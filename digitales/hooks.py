@@ -73,6 +73,17 @@ doc_events = {
 	"Sales Order": {
 		"on_submit": "digitales.digitales.custom_methods.create_purchase_order"
 	},
+
+	"Purchase Receipt": {
+		"on_submit": "digitales.digitales.custom_methods.stock_assignment",
+		"on_cancel": "digitales.digitales.custom_methods.stock_cancellation"
+	},
+
+	"Delivery Note": {
+		"on_submit": "digitales.digitales.custom_methods.update_stock_assignment_log_on_submit",
+		"on_cancel": "digitales.digitales.custom_methods.update_stock_assignment_log_on_cancel"
+		
+	},
 }
 
 # Scheduled Tasks
