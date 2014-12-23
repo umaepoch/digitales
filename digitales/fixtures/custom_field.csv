@@ -1,0 +1,39 @@
+"Data Import Template"
+"Table:","Custom Field"
+""
+""
+"Notes:"
+"Please do not change the template headings."
+"First data column must be blank."
+"If you are uploading new records, leave the ""name"" (ID) column blank."
+"If you are uploading new records, ""Naming Series"" becomes mandatory, if present."
+"Only mandatory fields are necessary for new records. You can delete non-mandatory columns if you wish."
+"For updating, you can update only selective columns."
+"You can only upload upto 5000 records in one go. (may be less in some cases)"
+""
+"DocType:","Custom Field","","","","","","","","","","","","","","","","","","","","","",""
+"Column Labels:","ID","Document","Field Type","Label","Insert After","Precision","Options","Field Description","Fieldname","Permission Level","Is Mandatory Field","Read Only","Ignore User Permissions","Width","Default Value","Hidden","Depends On","Print Hide","No Copy","Allow on Submit","In Report Filter","In List View","Report Hide"
+"Column Name:","name","dt","fieldtype","label","insert_after","precision","options","description","fieldname","permlevel","reqd","read_only","ignore_user_permissions","width","default","hidden","depends_on","print_hide","no_copy","allow_on_submit","in_filter","in_list_view","report_hide"
+"Mandatory:","Yes","Yes","Yes","No","No","No","No","No","No","No","No","No","No","No","No","No","No","No","No","No","No","No","No"
+"Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
+"Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
+"Start entering data below this line"
+"","""Sales Invoice Item-advance_paid""","Sales Invoice Item","Currency","Advance Paid","description","","","","advance_paid",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-advance_paid""","Sales Order Item","Currency","Advance Paid","assigned_qty","","","","advance_paid",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Customer-contract_form_no""","Customer","Link","Contract Form No","territory","","Customer Contract Form","","contract_form_no",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice-organisation""","Sales Invoice","Data","Organisation","currency","","","","organisation",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order-organisation""","Sales Order","Data","Organisation","po_no","","","","organisation",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice Item-marcfile_name""","Sales Invoice Item","Data","MARCfile Name","item_name","","","","marcfile_name",0,0,1,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice Item-shelf_ready_service_name""","Sales Invoice Item","Data","Shelf Ready Service  Name","description","","","","shelf_ready_service_name",0,0,1,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-line_item""","Sales Order Item","Data","Line Item","item_name","","","","line_item",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice Item-line_item""","Sales Invoice Item","Data","Line Item","item_name","","","","line_item",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-release_date_of_item""","Sales Order Item","Date","Release Date Of Item","item_name","","","","release_date_of_item",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Packing Slip Item-against_sales_order""","Packing Slip Item","Link","Against Sales Order","weight_uom","","Sales Order","","against_sales_order",0,0,1,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order-process_status""","Sales Order","Data","Process Status","currency","","Uncompleted
+Completed","","process_status",0,0,0,0,"","Uncompleted",0,"",0,0,0,0,0,0
+"","""Sales Order Item-assigned_qty""","Sales Order Item","Float","Assigned Qty","description","","","","assigned_qty",0,0,0,0,"","0.0",0,"",0,0,0,0,0,0
+"","""Sales Order-priority""","Sales Order","Select","Priority","order_type","","Low
+High","","priority",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-po_name""","Sales Order Item","Link","Po Name","description","","Purchase Order","","po_name",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Sales Order Item-po_child_name""","Sales Order Item","Data","PO Child name","po_name","","","","po_child_name",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Customer-shelf_ready_services_details""","Customer","Table","Shelf Ready Services Details","communications","","Shelf Ready Services","","shelf_ready_services_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
