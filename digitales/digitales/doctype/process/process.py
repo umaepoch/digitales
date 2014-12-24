@@ -23,6 +23,9 @@ class Process(Document):
 			}
 			return ret
 
+		else:
+			frappe.msgprint("Specified barcode='"+barcode+"' is not present")
+
 	# Update Sales Order Process Status which we required in sales invoice generation fron sales order---------------------------------------
 	def on_submit(self):
 		frappe.db.sql("""update `tabSales Order` set process_status='Uncompleted' 
