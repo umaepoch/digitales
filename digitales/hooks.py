@@ -83,7 +83,8 @@ doc_events = {
 	},
 
 	"Delivery Note": {
-		"on_submit": "digitales.digitales.custom_methods.update_stock_assignment_log_on_submit",
+		"on_submit": ["digitales.digitales.custom_methods.update_stock_assignment_log_on_submit",
+						"digitales.digitales.custom_methods.validate_qty_on_submit"],
 		"on_cancel": "digitales.digitales.custom_methods.update_stock_assignment_log_on_cancel"
 		
 	},

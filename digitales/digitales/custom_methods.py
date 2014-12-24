@@ -196,3 +196,9 @@ def update_stock_assignment_log_on_cancel(doc,method):
 		frappe.db.commit()
 
 
+def validate_qty_on_submit(doc,method):
+	for d in doc.get('delivery_note_details'):
+		if d.assigned_qty>=d.qty:
+			pass
+		else:
+			frappe.msgprint("Delivered Quantity must be less than assigned_qty for item_code='"+d.item_code+"'",raise_exception=1)
