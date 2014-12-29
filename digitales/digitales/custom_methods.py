@@ -202,3 +202,65 @@ def validate_qty_on_submit(doc,method):
 			pass
 		else:
 			frappe.msgprint("Delivered Quantity must be less than assigned_qty for item_code='"+d.item_code+"'",raise_exception=1)
+
+
+
+
+#For calling API through Poster--------------------------------------------------------------------------------------------
+
+
+@webnotes.whitelist(allow_guest=True)
+def GetItem(parameters):
+	return "in getitem"
+	check item id is present or not
+	if yes:
+		item=update_item(parameters)
+	if no:
+		item=create_item(parameters)
+
+
+def update_item(parameters):
+	pass
+
+def create_item(parameters):
+	pass
+
+
+
+
+
+@webnotes.whitelist(allow_guest=True)
+def GetCustomer(parameters):
+	return "in customer"
+	check customer id is present or not
+	if yes:
+		customer=update_customer(parameters)
+	if no:
+		customer=create_customer(parameters)
+
+
+def update_customer(parameters):
+	pass
+
+def create_customer(parameters):
+	pass
+
+
+
+
+
+@webnotes.whitelist(allow_guest=True)
+def GetSalesOrder(parameters):
+	return "in GetSalesOrder"
+	check sales_order id is present or not
+	if yes and docstatus ==0:
+		item=update_sales_order(parameters)
+	if no:
+		item=create_sales_order(parameters)
+
+
+def update_sales_order(parameters):
+	pass
+
+def create_sales_order(parameters):
+	pass

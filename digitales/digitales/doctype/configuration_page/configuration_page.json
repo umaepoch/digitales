@@ -84,7 +84,7 @@
    "print_hide": 0, 
    "read_only": 0, 
    "report_hide": 0, 
-   "reqd": 0, 
+   "reqd": 1, 
    "search_index": 0, 
    "set_only_once": 0
   }, 
@@ -117,7 +117,7 @@
  "is_submittable": 0, 
  "issingle": 1, 
  "istable": 0, 
- "modified": "2014-12-24 22:34:26.834906", 
+ "modified": "2014-12-29 17:45:56.294470", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Configuration Page", 

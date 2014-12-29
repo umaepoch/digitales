@@ -31,3 +31,4 @@ class Process(Document):
 		frappe.db.sql("""update `tabSales Order` set process_status='Uncompleted' 
 							where name='%s'"""%self.get_sales_order)
 		frappe.db.commit()
+
