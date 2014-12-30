@@ -42,7 +42,8 @@
    "label": "Sales Invoice Status", 
    "options": "Not Done\nDone", 
    "permlevel": 0, 
-   "precision": ""
+   "precision": "", 
+   "read_only": 1
   }, 
   {
    "allow_on_submit": 0, 
@@ -362,7 +363,7 @@
  "is_submittable": 1, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2014-12-24 22:35:05.511748", 
+ "modified": "2014-12-30 16:18:09.470523", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Process", 
