@@ -209,59 +209,59 @@ def validate_qty_on_submit(doc,method):
 #For calling API through Poster--------------------------------------------------------------------------------------------
 
 
-@webnotes.whitelist(allow_guest=True)
-def GetItem(parameters):
-	return "in getitem"
-	check item_code (sku) is present or not
-	if yes:
-		item=update_item(parameters)
-	if no:
-		item=create_item(parameters)
+# @webnotes.whitelist(allow_guest=True)
+# def GetItem(parameters):
+# 	return "in getitem"
+# 	check item_code (sku) is present or not
+# 	if yes:
+# 		item=update_item(parameters)
+# 	if no:
+# 		item=create_item(parameters)
 
 
-def update_item(parameters):
-	pass
+# def update_item(parameters):
+# 	pass
 
-def create_item(parameters):
-	pass
-
-
-
-
-
-@webnotes.whitelist(allow_guest=True)
-def GetCustomer(parameters):
-	parameters[1:-1]
-	return "in customer"
-	check customer id(cz name can be same) is present or not
-	if yes:
-		customer=update_customer(parameters)
-	if no:
-		customer=create_customer(parameters)
-
-
-def update_customer(parameters):
-	pass
-
-def create_customer(parameters):
-	pass
+# def create_item(parameters):
+# 	pass
 
 
 
 
 
-@webnotes.whitelist(allow_guest=True)
-def GetSalesOrder(parameters):
-	return "in GetSalesOrder"
-	check sales_order id is present or not
-	if yes and docstatus ==0:
-		item=update_sales_order(parameters)
-	if no:
-		item=create_sales_order(parameters)
+# @webnotes.whitelist(allow_guest=True)
+# def GetCustomer(parameters):
+# 	parameters[1:-1]
+# 	return "in customer"
+# 	check customer id(cz name can be same) is present or not
+# 	if yes:
+# 		customer=update_customer(parameters)
+# 	if no:
+# 		customer=create_customer(parameters)
 
 
-def update_sales_order(parameters):
-	pass
+# def update_customer(parameters):
+# 	pass
 
-def create_sales_order(parameters):
-	pass
+# def create_customer(parameters):
+#   pass
+
+
+
+
+
+# @webnotes.whitelist(allow_guest=True)
+# def GetSalesOrder(parameters):
+# 	return "in GetSalesOrder"
+# 	check sales_order id is present or not
+# 	if yes and docstatus ==0:
+# 		item=update_sales_order(parameters)
+# 	if no:
+# 		item=create_sales_order(parameters)
+
+
+# def update_sales_order(parameters):
+# 	pass
+
+# def create_sales_order(parameters):
+# 	pass
