@@ -18,10 +18,21 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
-"","""Delivery Note Item-assigned_qty""","Delivery Note Item","Float","Assigned Qty","description","","","","assigned_qty",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Invoice Item-advance_paid""","Sales Invoice Item","Currency","Advance Paid","description","","","","advance_paid",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order Item-advance_paid""","Sales Order Item","Currency","Advance Paid","assigned_qty","","","","advance_paid",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Employee-hour_rate""","Employee","Currency","Rate Per Hour","digitales_salary_structure","","","Rate per hour for salary calculation","hour_rate",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Employee-digitales_salary_structure""","Employee","Select","Digitales Salary Structure","col_break_22","","
+Yes
+No","","digitales_salary_structure",0,1,0,0,"","",0,"",0,0,0,0,0,0
+"","""Attendance-total_break_hours""","Attendance","Float","Total Break Hours","total_hours","2","","","total_break_hours",0,0,1,0,"","",0,"",0,0,0,0,0,0
+"","""Attendance-total_hours""","Attendance","Float","Total Worked Hours","attendance_time_sheet","2","","","total_hours",0,0,1,0,"","",0,"",0,0,0,0,0,0
+"","""Attendance-1""","Attendance","Column Break","1","total_break_hours","","","","1",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Attendance-attendance_time_sheet""","Attendance","Table","Attendance Time Sheet","attendance_time_sheet","","Attendance Time Sheets","","attendance_time_sheet",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order-priority""","Sales Order","Select","Priority","order_type","","
+Low
+High","","priority",0,1,0,0,"","",0,"",0,0,0,0,0,0
 "","""Customer-contract_form_no""","Customer","Link","Contract Form No","territory","","Customer Contract Form","","contract_form_no",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice Item-advance_paid""","Sales Invoice Item","Currency","Advance Paid","description","","","","advance_paid",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Delivery Note Item-assigned_qty""","Delivery Note Item","Float","Assigned Qty","description","","","","assigned_qty",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-advance_paid""","Sales Order Item","Currency","Advance Paid","assigned_qty","","","","advance_paid",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-organisation""","Sales Invoice","Data","Organisation","currency","","","","organisation",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-organisation""","Sales Order","Data","Organisation","po_no","","","","organisation",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice Item-marcfile_name""","Sales Invoice Item","Data","MARCfile Name","item_name","","","","marcfile_name",0,0,1,0,"","",0,"",0,0,0,0,0,0
@@ -33,8 +44,6 @@
 "","""Sales Order-process_status""","Sales Order","Data","Process Status","currency","","Uncompleted
 Completed","","process_status",0,0,0,0,"","Uncompleted",0,"",0,0,0,0,0,0
 "","""Sales Order Item-assigned_qty""","Sales Order Item","Float","Assigned Qty","description","","","","assigned_qty",0,0,0,0,"","0.0",0,"",0,0,0,0,0,0
-"","""Sales Order-priority""","Sales Order","Select","Priority","order_type","","Low
-High","","priority",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-po_name""","Sales Order Item","Link","Po Name","description","","Purchase Order","","po_name",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order Item-po_child_name""","Sales Order Item","Data","PO Child name","po_name","","","","po_child_name",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Customer-shelf_ready_services_details""","Customer","Table","Shelf Ready Services Details","communications","","Shelf Ready Services","","shelf_ready_services_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
