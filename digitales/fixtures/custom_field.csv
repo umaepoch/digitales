@@ -18,6 +18,26 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
+"","""Item-rrp""","Item","Link","RRP","sale_price","","Price List","","rrp",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Item-sale_price""","Item","Data","Sale Price","selling_cost_center","","","","sale_price",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Item-product_release_date""","Item","Date","Product Release Date","item_name","","","","product_release_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Taxes and Charges-discount_percentage""","Sales Taxes and Charges","Data","Discount Percentage","rate","","","","discount_percentage",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice Item-gst""","Sales Invoice Item","Data","GST","rrp","","","In %","gst",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice Item-media""","Sales Invoice Item","Data","Media","rrp","","","","media",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice Item-gst_value""","Sales Invoice Item","Data","GST Value","gst","","","","gst_value",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice Item-rrp""","Sales Invoice Item","Link","RRP","item_group","","Price List","","rrp",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice Item-advance_paid""","Sales Invoice Item","Currency","Advance Paid","description","","","","advance_paid",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice Item-shelf_ready_service_name""","Sales Invoice Item","Data","Shelf Ready Service  Name","description","","","","shelf_ready_service_name",0,0,1,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice Item-line_item""","Sales Invoice Item","Data","Line Item","item_name","","","","line_item",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice Item-marcfile_name""","Sales Invoice Item","Data","MARCfile Name","item_name","","","","marcfile_name",0,0,1,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice-organisation""","Sales Invoice","Data","Organisation","currency","","","","organisation",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-column_break_1""","Sales Order Item","Column Break","column break 1","order_number","","","","column_break_1",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-budget""","Sales Order Item","Data","Budget","order_number","","","","budget",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-order_number""","Sales Order Item","Data","Order Number","rrp","","","","order_number",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-rrp""","Sales Order Item","Link","RRP","item_details","","Price List","","rrp",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-item_details""","Sales Order Item","Section Break","Item Details","transaction_date","","","","item_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order-comment""","Sales Order","Small Text","Comment","po_no","","","","comment",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order-organisation""","Sales Order","Data","Organisation","priority","","","","organisation",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Employee-hour_rate""","Employee","Currency","Rate Per Hour","digitales_salary_structure","","","Rate per hour for salary calculation","hour_rate",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Employee-digitales_salary_structure""","Employee","Select","Digitales Salary Structure","col_break_22","","
 Yes
@@ -30,15 +50,9 @@ No","","digitales_salary_structure",0,1,0,0,"","",0,"",0,0,0,0,0,0
 Low
 High","","priority",0,1,0,0,"","",0,"",0,0,0,0,0,0
 "","""Customer-contract_form_no""","Customer","Link","Contract Form No","territory","","Customer Contract Form","","contract_form_no",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Invoice Item-advance_paid""","Sales Invoice Item","Currency","Advance Paid","description","","","","advance_paid",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Delivery Note Item-assigned_qty""","Delivery Note Item","Float","Assigned Qty","description","","","","assigned_qty",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-advance_paid""","Sales Order Item","Currency","Advance Paid","assigned_qty","","","","advance_paid",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Invoice-organisation""","Sales Invoice","Data","Organisation","currency","","","","organisation",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-organisation""","Sales Order","Data","Organisation","po_no","","","","organisation",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Invoice Item-marcfile_name""","Sales Invoice Item","Data","MARCfile Name","item_name","","","","marcfile_name",0,0,1,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Invoice Item-shelf_ready_service_name""","Sales Invoice Item","Data","Shelf Ready Service  Name","description","","","","shelf_ready_service_name",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-line_item""","Sales Order Item","Data","Line Item","item_name","","","","line_item",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Invoice Item-line_item""","Sales Invoice Item","Data","Line Item","item_name","","","","line_item",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-release_date_of_item""","Sales Order Item","Date","Release Date Of Item","item_name","","","","release_date_of_item",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Packing Slip Item-against_sales_order""","Packing Slip Item","Link","Against Sales Order","weight_uom","","Sales Order","","against_sales_order",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-process_status""","Sales Order","Data","Process Status","currency","","Uncompleted
