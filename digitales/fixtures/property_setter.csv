@@ -18,6 +18,7 @@
 "Type:","Data (text)","Select","Link","Data","Text","Data","Data","Data"
 "Info:","","One of: DocField, DocType","Valid DocType","","","","",""
 "Start entering data below this line"
+"","""Sales Invoice Item-process_id-previous_field""","DocField","Sales Invoice Item","previous_field","sales_order","process_id","Data",""
 "","""Sales Invoice-comment-previous_field""","DocField","Sales Invoice","previous_field","due_date","comment","Data",""
 "","""Sales Invoice-contract_number-previous_field""","DocField","Sales Invoice","previous_field","purchase_order_number","contract_number","Data",""
 "","""Sales Invoice-purchase_order_number-previous_field""","DocField","Sales Invoice","previous_field","mode_of_payment","purchase_order_number","Data",""
