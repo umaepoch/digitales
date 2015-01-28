@@ -25,7 +25,7 @@
    "print_hide": 0, 
    "read_only": 0, 
    "report_hide": 0, 
-   "reqd": 0, 
+   "reqd": 1, 
    "search_index": 0, 
    "set_only_once": 0
   }, 
@@ -45,7 +45,7 @@
    "print_hide": 0, 
    "read_only": 0, 
    "report_hide": 0, 
-   "reqd": 0, 
+   "reqd": 1, 
    "search_index": 0, 
    "set_only_once": 0
   }, 
@@ -99,7 +99,8 @@
    "fieldtype": "Data", 
    "label": " Service Barcode", 
    "permlevel": 0, 
-   "precision": ""
+   "precision": "", 
+   "reqd": 1
   }, 
   {
    "depends_on": "eval:doc.process_type=='Cataloguing'", 
@@ -126,7 +127,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2014-12-24 22:35:23.864572", 
+ "modified": "2015-01-24 16:28:38.009735", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Shelf Ready Service", 

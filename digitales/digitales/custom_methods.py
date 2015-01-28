@@ -11,15 +11,19 @@ from frappe.model.db_query import DatabaseQuery
 def create_purchase_order(doc,method):
 
 	for d in doc.get('sales_order_details'):
-		ordered_qty=frappe.db.sql("""select sum(s.qty)-sum(s.delivered_qty) as qty  
+		so_ordered_qty=frappe.db.sql("""select sum(s.qty) as qty  
 									from `tabSales Order Item` s inner join `tabSales Order` so 
-										on s.parent=so.name where s.item_code='%s' and so.docstatus=1 
-										and so.delivery_status='Not Delivered' 
-										or so.delivery_status='Partly Delivered'"""
+										on s.parent=so.name where s.item_code='%s' and so.docstatus=1 """
 										%d.item_code,as_list=1)
-		#frappe.errprint(ordered_qty)
-		qty=flt(ordered_qty[0][0]-d.actual_qty)
-		#frappe.errprint(qty)
+		frappe.errprint(so_ordered_qty)
+		po_ordered_qty=frappe.db.sql("""select sum(p.qty) as qty  
+									from `tabPurchase Order Item` p inner join `tabPurchase Order` po 
+										on p.parent=po.name where p.item_code='%s' and po.docstatus=1 """
+										%d.item_code,as_list=1)
+		frappe.errprint(po_ordered_qty)
+
+		qty=flt(so_ordered_qty[0][0]-po_ordered_qty[0][0])
+		frappe.errprint(qty)
 		if qty>0:
 				supplier=frappe.db.sql("""select default_supplier from `tabItem` where 
 											name='%s'"""%d.item_code,as_list=1)
@@ -63,7 +67,7 @@ def create_new_po(doc,d,supplier,qty):
 	e.base_amount=d.amount
 	e.warehouse=d.warehouse
 	e.schedule_date=d.transaction_date
-	po.taxes_and_charges=doc.taxes_and_charges
+	#po.taxes_and_charges=doc.taxes_and_charges
 	po.save(ignore_permissions=True)
 	#frappe.errprint(po.name)
 	#update_so_details(doc,d,d.item_code,po.name)
@@ -89,13 +93,13 @@ def update_child_entry(doc,d,purchase_order,qty):
 	
 def update_qty(doc,d,item,purchase_order,qty):
 	#frappe.errprint("in update qty")
-	qty11=frappe.db.sql("""select qty from `tabPurchase Order Item` where 
-							item_code='%s' and parent='%s'"""
-								%(item,purchase_order),as_list=1)
-	qty1=flt(qty11[0][0]+flt(qty))
+	# qty11=frappe.db.sql("""select qty from `tabPurchase Order Item` where 
+	# 						item_code='%s' and parent='%s'"""
+	# 							%(item,purchase_order),as_list=1)
+	# qty1=flt(qty11[0][0]+flt(qty))
 	frappe.db.sql("""update `tabPurchase Order Item` set qty='%s' 
 						where parent='%s' and item_code='%s'"""
-							%(qty1,purchase_order,item))
+							%(qty,purchase_order,item))
 	frappe.db.commit()
 	#update_so_details(doc,d,item,purchase_order)
 
@@ -178,13 +182,13 @@ def update_stock_assignment_log_on_submit(doc,method):
 												and so.docstatus=1 and s.parent='%s' 
 													order by so.creation"""
 														%(d.item_code,doc.name),as_list=1)
-		break
-	if sales_order_name:
-		frappe.db.sql("""update `tabStock Assignment Log` 
-							set delivered_qty='%s', delivery_note='%s'
-								where sales_order='%s' and item_code='%s'"""
-									%(d.qty,doc.name,sales_order_name[0][0],d.item_code))
-		frappe.db.commit()
+	
+		if sales_order_name:
+			frappe.db.sql("""update `tabStock Assignment Log` 
+								set delivered_qty='%s', delivery_note='%s'
+									where sales_order='%s' and item_code='%s'"""
+										%(d.qty,doc.name,sales_order_name[0][0],d.item_code))
+			frappe.db.commit()
 
 
 

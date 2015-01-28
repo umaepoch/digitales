@@ -24,7 +24,7 @@ class Process(Document):
 			return ret
 
 		else:
-			frappe.msgprint("Specified barcode='"+barcode+"' is not present")
+			frappe.msgprint("Specified barcode is not valid barcode")
 
 	# Update Sales Order Process Status which we required in sales invoice generation fron sales order---------------------------------------
 	def on_submit(self):

@@ -6,6 +6,6 @@ def get_data():
 			"color": "#966D58",
 			"icon": "icon-truck",
 			"type": "module",
-			"label": _("digitales")
+			"label": _("Digitales")
 		}
 	}
