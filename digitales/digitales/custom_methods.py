@@ -15,15 +15,15 @@ def create_purchase_order(doc,method):
 									from `tabSales Order Item` s inner join `tabSales Order` so 
 										on s.parent=so.name where s.item_code='%s' and so.docstatus=1 """
 										%d.item_code,as_list=1)
-		frappe.errprint(so_ordered_qty)
+		#frappe.errprint(so_ordered_qty)
 		po_ordered_qty=frappe.db.sql("""select sum(p.qty) as qty  
 									from `tabPurchase Order Item` p inner join `tabPurchase Order` po 
 										on p.parent=po.name where p.item_code='%s' and po.docstatus=1 """
 										%d.item_code,as_list=1)
-		frappe.errprint(po_ordered_qty)
+		#frappe.errprint(po_ordered_qty)
 
 		qty=flt(so_ordered_qty[0][0]-po_ordered_qty[0][0])
-		frappe.errprint(qty)
+		#frappe.errprint(qty)
 		if qty>0:
 				supplier=frappe.db.sql("""select default_supplier from `tabItem` where 
 											name='%s'"""%d.item_code,as_list=1)
@@ -154,6 +154,12 @@ def update_assigned_qty(assigned_qty,sales_order,item_code):
 
 def create_stock_assignment(purchase_receipt,d,sales_order,ordered_qty,assigned_qty):
 	#frappe.errprint("in stock assignment")
+	# stock_assignment=frappe.db.sql("""select name from `tabStock Assignment Log` where 
+	# 								sales_order='%s' and item_code='%s'"""
+	# 								%(sales_order,d.item_code))
+	# frappe.errprint(stock_assignment)
+	# if stock_assignment:
+		
 	sa = frappe.new_doc('Stock Assignment Log')
 	sa.purchase_receipt=purchase_receipt
 	sa.sales_order=sales_order
@@ -172,9 +178,9 @@ def stock_cancellation(doc,method):
 	else:
 		pass
 
-# Onn sibmission of delivery Note---------------------------------------------------------------------------------------------------------------------------------
+# On sibmission of delivery Note---------------------------------------------------------------------------------------------------------------------------------
 def update_stock_assignment_log_on_submit(doc,method):
-	# frappe.errprint("in update stock assignment log")
+	#frappe.errprint("in update stock assignment log")
 	for d in doc.get('delivery_note_details'):
 		sales_order_name=frappe.db.sql("""select s.against_sales_order from 
 										`tabDelivery Note Item` s inner join `tabDelivery Note` so 
@@ -182,22 +188,59 @@ def update_stock_assignment_log_on_submit(doc,method):
 												and so.docstatus=1 and s.parent='%s' 
 													order by so.creation"""
 														%(d.item_code,doc.name),as_list=1)
-	
+		frappe.errprint(sales_order_name[0][0])
 		if sales_order_name:
-			frappe.db.sql("""update `tabStock Assignment Log` 
+			delivery_note_name=frappe.db.sql(""" select delivery_note  from `tabStock Assignment Log` where
+							sales_order='%s' and item_code='%s'"""%(sales_order_name[0][0],d.item_code))
+			#frappe.errprint(delivery_note_name)
+			#frappe.errprint(len(delivery_note_name))
+			if delivery_note_name[0][0]==None:
+
+				frappe.db.sql("""update `tabStock Assignment Log` 
 								set delivered_qty='%s', delivery_note='%s'
 									where sales_order='%s' and item_code='%s'"""
 										%(d.qty,doc.name,sales_order_name[0][0],d.item_code))
-			frappe.db.commit()
-
+				frappe.db.commit()
+			else:
+				delivery_note = delivery_note_name[0][0] + ', ' + doc.name
+				delivery_note_details=frappe.db.sql("""select delivered_qty from `tabStock Assignment Log`
+												where sales_order='%s' and item_code='%s'"""%(sales_order_name[0][0],d.item_code))
+				#frappe.errprint(["delivery_note",delivery_note])
+				if delivery_note_details:
+					qty=cint(delivery_note_details[0][0])+d.qty
+					#frappe.errprint(["qty",qty])
+					frappe.db.sql("""update `tabStock Assignment Log` 
+								set delivered_qty='%s', delivery_note='%s'
+									where sales_order='%s' and item_code='%s'"""
+										%(qty,delivery_note,sales_order_name[0][0],d.item_code))
+					frappe.db.commit()
 
 
 def update_stock_assignment_log_on_cancel(doc,method):
 	for d in doc.get('delivery_note_details'):
-		frappe.db.sql("""update `tabStock Assignment Log` 
-							set delivery_note='',delivered_qty=0.00
-								where item_code='%s'"""%d.item_code)
-		frappe.db.commit()
+		
+		name=frappe.db.sql(""" select name,delivered_qty from `tabStock Assignment Log` where
+							sales_order='%s' and item_code='%s'"""%(d.against_sales_order,d.item_code))
+		if name:
+			delivery_note=frappe.db.sql("""select delivery_note from `tabStock Assignment Log` where 
+									name='%s'"""%name[0][0])
+			#frappe.errprint(delivery_note[0][0])
+
+		delivery_note_name=cstr(delivery_note[0][0]).split(", ")
+		#frappe.errprint(delivery_note_name)
+		#frappe.errprint(d.parent)
+		if d.parent in delivery_note_name:
+			#frappe.errprint("in if loop")
+			delivery_note_name.remove(d.parent)
+			
+			#frappe.errprint(delivery_note_name)
+			qty=cint(name[0][1])-d.qty
+			#frappe.errprint(qty)
+			if name:
+
+				frappe.db.sql("""update `tabStock Assignment Log` 
+								set delivered_qty='%s',delivery_note='%s' where item_code='%s'"""%(qty,','.join(delivery_note_name),d.item_code),debug=1)
+				frappe.db.commit()
 
 
 def validate_qty_on_submit(doc,method):
@@ -206,6 +249,7 @@ def validate_qty_on_submit(doc,method):
 			pass
 		else:
 			frappe.msgprint("Delivered Quantity must be less than assigned_qty for item_code='"+d.item_code+"'",raise_exception=1)
+
 
 
 
