@@ -11,12 +11,13 @@ from frappe.model.db_query import DatabaseQuery
 def create_purchase_order(doc,method):
 
 	for d in doc.get('sales_order_details'):
-		so_ordered_qty=frappe.db.sql("""select sum(s.qty) as qty  
+		so_ordered_qty=frappe.db.sql("""select ifnull(sum(s.qty),0) as qty  
 									from `tabSales Order Item` s inner join `tabSales Order` so 
 										on s.parent=so.name where s.item_code='%s' and so.docstatus=1 """
 										%d.item_code,as_list=1)
 		#frappe.errprint(so_ordered_qty)
-		po_ordered_qty=frappe.db.sql("""select sum(p.qty) as qty  
+		
+		po_ordered_qty=frappe.db.sql("""select ifnull(sum(p.qty),0) as qty 
 									from `tabPurchase Order Item` p inner join `tabPurchase Order` po 
 										on p.parent=po.name where p.item_code='%s' and po.docstatus=1 """
 										%d.item_code,as_list=1)
@@ -154,19 +155,31 @@ def update_assigned_qty(assigned_qty,sales_order,item_code):
 
 def create_stock_assignment(purchase_receipt,d,sales_order,ordered_qty,assigned_qty):
 	#frappe.errprint("in stock assignment")
-	# stock_assignment=frappe.db.sql("""select name from `tabStock Assignment Log` where 
-	# 								sales_order='%s' and item_code='%s'"""
-	# 								%(sales_order,d.item_code))
-	# frappe.errprint(stock_assignment)
-	# if stock_assignment:
-		
-	sa = frappe.new_doc('Stock Assignment Log')
-	sa.purchase_receipt=purchase_receipt
-	sa.sales_order=sales_order
-	sa.ordered_qty=ordered_qty
-	sa.assign_qty=assigned_qty
-	sa.item_code=d.item_code
-	sa.save(ignore_permissions=True)
+	stock_assignment=frappe.db.sql("""select name from `tabStock Assignment Log` where 
+									sales_order='%s' and item_code='%s'"""
+									%(sales_order,d.item_code),debug=1)
+	#frappe.errprint(stock_assignment)
+	if stock_assignment:
+		ass_qty= frappe.db.sql(""" select assigned_qty from `tabStock Assignment Log`
+			     where name='%s'"""%stock_assignment[0][0],debug=1)
+		frappe.errprint(ass_qty)
+		qty=assigned_qty+ass_qty[0][0]
+		frappe.db.sql("""update `tabStock Assignment Log` set purchase_receipt='%s',
+					    sales_order='%s',assigned_qty='%s'
+						where name='%s'"""
+						%(purchase_receipt,sales_order,qty,stock_assignment[0][0]))
+		frappe.db.commit()
+
+	else:
+
+		sa = frappe.new_doc('Stock Assignment Log')
+		sa.purchase_receipt=purchase_receipt
+		sa.sales_order=sales_order
+		sa.ordered_qty=ordered_qty
+		sa.assign_qty=assigned_qty
+		sa.item_code=d.item_code
+		sa.save(ignore_permissions=True)
+
 	
 def stock_cancellation(doc,method):
 	# frappe.errprint("in stock cancellation")
@@ -188,7 +201,7 @@ def update_stock_assignment_log_on_submit(doc,method):
 												and so.docstatus=1 and s.parent='%s' 
 													order by so.creation"""
 														%(d.item_code,doc.name),as_list=1)
-		frappe.errprint(sales_order_name[0][0])
+		#frappe.errprint(sales_order_name[0][0])
 		if sales_order_name:
 			delivery_note_name=frappe.db.sql(""" select delivery_note  from `tabStock Assignment Log` where
 							sales_order='%s' and item_code='%s'"""%(sales_order_name[0][0],d.item_code))
