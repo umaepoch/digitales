@@ -4,8 +4,14 @@ import frappe
 from frappe.widgets.reportview import get_match_cond
 from frappe.utils import add_days, cint, cstr, date_diff, rounded, flt, getdate, nowdate, \
 	get_first_day, get_last_day,money_in_words, now, nowtime
+#from frappe.utils import add_days, cint, cstr, flt, getdate, nowdate, rounded
 from frappe import _
 from frappe.model.db_query import DatabaseQuery
+from requests_oauthlib import OAuth1 as OAuth
+import requests
+import json
+import datetime
+import time
 
 # On submission of sales order---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def create_purchase_order(doc,method):
@@ -157,11 +163,11 @@ def create_stock_assignment(purchase_receipt,d,sales_order,ordered_qty,assigned_
 	#frappe.errprint("in stock assignment")
 	stock_assignment=frappe.db.sql("""select name from `tabStock Assignment Log` where 
 									sales_order='%s' and item_code='%s'"""
-									%(sales_order,d.item_code),debug=1)
+									%(sales_order,d.item_code))
 	#frappe.errprint(stock_assignment)
 	if stock_assignment:
 		ass_qty= frappe.db.sql(""" select assigned_qty from `tabStock Assignment Log`
-			     where name='%s'"""%stock_assignment[0][0],debug=1)
+			     where name='%s'"""%stock_assignment[0][0])
 		frappe.errprint(ass_qty)
 		qty=assigned_qty+ass_qty[0][0]
 		frappe.db.sql("""update `tabStock Assignment Log` set purchase_receipt='%s',
@@ -207,7 +213,7 @@ def update_stock_assignment_log_on_submit(doc,method):
 							sales_order='%s' and item_code='%s'"""%(sales_order_name[0][0],d.item_code))
 			#frappe.errprint(delivery_note_name)
 			#frappe.errprint(len(delivery_note_name))
-			if delivery_note_name[0][0]==None:
+			if not delivery_note_name:
 
 				frappe.db.sql("""update `tabStock Assignment Log` 
 								set delivered_qty='%s', delivery_note='%s'
@@ -239,21 +245,21 @@ def update_stock_assignment_log_on_cancel(doc,method):
 									name='%s'"""%name[0][0])
 			#frappe.errprint(delivery_note[0][0])
 
-		delivery_note_name=cstr(delivery_note[0][0]).split(", ")
+			delivery_note_name=cstr(delivery_note[0][0]).split(", ")
 		#frappe.errprint(delivery_note_name)
 		#frappe.errprint(d.parent)
-		if d.parent in delivery_note_name:
+			if d.parent in delivery_note_name:
 			#frappe.errprint("in if loop")
-			delivery_note_name.remove(d.parent)
+				delivery_note_name.remove(d.parent)
 			
 			#frappe.errprint(delivery_note_name)
-			qty=cint(name[0][1])-d.qty
+				qty=cint(name[0][1])-d.qty
 			#frappe.errprint(qty)
-			if name:
+				if name:
 
-				frappe.db.sql("""update `tabStock Assignment Log` 
-								set delivered_qty='%s',delivery_note='%s' where item_code='%s'"""%(qty,','.join(delivery_note_name),d.item_code),debug=1)
-				frappe.db.commit()
+					frappe.db.sql("""update `tabStock Assignment Log` 
+								set delivered_qty='%s',delivery_note='%s' where item_code='%s'"""%(qty,','.join(delivery_note_name),d.item_code))
+					frappe.db.commit()
 
 
 def validate_qty_on_submit(doc,method):
@@ -270,59 +276,350 @@ def validate_qty_on_submit(doc,method):
 #For calling API through Poster--------------------------------------------------------------------------------------------
 
 
-# @webnotes.whitelist(allow_guest=True)
-# def GetItem(parameters):
-# 	return "in getitem"
-# 	check item_code (sku) is present or not
-# 	if yes:
-# 		item=update_item(parameters)
-# 	if no:
-# 		item=create_item(parameters)
+#Get Item from magento------------------------------------------------------------------------------------------------------------------------------------
+def GetItem():
+	import datetime
+	import time
+	from datetime import datetime
+	from time import sleep
+	frappe.errprint("in get item")
+	content=GetCount()
+	frappe.errprint(content)
+	frappe.errprint(content['products_count'])
+	frappe.errprint(type(content['product_pages_per_100_count']))
+	oauth = GetOauthDetails()
+	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+	#for i in range(1,content['product_pages_per_100_count']+1):
+	for i in range(600,610):
+		#frappe.errprint(i)
+		r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/products?page='+cstr(i)+'&limit=100', headers=h, auth=oauth)
+		content=json.loads(r.content)
+		try:
+			for i in content:
+				item=frappe.db.sql("""select name, modified_date from `tabItem` where name='%s'"""%content[i].get('sku'),as_list=1)
+				frappe.errprint(item)
+				# frappe.errprint(item[0][1].split('.')[0])
+				# frappe.errprint(content[i].get('updated_at'))
+				# frappe.errprint(type(content[i].get('updated_at')))
+				# frappe.errprint(type(item[0][1].split('.')[0]))
+				# frappe.errprint(modified_date)
+				# frappe.errprint(updated_date)
+				#frappe.errprint(type(item[0][1]))
+				# frappe.errprint(type(updated_date))
+				if item:
+					modified_date=datetime.strptime(item[0][1], '%Y-%m-%d %H:%M:%S')
+					updated_date=datetime.strptime(content[i].get('updated_at'), '%Y-%m-%d %H:%M:%S')
+					frappe.errprint(modified_date)
+					frappe.errprint(updated_date)
+					if modified_date==updated_date:
+						frappe.errprint("two dates are equal")
+						pass
+					else:
+						frappe.errprint("in update item")
+						update_item(item[0][0],i,content)
+				else:
+					frappe.errprint("in else part")
+					create_item(i,content)
+				#sleep(5)
+		except Exception,e:
+			print e	
+
+	# delete_item()
+	# update_item_status()
+
+def update_item_status():
+	frappe.db.sql("""update `tabItem` set item_status='Non Existing'""" )
+	frappe.db.commit()
+
+def delete_item():
+	frappe.db.sql("""delete from `tabItem` where item_status='Non Existing'""")
+	frappe.db.commit()
+
+def create_item(i,content):
+	frappe.errprint("in create new item")
+	item = frappe.new_doc('Item')
+	create_new_product(item,i,content)
+	#status=check_uom_conversion(item,i,content)
+	item.save(ignore_permissions=True)	
+
+def update_item(name,i,content):
+	#frappe.errprint("in update item")
+	item = frappe.get_doc("Item", name)
+	create_new_product(item,i,content)
+	item.save(ignore_permissions=True)
+
+def create_new_product(item,i,content):
+	frappe.errprint("in cretae new product")
+	#print content[i]
+	item.item_code=content[i].get('sku')
+	item.item_name=content[i].get('name') or content[i].get('sku')
+	item.item_group = 'Products'
+	if content[i].get('media'):
+		item_group=frappe.db.sql("""select name from `tabItem Group`""",as_list=1)
+		frappe.errprint(item_group)
+		if [content[i].get('media')] in item_group:
+			item.item_group=content[i].get('media') or 'Products'
+		else:
+			item_group=create_new_itemgroup(i,content)
+			item.item_group=item_group
+	item.description=content[i].get('short_description') or content[i].get('description') or content[i].get('sku')
+	item.event_id=i
+	item.item_status='Existing'
+	warehouse=get_own_warehouse()
+	item.default_warehouse=warehouse
+	item.modified_date=content[i].get('updated_at')
+	item.distributor=content[i].get('distributor')
+	item.product_release_date=content[i].get('release_date')
+	return True
+
+def check_uom_conversion(item):
+	frappe.errprint("in chcek uom conversion")
+	stock_uom=frappe.db.sql(""" select stock_uom from `tabItem` where name='%s'"""%item,as_list=1)
+	frappe.errprint(stock_uom)
+	if stock_uom:
+		uom_details= frappe.db.sql("""select ifnull(count(idx),0) from `tabUOM Conversion Detail` where uom='%s' and parent='%s'
+		"""%(stock_uom[0][0],item),as_list=1)
+		frappe.errprint(uom_details)
+		if uom_details:
+			if uom_details[0][0]!=1:
+				return False
+			else:
+				return True
+	else:
+		return False
 
 
-# def update_item(parameters):
-# 	pass
+def create_new_itemgroup(i,content):
+	frappe.errprint("in item_group")
+	itemgroup=frappe.new_doc('Item Group')
+	#frappe.errprint(itemgroup)
+	itemgroup.parent_item_group='All Item Groups'
+	itemgroup.item_group_name=content[i].get('media')
+	itemgroup.is_group='No'
+	itemgroup.save()
+	#frappe.errprint(content[i]['media'])
+	#frappe.errprint(item_group.name)
+	return itemgroup.name or 'Products'
 
-# def create_item(parameters):
-# 	pass
+def get_own_warehouse():
+		frappe.errprint("get_own_warehouse")
+		warehouse=frappe.db.sql("""select value from `tabSingles` where doctype='Configuration Page'
+					and field='own_warehouse'""",as_list=1)
+		if warehouse:
+			return warehouse[0][0]
 
-
-
-
-
-# @webnotes.whitelist(allow_guest=True)
-# def GetCustomer(parameters):
-# 	parameters[1:-1]
-# 	return "in customer"
-# 	check customer id(cz name can be same) is present or not
-# 	if yes:
-# 		customer=update_customer(parameters)
-# 	if no:
-# 		customer=create_customer(parameters)
-
-
-# def update_customer(parameters):
-# 	pass
-
-# def create_customer(parameters):
-#   pass
+		else:
+			
+			frappe.msgprint("Please specify default own warehouse in Configuration Page",raise_exception=1)
 
 
+def GetOauthDetails():
+	frappe.errprint("in get oauth details")
+	oauth = OAuth(client_key='c069f82639779dba424a19da7bb3946e', client_secret='2586f31b9c69084ac431def208f055d1', resource_owner_key='f296cbe24a82dec20dd8878a43e4e2fd', resource_owner_secret='aa9625f1580a21d2d6d3c51d063f2456')
+	return oauth
+
+
+def GetCount():
+	frappe.errprint("in get count details")
+	oauth = OAuth(client_key='c069f82639779dba424a19da7bb3946e', client_secret='2586f31b9c69084ac431def208f055d1', resource_owner_key='f296cbe24a82dec20dd8878a43e4e2fd', resource_owner_secret='aa9625f1580a21d2d6d3c51d063f2456')
+	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+	r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/count', headers=h, auth=oauth)
+	d = json.loads(r.content)
+	return d
 
 
 
-# @webnotes.whitelist(allow_guest=True)
-# def GetSalesOrder(parameters):
-# 	return "in GetSalesOrder"
-# 	check sales_order id is present or not
-# 	if yes and docstatus ==0:
-# 		item=update_sales_order(parameters)
-# 	if no:
-# 		item=create_sales_order(parameters)
+
+# Get Customer from magento---------------------------------------------------------------------------------------------------------------------------------
+def GetCustomer():
+	import datetime
+	import time
+	from datetime import datetime
+	from time import sleep
+	frappe.errprint("in get customer")
+	content=GetCount()
+	frappe.errprint(content)
+	oauth = GetOauthDetails()
+	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+	for i in range(1,content['customer_pages_per_100_count']+1):
+		frappe.errprint(i)
+		r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/customers?page='+cstr(i)+'&limit=100', headers=h, auth=oauth)
+		content=json.loads(r.content)
+
+		try:
+			for i in content:
+				customer=frappe.db.sql("""select name,modified_date from `tabCustomer` where name='%s'"""%(cstr(i.get('organisation')).replace("'","")),as_list=1)
+				if customer:
+					modified_date=datetime.strptime(customer[0][1], '%Y-%m-%d %H:%M:%S')
+					updated_date=datetime.strptime(i.get('updated_at'), '%Y-%m-%d %H:%M:%S')
+					frappe.errprint(modified_date)
+					frappe.errprint(updated_date)
+					if modified_date==updated_date:
+						frappe.errprint("two customer dates are equal")
+						pass
+					else:
+						frappe.errprint("in update customer")
+						update_customer(customer[0][0],i,content)
+				else:
+					frappe.errprint("in else part")
+					create_customer(i,content)
+					
+		except Exception,e:
+			print e,'Error'
+
+def create_customer(i,content):
+	customer = frappe.new_doc('Customer')
+	create_new_customer(customer,i,content)
+	create_customer_contact(customer,i,content,customer)
+
+def update_customer(customer,i ,content):
+	customer = frappe.get_doc("Customer", customer)
+	create_new_customer(customer,i,content)
+	contact=frappe.db.sql("""select name from `tabContact` where customer='%s'"""%customer.name,as_list=1)
+	if contact:
+		update_contact(customer,i,content,contact[0][0])
+	else:
+		create_contact(customer,i,content)
+
+def update_contact(customer,i,content,contact):
+	contact = frappe.get_doc("Contact", contact)
+	create_customer_contact(customer,i,content,contact)
+
+def create_contact(customer,i,content):
+	contact=frappe.new_doc('Contact')
+	create_customer_contact(customer,i,content,contact)
+
+def create_new_customer(customer,i,content):
+	frappe.errprint("in create new customer")
+	customer.entity_id = i.get('entity_id')
+	#customer.customer_name = (i.get('firstname') +' '+ i.get('lastname'))
+	customer.customer_name=cstr(i.get('organisation')).replace("'","")
+	customer.customer_type = 'Company'
+	#customer.customer_group = create_customer_group(i.get('organisation')) or 'All Customer Groups'
+	customer.customer_group='All Customer Groups'
+	customer.territory = 'All Territories'
+	customer.customer_status = 'Existing'
+	customer.modified_date=i.get('updated_at')
+	customer.save(ignore_permissions=True)
+	frappe.errprint("save customer")
+	#create_customer_contact(customer,i,content)
+	
+
+def create_customer_contact(customer,i,content,contact):
+	frappe.errprint("create customer contact")
+	#frappe.errprint()
+	#frappe.errprint(customer.name)
+	#contact=frappe.new_doc('Contact')
+	if i.get('firstname'):
+		contact.first_name=i.get('firstname')
+		contact.last_name=i.get('lastname')
+		contact.customer= customer.name
+		contact.customer_name=customer.customer_name
+		contact.email_id=i.get('email')
+		contact.save(ignore_permissions=True)
+	else:
+		pass
+
+def create_customer_group(i):
+	print "in the create_customer_group--------------------------------------------------"
+	print i
+	organization = cstr(i).replace("'","")
+	customer_group=frappe.db.sql("""select name from `tabCustomer Group` where name='%s'"""%(organization))
+	if not customer_group:
+		cg=frappe.new_doc('Customer Group')
+		cg.customer_group_name = organization
+		cg.parent_customer_group='All Customer Groups'
+		cg.is_group='No'
+		cg.save(ignore_permissions=True)
+
+def GetOrders():
+	import datetime
+	import time
+	from datetime import datetime
+	from time import sleep
+	frappe.errprint("in get orders")
+	content=GetCount()
+	frappe.errprint(content)
+	oauth = GetOauthDetails()
+	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+	for i in range(1,content['orders_pages_per_100_count']+1):
+		r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/orders?page='+cstr(i)+'&limit=10', headers=h, auth=oauth)
+		#r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/orders?page=2&limit=100', headers=h, auth=oauth)
+		content=json.loads(r.content)
+		frappe.errprint(content)
+		# frappe.errprint(i.get('entity_id'))
+		#frappe.errprint(content[i].get('updated_at'))
+		try:
+			for i in content:
+				#frappe.errprint(i)
+				#frappe.errprint(content[i].get('entity_id'))
+				customer=frappe.db.sql("""select name from `tabCustomer` where entity_id='%s'"""
+					%content[i].get('customer_id'),as_list=1,debug=1)
+				frappe.errprint(customer)
+				if customer:
+
+					order=frappe.db.sql("""select name,modified_date from `tabSales Order` where entity_id='%s'"""%(content[i].get('entity_id')),as_list=1)
+					if order:
+						modified_date=datetime.strptime(order[0][1], '%Y-%m-%d %H:%M:%S')
+						updated_date=datetime.strptime(content[i].get('updated_at'), '%Y-%m-%d %H:%M:%S')
+						frappe.errprint(modified_date)
+						frappe.errprint(updated_date)
+						if modified_date==updated_date:
+							frappe.errprint("two order dates are equal")
+							pass
+						else:
+							frappe.errprint("in update customer")
+							update_order(order[0][0],i,content,customer[0][0])
+					else:
+						frappe.errprint("in else part")
+						create_order(i,content,customer[0][0])
+				
+		except Exception,e:
+			print e,'Error'
+
+def update_order(order,i,content,customer):
+	frappe.errprint("in update sales order")
+	order = frappe.get_doc("Sales Order", order)
+	create_order(i,content,customer)
 
 
-# def update_sales_order(parameters):
-# 	pass
+def create_order(i,content,customer):
+	frappe.errprint("in create order")
+	#frappe.errprint(content[i].get('customer_id'))
+	order = frappe.new_doc('Sales Order')
+	order.customer=customer
+	order.entity_id=content[i].get('entity_id')
+	order.modified_date=content[i].get('updated_at')
+	order.delivery_date=nowdate
+	#frappe.errprint(content[i].get('order_items'))
+	order.grand_total_export=content[i].get('grand_total')
+	if content[i].get('order_items'):
+		for i in content[i].get('order_items'):
+			frappe.errprint(i['sku'])
+			item=frappe.db.sql("""select name from `tabItem` where item_code='%s'"""
+				%i['sku'],as_list=1)
+			if item:
 
-# def create_sales_order(parameters):
-# 	pass
+				create_child_item(i,order)
+			else:
+				pass
+	else:
+		pass
+
+	if content[i].get('order_comments'):
+		for j in content[i].get('order_comments'):
+			frappe.errprint(i['status'])
+			order.status=j['status']
+
+	
+	order.save(ignore_permissions=True)
+
+def create_child_item(i,order):
+	frappe.errprint("in create child item")
+	oi = order.append('sales_order_details', {})
+	oi.item_code=i['sku']
+	oi.qty=i['qty_ordered']
+	oi.rate=i['price']
+	oi.amount=i['row_total_incl_tax']
+	return True
+

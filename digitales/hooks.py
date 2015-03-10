@@ -85,29 +85,36 @@ doc_events = {
 						"digitales.digitales.custom_methods.validate_qty_on_submit"],
 		"on_cancel": "digitales.digitales.custom_methods.update_stock_assignment_log_on_cancel"
 		
-	},
+	}
+	
 }
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"digitales.tasks.all"
-# 	],
+scheduler_events = {
+#	"all": [
+#		"digitales.digitales.custom_methods.GetItem",
+#		#"digitales.digitales.custom_methods.GetCustomer",
+#		#"digitales.digitales.custom_methods.GetOrders",
+
+#	]
 # 	"daily": [
 # 		"digitales.tasks.daily"
 # 	],
-# 	"hourly": [
-# 		"digitales.tasks.hourly"
-# 	],
+	"hourly": [
+		#"digitales.tasks.hourly"
+		#"digitales.digitales.custom_methods.GetItem"
+		#"digitales.digitales.custom_methods.GetCustomer"
+		"digitales.digitales.custom_methods.GetOrders"
+	]
 # 	"weekly": [
 # 		"digitales.tasks.weekly"
 # 	]
 # 	"monthly": [
 # 		"digitales.tasks.monthly"
 # 	]
-# }
+ }
 
 # Testing
 # -------
