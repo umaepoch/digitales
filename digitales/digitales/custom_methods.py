@@ -289,8 +289,8 @@ def GetItem():
 	frappe.errprint(type(content['product_pages_per_100_count']))
 	oauth = GetOauthDetails()
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
-	#for i in range(1,content['product_pages_per_100_count']+1):
-	for i in range(600,610):
+	for i in range(1,content['product_pages_per_100_count']+1):
+	#for i in range(600,610):
 		#frappe.errprint(i)
 		r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/products?page='+cstr(i)+'&limit=100', headers=h, auth=oauth)
 		content=json.loads(r.content)
@@ -392,13 +392,13 @@ def check_uom_conversion(item):
 def create_new_itemgroup(i,content):
 	frappe.errprint("in item_group")
 	itemgroup=frappe.new_doc('Item Group')
-	#frappe.errprint(itemgroup)
+	frappe.errprint(itemgroup)
 	itemgroup.parent_item_group='All Item Groups'
 	itemgroup.item_group_name=content[i].get('media')
 	itemgroup.is_group='No'
 	itemgroup.save()
-	#frappe.errprint(content[i]['media'])
-	#frappe.errprint(item_group.name)
+	frappe.errprint(content[i]['media'])
+	frappe.errprint(item_group.name)
 	return itemgroup.name or 'Products'
 
 def get_own_warehouse():
