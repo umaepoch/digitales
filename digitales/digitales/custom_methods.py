@@ -285,8 +285,8 @@ def GetItem():
 	frappe.errprint("in get item")
 	content=GetCount()
 	frappe.errprint(content)
-	frappe.errprint(content['products_count'])
-	frappe.errprint(type(content['product_pages_per_100_count']))
+	#frappe.errprint(content['products_count'])
+	#frappe.errprint(type(content['product_pages_per_100_count']))
 	oauth = GetOauthDetails()
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 	for i in range(1,content['product_pages_per_100_count']+1):
@@ -397,8 +397,8 @@ def create_new_itemgroup(i,content):
 	itemgroup.item_group_name=content[i].get('media')
 	itemgroup.is_group='No'
 	itemgroup.save()
-	frappe.errprint(content[i]['media'])
-	frappe.errprint(item_group.name)
+	# frappe.errprint(content[i]['media'])
+	# frappe.errprint(item_group.name)
 	return itemgroup.name or 'Products'
 
 def get_own_warehouse():
@@ -543,39 +543,39 @@ def GetOrders():
 	oauth = GetOauthDetails()
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 	for i in range(1,content['orders_pages_per_100_count']+1):
-		r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/orders?page='+cstr(i)+'&limit=10', headers=h, auth=oauth)
+		r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/orders?page='+cstr(i)+'&limit=100', headers=h, auth=oauth)
 		#r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/orders?page=2&limit=100', headers=h, auth=oauth)
 		content=json.loads(r.content)
-		frappe.errprint(content)
+		#frappe.errprint(content)
 		# frappe.errprint(i.get('entity_id'))
 		#frappe.errprint(content[i].get('updated_at'))
-		try:
-			for i in content:
-				#frappe.errprint(i)
-				#frappe.errprint(content[i].get('entity_id'))
-				customer=frappe.db.sql("""select name from `tabCustomer` where entity_id='%s'"""
-					%content[i].get('customer_id'),as_list=1,debug=1)
-				frappe.errprint(customer)
-				if customer:
+		#try:
+		for i in content:
+			#frappe.errprint(i)
+			#frappe.errprint(content[i].get('entity_id'))
+			customer=frappe.db.sql("""select name from `tabCustomer` where entity_id='%s'"""
+				%content[i].get('customer_id'),as_list=1,debug=1)
+			frappe.errprint(customer)
+			if customer:
 
-					order=frappe.db.sql("""select name,modified_date from `tabSales Order` where entity_id='%s'"""%(content[i].get('entity_id')),as_list=1)
-					if order:
-						modified_date=datetime.strptime(order[0][1], '%Y-%m-%d %H:%M:%S')
-						updated_date=datetime.strptime(content[i].get('updated_at'), '%Y-%m-%d %H:%M:%S')
-						frappe.errprint(modified_date)
-						frappe.errprint(updated_date)
-						if modified_date==updated_date:
-							frappe.errprint("two order dates are equal")
-							pass
-						else:
-							frappe.errprint("in update customer")
-							update_order(order[0][0],i,content,customer[0][0])
+				order=frappe.db.sql("""select name,modified_date from `tabSales Order` where entity_id='%s'"""%(content[i].get('entity_id')),as_list=1)
+				if order:
+					modified_date=datetime.strptime(order[0][1], '%Y-%m-%d %H:%M:%S')
+					updated_date=datetime.strptime(content[i].get('updated_at'), '%Y-%m-%d %H:%M:%S')
+					frappe.errprint(modified_date)
+					frappe.errprint(updated_date)
+					if modified_date==updated_date:
+						frappe.errprint("two order dates are equal")
+						pass
 					else:
-						frappe.errprint("in else part")
-						create_order(i,content,customer[0][0])
+						frappe.errprint("in update customer")
+						update_order(order[0][0],i,content,customer[0][0])
+				else:
+					frappe.errprint("in else part")
+					create_order(i,content,customer[0][0])
 				
-		except Exception,e:
-			print e,'Error'
+		# except Exception,e:
+		# 	print e,'Error'
 
 def update_order(order,i,content,customer):
 	frappe.errprint("in update sales order")
@@ -585,12 +585,21 @@ def update_order(order,i,content,customer):
 
 def create_order(i,content,customer):
 	frappe.errprint("in create order")
-	#frappe.errprint(content[i].get('customer_id'))
+	from datetime import date
+	from dateutil.relativedelta import relativedelta
+	delivery_date = date.today() + relativedelta(days=+6)
 	order = frappe.new_doc('Sales Order')
 	order.customer=customer
+	if customer:
+		tender_group=frappe.db.sql(""""select tender_group from `tabCustomer` where name='%s'
+				"""%customer,as_list=1)
+		if tender_group:
+			order.tender_group=tender_group[0][0]
+		else:
+			pass
 	order.entity_id=content[i].get('entity_id')
 	order.modified_date=content[i].get('updated_at')
-	order.delivery_date=nowdate
+	order.delivery_date=delivery_date
 	#frappe.errprint(content[i].get('order_items'))
 	order.grand_total_export=content[i].get('grand_total')
 	if content[i].get('order_items'):
@@ -606,10 +615,10 @@ def create_order(i,content,customer):
 	else:
 		pass
 
-	if content[i].get('order_comments'):
-		for j in content[i].get('order_comments'):
-			frappe.errprint(i['status'])
-			order.status=j['status']
+	# if content[i].get('order_comments'):
+	# 	for j in content[i].get('order_comments'):
+	# 		frappe.errprint(i['status'])
+	# 		order.status=j['status']
 
 	
 	order.save(ignore_permissions=True)
@@ -618,8 +627,55 @@ def create_child_item(i,order):
 	frappe.errprint("in create child item")
 	oi = order.append('sales_order_details', {})
 	oi.item_code=i['sku']
+	if i['sku']:
+		item_release_date=frappe.db.sql("""select product_release_date from `tabItem`
+								where name='%s'"""%i['sku'],as_list=1)
+		frappe.errprint(item_release_date)
+		if item_release_date:
+			oi.release_date_of_item=item_release_date[0][0]
 	oi.qty=i['qty_ordered']
 	oi.rate=i['price']
 	oi.amount=i['row_total_incl_tax']
 	return True
 
+
+@frappe.whitelist()
+def upload():
+	if not frappe.has_permission("Attendance", "create"):
+		raise frappe.PermissionError
+
+	from frappe.utils.csvutils import read_csv_content_from_uploaded_file
+	from frappe.modules import scrub
+
+	rows = read_csv_content_from_uploaded_file()
+	rows = filter(lambda x: x and any(x), rows)
+	if not rows:
+		msg = [_("Please select a csv file")]
+		return {"messages": msg, "error": msg}
+	columns = [scrub(f) for f in rows[4]]
+	columns[0] = "name"
+	columns[3] = "att_date"
+	ret = []
+	error = False
+
+	from frappe.utils.csvutils import check_record, import_doc
+	attendance_dict = attendance_rowdata = {}
+	for i, row in enumerate(rows[5:]):
+		if not row: continue
+		row_idx = i + 5
+		if row[1]:
+			data = row[1]
+			attendance_rowdata.setdefault(data, row)
+		if data in attendance_dict:
+			attendance_dict[data].append([row[8], row[9]])
+		else:
+			attendance_dict.setdefault(data, [[row[8], row[9]]])
+	if attendance_dict and attendance_rowdata:
+		for r in attendance_rowdata:
+			frappe.errprint([attendance_rowdata[r], attendance_dict[r]])
+	frappe.errprint(erferf)
+	if error:
+		frappe.db.rollback()
+	else:
+		frappe.db.commit()
+	return {"messages": ret, "error": error}

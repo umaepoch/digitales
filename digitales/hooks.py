@@ -104,9 +104,9 @@ scheduler_events = {
 # 	],
 	"hourly": [
 		#"digitales.tasks.hourly"
-		"digitales.digitales.custom_methods.GetItem"
+		#"digitales.digitales.custom_methods.GetItem"
 		#"digitales.digitales.custom_methods.GetCustomer"
-		#"digitales.digitales.custom_methods.GetOrders"
+		"digitales.digitales.custom_methods.GetOrders"
 	]
 # 	"weekly": [
 # 		"digitales.tasks.weekly"
