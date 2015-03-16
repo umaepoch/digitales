@@ -18,6 +18,7 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
+"","""Sales Order-budget""","Sales Order","Link","Budget","entity_id","","Budget","","budget",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice Item-line_item""","Sales Invoice Item","Data","Line Item","item_name","","","","line_item",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Customer-contract_details""","Customer","Table","Contract Details","budget_details","","Tender Group Details","","contract_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-po_no""","Sales Invoice","Data","PO No","mode_of_payment","","","","po_no",0,0,0,0,"","",0,"",0,0,0,0,0,0
@@ -31,7 +32,6 @@
 "","""Sales Invoice Item-rrp""","Sales Invoice Item","Link","RRP","item_group","","Price List","","rrp",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Invoice Item-advance_paid""","Sales Invoice Item","Currency","Advance Paid","description","","","","advance_paid",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Invoice-organisation""","Sales Invoice","Data","Organisation","currency","","","","organisation",0,0,0,0,"","",1,"",0,0,0,0,0,0
-"","""Sales Order-budget""","Sales Order","Link","Budget","entity_id","","Budget","","budget",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-entity_id""","Sales Order","Data","Order Number","organisation","","","","entity_id",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-line_item""","Sales Order Item","Data","Line Item","item_name","","","","line_item",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order Item-gst_value""","Sales Order Item","Data","GST Value","budget","","","","gst_value",0,0,0,0,"","",0,"",0,0,0,0,0,0

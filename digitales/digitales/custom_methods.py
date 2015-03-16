@@ -73,7 +73,7 @@ def create_new_po(doc,d,supplier,qty):
 	e.base_rate=d.rate
 	e.base_amount=d.amount
 	e.warehouse=d.warehouse
-	e.schedule_date=d.transaction_date
+	e.schedule_date=d.transaction_date or nowdate()
 	#po.taxes_and_charges=doc.taxes_and_charges
 	po.save(ignore_permissions=True)
 	#frappe.errprint(po.name)
