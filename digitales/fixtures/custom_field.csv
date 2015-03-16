@@ -18,16 +18,19 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
-"","""Sales Invoice-tender_group""","Sales Invoice","Link","Tender Group","budget","","Tender Group","","tender_group",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Invoice-budget""","Sales Invoice","Link","Budget","order_type","","Budget","","budget",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice Item-line_item""","Sales Invoice Item","Data","Line Item","item_name","","","","line_item",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Customer-contract_details""","Customer","Table","Contract Details","budget_details","","Tender Group Details","","contract_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice-po_no""","Sales Invoice","Data","PO No","mode_of_payment","","","","po_no",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Item-rrp""","Item","Link","RRP","sale_price","","Price List","","rrp",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice Item-budget""","Sales Invoice Item","Link","Budget","delivered_qty","","Budget","","budget",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Sales Order-tender_group""","Sales Order","Link","Tender Group","budget","","Tender Group","","tender_group",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice Item-gst_value""","Sales Invoice Item","Data","GST Value","gst","","","","gst_value",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Sales Invoice-budget""","Sales Invoice","Link","Budget","order_type","","Budget","","budget",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice-tender_group""","Sales Invoice","Link","Tender Group","budget","","Tender Group","","tender_group",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice Item-gst""","Sales Invoice Item","Data","GST","rrp","","","In %","gst",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Invoice Item-rrp""","Sales Invoice Item","Link","RRP","item_group","","Price List","","rrp",0,0,0,0,"","",1,"",0,0,0,0,0,0
-"","""Sales Invoice Item-budget""","Sales Invoice Item","Link","Budget","delivered_qty","","Budget","","budget",0,0,0,0,"","",1,"",0,0,0,0,0,0
-"","""Sales Invoice Item-line_item""","Sales Invoice Item","Data","Line Item","item_name","","","","line_item",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Invoice Item-advance_paid""","Sales Invoice Item","Currency","Advance Paid","description","","","","advance_paid",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Invoice-organisation""","Sales Invoice","Data","Organisation","currency","","","","organisation",0,0,0,0,"","",1,"",0,0,0,0,0,0
-"","""Sales Order-tender_group""","Sales Order","Link","Tender Group","budget","","Tender Group","","tender_group",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-budget""","Sales Order","Link","Budget","entity_id","","Budget","","budget",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-entity_id""","Sales Order","Data","Order Number","organisation","","","","entity_id",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-line_item""","Sales Order Item","Data","Line Item","item_name","","","","line_item",0,0,0,0,"","",1,"",0,0,0,0,0,0
@@ -46,7 +49,6 @@ Existing
 Non Existing","","sales_order_status",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order-modified_date""","Sales Order","Datetime","Modified Date","comment","","","","modified_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Customer-modified_date""","Customer","Datetime","Modified Date","tender_group","","","","modified_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Item-rrp""","Item","Link","RRP","sale_price","","Price List","","rrp",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Item-sale_price""","Item","Data","Sale Price","selling_cost_center","","","","sale_price",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Item-modified_date""","Item","Datetime","Modified Date","item_status","","","","modified_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-order_type""","Sales Invoice","Select","Order Type","po_no","","
@@ -56,7 +58,6 @@ Shopping Cart","","order_type",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-budget""","Sales Order Item","Link","Budget","order_number","","Budget","","budget",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Customer-contract_form_no""","Customer","Link","Contract Form No","territory","","Customer Contract Form","","contract_form_no",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Customer-tender_group""","Customer","Link","Tender Group","contract_form_no","","Tender Group","","tender_group",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Customer-contract_details""","Customer","Table","Contract Details","budget_details","","Tender Group Details","","contract_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Customer-budget_details""","Customer","Table","Budget Details","shelf_ready_services_details","","Budget Details","","budget_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-gst""","Sales Order Item","Data","GST","order_number","","","In %","gst",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-assigned_qty""","Sales Order Item","Float","Assigned Qty","description","","","","assigned_qty",0,0,0,0,"","0.0",0,"",0,0,0,0,0,0
@@ -68,7 +69,6 @@ Completed","","process_status",0,0,0,0,"","Uncompleted",0,"",0,0,0,0,0,0
 "","""Sales Order-comment""","Sales Order","Small Text","Comment","po_no","","","","comment",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-priority""","Sales Order","Select","Priority","order_type","","Low
 High","","priority",0,1,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Invoice-po_no""","Sales Invoice","Data","PO No","mode_of_payment","","","","po_no",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Customer-entity_id""","Customer","Data","Entity ID","lead_name","","","","entity_id",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Item-event_id""","Item","Data","Entity  ID","product_release_date","","","","event_id",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Attendance-total_break_hours""","Attendance","Float","Total Break Hours","total_hours","2","","","total_break_hours",0,0,1,0,"","",1,"eval:doc.status!='Absent'",0,0,0,0,0,0
