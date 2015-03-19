@@ -217,7 +217,7 @@
  "is_submittable": 1, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2015-03-03 20:52:30.806347", 
+ "modified": "2015-03-18 18:29:18.087774", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Customer Contract Form", 
@@ -227,7 +227,7 @@
   {
    "amend": 0, 
    "apply_user_permissions": 0, 
-   "cancel": 0, 
+   "cancel": 1, 
    "create": 1, 
    "delete": 1, 
    "email": 0, 
