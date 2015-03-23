@@ -287,47 +287,38 @@ def GetItem():
 	from datetime import datetime
 	from time import sleep
 	frappe.errprint("in get item")
-	content=GetCount()
-	frappe.errprint(content)
-	#frappe.errprint(content['products_count'])
-	#frappe.errprint(type(content['product_pages_per_100_count']))
-	oauth = GetOauthDetails()
-	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
-	for i in range(1,content['product_pages_per_100_count']+1):
-	#for i in range(600,610):
-		#frappe.errprint(i)
-		r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/products?page='+cstr(i)+'&limit=100', headers=h, auth=oauth)
-		content=json.loads(r.content)
-		frappe.errprint(len(content))
-		try:
-			for i in content:
-				item=frappe.db.sql("""select name, modified_date from `tabItem` where name='%s'"""%content[i].get('sku'),as_list=1)
-				frappe.errprint(item)
-				# frappe.errprint(item[0][1].split('.')[0])
-				# frappe.errprint(content[i].get('updated_at'))
-				# frappe.errprint(type(content[i].get('updated_at')))
-				# frappe.errprint(type(item[0][1].split('.')[0]))
-				# frappe.errprint(modified_date)
-				# frappe.errprint(updated_date)
-				#frappe.errprint(type(item[0][1]))
-				# frappe.errprint(type(updated_date))
-				if item:
-					modified_date=datetime.strptime(item[0][1], '%Y-%m-%d %H:%M:%S')
-					updated_date=datetime.strptime(content[i].get('updated_at'), '%Y-%m-%d %H:%M:%S')
-					frappe.errprint(modified_date)
-					frappe.errprint(updated_date)
-					if modified_date==updated_date:
-						frappe.errprint("two dates are equal")
-						pass
-					else:
-						frappe.errprint("in update item")
-						update_item(item[0][0],i,content)
-				else:
-					frappe.errprint("in else part")
-					create_item(i,content)
-				#sleep(5)
-		except Exception,e:
-			print e	
+	max_item_date=frappe.db.sql("""select max(modified_date) from `tabItem`""",as_list=1)
+	if not max_item_date:
+		content=GetCount()
+		frappe.errprint(content)
+		oauth = GetOauthDetails()
+		h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+		for i in range(1,content['product_pages_per_100_count']+1):
+			r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/products?page='+cstr(i)+'&limit=100', headers=h, auth=oauth)
+			content=json.loads(r.content)
+			frappe.errprint(len(content))
+			try:
+				get_item_data(content)
+			except Exception,e:
+				print e	
+	else:
+		pass
+		#same as above written code
+		# here we can call diffrent count method to get modified records according to the page number
+		# try:
+		# 	get_item_data(content)
+		# except Exception,e:
+		# 		print e
+
+def get_item_data(content):
+	for i in content:
+		item=frappe.db.sql("""select name from `tabItem` where name='%s'"""%content[i].get('sku'),as_list=1)
+		frappe.errprint(item)
+		if item:
+			update_item(item[0][0],i,content)
+		else:
+			frappe.errprint("in else part")
+			create_item(i,content)
 
 	# delete_item()
 	# update_item_status()
