@@ -375,7 +375,7 @@ def check_uom_conversion(item):
 	if stock_uom:
 		uom_details= frappe.db.sql("""select ifnull(count(idx),0) from `tabUOM Conversion Detail` where uom='%s' and parent='%s'
 		"""%(stock_uom[0][0],item),as_list=1)
-		frappe.errprint(uom_details)
+		#frappe.errprint(uom_details)
 		if uom_details:
 			if uom_details[0][0]!=1:
 				return False
