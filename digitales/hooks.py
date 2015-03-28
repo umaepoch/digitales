@@ -95,7 +95,7 @@ doc_events = {
 scheduler_events = {
 	"all": [
 #		#"digitales.digitales.custom_methods.GetItem",
-		"digitales.digitales.custom_methods.GetCustomer",
+		"digitales.digitales.custom_methods.GetCustomer"
 		#"digitales.digitales.custom_methods.GetOrders"
 
 	]

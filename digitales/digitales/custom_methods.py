@@ -423,38 +423,59 @@ def GetCount():
 	d = json.loads(r.content)
 	return d
 
+def GetUpdatedCount():
+	frappe.errprint("in updated get count details")
+	oauth = OAuth(client_key='c069f82639779dba424a19da7bb3946e', client_secret='2586f31b9c69084ac431def208f055d1', resource_owner_key='f296cbe24a82dec20dd8878a43e4e2fd', resource_owner_secret='aa9625f1580a21d2d6d3c51d063f2456')
+	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+	r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/mcount?start_date=27-03-2015 06:30:00', headers=h, auth=oauth)
+	d = json.loads(r.content)
+	return d
 
 
 
 # Get Customer from magento---------------------------------------------------------------------------------------------------------------------------------
 def GetCustomer():
 	frappe.errprint("in get customer")
-	content=GetCount()
 	oauth = GetOauthDetails()
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 	max_date= frappe.db.sql("""select max(modified_date) from `tabCustomer`""",as_list=1)
-	if max_date:
+	if max_date[0][0]==None:
 		try:
-			#frappe.errprint(max_date[0][0])
-			#frappe.errprint("max date is available")
-			r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/customers?filter[1][attribute]=updated_at&filter[1][gt]='+cstr(max_date[0][0])+'', headers=h, auth=oauth)
+			frappe.errprint("max date is not available")
+			r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/customers?page=1&limit=100', headers=h, auth=oauth)
 			content=json.loads(r.content)
+			frappe.errprint(content)
+			frappe.errprint(len(content))
+			#frappe.errprintdcsdcs
+			get_cutomer_data(content)
+		except Exception,e:
+			print e
+	# else:
+	# 	pass
+	else:
+		frappe.errprint(max_date)
+		try:
+			frappe.errprint("max date is avilable")
+			updated_content=GetUpdatedCount()
+			frappe.errprint(updated_content)
+			r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/customers?filter[1][attribute]=updated_at&filter[1][gt]=27-03-2015 06:30:00', headers=h, auth=oauth)
+			print r
+			content=json.loads(r.content)
+			frappe.errprint(content)
+			frappe.errprint(len(content))
 			get_cutomer_data(content)
 		except Exception,e:
 			print e,'Error'
-	else:
-		#frappe.errprint("max date is not available")
-		r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/customers', headers=h, auth=oauth)
-		content=json.loads(r.content)
-		get_cutomer_data(content)
+
 
 def get_cutomer_data(content):
 	for i in content:
-		customer=frappe.db.sql("""select name from `tabCustomer` where name='%s'"""%(cstr(i.get('organisation')).replace("'","")),as_list=1)
+		print i
+		print content[i].get('organisation')
+		#print content[i].get('organisation')
+		customer=frappe.db.sql("""select name from `tabCustomer` where name='%s'"""%(cstr(content[i].get('organisation')).replace("'","")),as_list=1,debug=1)
 		if customer:
-			# modified_date=datetime.strptime(customer[0][1], '%Y-%m-%d %H:%M:%S')
-			# updated_date=datetime.strptime(i.get('updated_at'), '%Y-%m-%d %H:%M:%S')
-			contact=frappe.db.sql("""select name from `tabContact` where entity_id='%s'"""%i.get('entity_id'),as_list=1)
+			contact=frappe.db.sql("""select name from `tabContact` where entity_id='%s'"""%content[i].get('entity_id'),as_list=1)
 			if contact:
 				pass
 			else:
@@ -471,7 +492,7 @@ def create_customer(i,content):
 def update_customer(customer,i ,content):
 	customer = frappe.get_doc("Customer", customer)
 	create_new_customer(customer,i,content)
-	contact=frappe.db.sql("""select name from `tabContact` where entity_id='%s'"""%i.get('entity_id'),as_list=1)
+	contact=frappe.db.sql("""select name from `tabContact` where entity_id='%s'"""%content[i].get('entity_id'),as_list=1)
 	if contact:
 		update_contact(customer,i,content,contact[0][0])
 	else:
@@ -486,27 +507,37 @@ def create_contact(customer,i,content):
 	create_customer_contact(customer,i,content,contact)
 
 def create_new_customer(customer,i,content):
+	import itertools
 	frappe.errprint("in create new customer")
-	customer.entity_id = i.get('entity_id')
-	#customer.customer_name = (i.get('firstname') +' '+ i.get('lastname'))
-	customer.customer_name=cstr(i.get('organisation')).replace("'","")
+	#print len(content[i].get('group'))
+	customer.entity_id = content[i].get('entity_id')
+	customer.customer_name=cstr(content[i].get('organisation')).replace("'","")
 	customer.customer_type = 'Company'
-	#customer.customer_group = create_customer_group(i.get('organisation')) or 'All Customer Groups'
-	customer.customer_group='All Customer Groups'
-	customer.territory = 'All Territories'
+	if content[i].get('group'):
+		#frappe.errprint(content[i].get('group'))
+		customer_group= frappe.db.sql("""select name from `tabCustomer Group`""",as_list=1)
+		group= list(itertools.chain.from_iterable(customer_group))
+		#frappe.errprint(group)
+		if cstr(content[i].get('group')).strip() in group:
+			#frappe.errprint("group is presenttttttttttttttttttttttt")
+			customer.customer_group = cstr(content[i].get('group')).strip()
+		else:
+			customer.customer_group = create_customer_group(content[i].get('group')) or 'All Customer Groups'
+	#customer.customer_group='All Customer Groups'
+	customer.territory = 'Australia'
 	customer.customer_status = 'Existing'
-	customer.modified_date=i.get('updated_at')
+	customer.modified_date=content[i].get('updated_at')
 	customer.save(ignore_permissions=True)
 	
 def create_customer_contact(customer,i,content,contact):
 	frappe.errprint("create customer contact")
-	if i.get('firstname'):
-		contact.first_name=i.get('firstname')
-		contact.last_name=i.get('lastname')
+	if content[i].get('firstname'):
+		contact.first_name=content[i].get('firstname')
+		contact.last_name=content[i].get('lastname')
 		contact.customer= customer.name
 		contact.customer_name=customer.customer_name
-		contact.entity_id = i.get('entity_id')
-		contact.email_id=i.get('email')
+		contact.entity_id = content[i].get('entity_id')
+		contact.email_id=content[i].get('email')
 		contact.save(ignore_permissions=True)
 	else:
 		pass
@@ -515,13 +546,13 @@ def create_customer_contact(customer,i,content,contact):
 def create_new_contact(customer,i,content):
 	frappe.errprint("in create new contact")
 	contact=frappe.new_doc('Contact')
-	if i.get('firstname'):
-		contact.first_name=i.get('firstname')
-		contact.last_name=i.get('lastname')
+	if content[i].get('firstname'):
+		contact.first_name=content[i].get('firstname')
+		contact.last_name=content[i].get('lastname')
 		contact.customer= customer
 		contact.customer_name=customer
-		contact.entity_id = i.get('entity_id')
-		contact.email_id=i.get('email')
+		contact.entity_id = content[i].get('entity_id')
+		contact.email_id=content[i].get('email')
 		#frappe.errprint(contact.entity_id)
 		contact.save(ignore_permissions=True)
 	else:
@@ -529,16 +560,13 @@ def create_new_contact(customer,i,content):
 
 
 def create_customer_group(i):
-	print "in the create_customer_group--------------------------------------------------"
-	print i
-	organization = cstr(i).replace("'","")
-	customer_group=frappe.db.sql("""select name from `tabCustomer Group` where name='%s'"""%(organization))
-	if not customer_group:
-		cg=frappe.new_doc('Customer Group')
-		cg.customer_group_name = organization
-		cg.parent_customer_group='All Customer Groups'
-		cg.is_group='No'
-		cg.save(ignore_permissions=True)
+	frappe.errprint("in the create_customer_group--------------------------------------------------")
+	cg=frappe.new_doc('Customer Group')
+	cg.customer_group_name = i
+	cg.parent_customer_group='All Customer Groups'
+	cg.is_group='No'
+	cg.save(ignore_permissions=True)
+
 
 def GetOrders():
 	import datetime
