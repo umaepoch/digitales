@@ -391,7 +391,6 @@ def create_new_product(item,i,content):
 	return True
 
 def check_uom_conversion(item):
-	print item
 	stock_uom=frappe.db.sql(""" select stock_uom from `tabItem` where name='%s'"""%item,as_list=1)
 	if stock_uom:
 		uom_details= frappe.db.sql("""select ifnull(count(idx),0) from `tabUOM Conversion Detail` where uom='%s' and parent='%s'
