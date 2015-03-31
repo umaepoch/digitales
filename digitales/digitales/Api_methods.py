@@ -356,6 +356,8 @@ def create_new_product(item,i,content):
 	if content[i].get('media'):
 		if frappe.db.get_value('Item Group', content[i].get('media'), 'name'):
 			item.item_group=content[i].get('media') or 'Products'
+		elif frappe.db.get_value('Item', content[i].get('media'), 'name'):
+			item.item_group = 'Products'
 		else:
 			item_group=create_new_itemgroup(i,content)
 			item.item_group=item_group
