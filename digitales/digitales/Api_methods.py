@@ -281,7 +281,7 @@ def validate_qty_on_submit(doc,method):
 
 def check_APItime():
 	GetItem()
-	#GetCustomer()
+	# GetCustomer()
 	#GetOrders()
 	# time = frappe.db.sql("""select value from `tabSingles` where doctype='API Configuration Page' and field in ('date','api_type')""",as_list=1)
 	# if time:
@@ -308,15 +308,13 @@ def GetItem():
 	# update_execution_date('Customer')
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 	oauth = GetOauthDetails()
-	max_item_date = '2014-09-07 05:43:13'
+	max_item_date = '1991-09-07 05:43:13'
 	max_date = frappe.db.sql(""" select max(modified_date) as max_date from `tabItem` """,as_list=1)
 	if max_date[0][0]!=None:
 		max_item_date = max_date[0][0]
+	max_item_date = (datetime.datetime.strptime(max_item_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
 	status = get_products_from_magento(1, max_item_date, h, oauth)		
-	if status == False:
-		count = get_Data_count(max_item_date, 'product_pages_per_100_mcount')
-		get_missed_items(count, max_item_date, h, oauth)
-
+	
 def get_missed_items(count, max_date, header, oauth_data):
 	if count > 0:
 		for index in range(1, count+1):
@@ -336,7 +334,9 @@ def get_products_from_magento(page, max_date, header, oauth_data, type_of_data=N
 					count = count + 1
 					create_item(index, product_data)
 			if count == 0 and type_of_data != 'missed':
-				return False
+				tot_count = get_Data_count(max_date, 'product_pages_per_100_mcount')
+				if cint(tot_count)>0 :
+					get_missed_items(5, max_date, header, oauth_data)
 	return True
 
 def create_item(i,content):
@@ -491,13 +491,13 @@ def create_new_customer(customer,i,content):
 	#customer.customer_name=cstr(content[i].get('organisation'))
 	customer.customer_type = 'Company'
 	if content[i].get('group'):
-		customer_group= frappe.db.sql("""select name from `tabCustomer Group`""",as_list=1)
-		group= list(itertools.chain.from_iterable(customer_group))
-		#frappe.errprint(group)
-		if cstr(content[i].get('group')).strip() + ' ' + 'Group' in group:
-			customer.customer_group = cstr(content[i].get('group')).strip() + ' ' + 'Group'
+		if frappe.db.get_value('Customer Group', content[i].get('group'), 'name'):
+			customer.customer_group=content[i].get('group') or 'All Customer Groups'
+		elif frappe.db.get_value('Customer', content[i].get('group'), 'name'):
+			customer.customer_group = 'All Customer Groups'
 		else:
-			customer.customer_group = create_customer_group(content[i].get('group')) or 'All Customer Groups'
+			customer_group=create_customer_group(content[i].get('group'))
+			customer.customer_group=customer_group
 	customer.territory = 'Australia'
 	customer.customer_status = 'Existing'
 	customer.modified_date=content[i].get('updated_at')

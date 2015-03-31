@@ -441,14 +441,14 @@ def GetUpdatedCount(max_date):
 # Get Customer from magento---------------------------------------------------------------------------------------------------------------------------------
 def GetCustomer():
 	frappe.errprint("in get customer")
-	now = datetime.datetime.now() 
-	now_plus_10 = now + datetime.timedelta(minutes = 5)
-	#frappe.errprint(now_plus_10)
-	#add_time= now_plus_10
-	frappe.db.sql("""update `tabSingles` set value='%s' where doctype='API Configuration Page' and field='date'"""%cstr(now_plus_10).split('.')[0])
-	frappe.db.commit()
-	frappe.db.sql("""update `tabSingles` set value='Order' where doctype='API Configuration Page' and field='api_type'""")
-	frappe.db.commit()
+	# now = datetime.datetime.now() 
+	# now_plus_10 = now + datetime.timedelta(minutes = 5)
+	# #frappe.errprint(now_plus_10)
+	# #add_time= now_plus_10
+	# frappe.db.sql("""update `tabSingles` set value='%s' where doctype='API Configuration Page' and field='date'"""%cstr(now_plus_10).split('.')[0])
+	# frappe.db.commit()
+	# frappe.db.sql("""update `tabSingles` set value='Order' where doctype='API Configuration Page' and field='api_type'""")
+	# frappe.db.commit()
 	#return byee
 	oauth = GetOauthDetails()
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
@@ -467,22 +467,22 @@ def GetCustomer():
 		try:
 			#frappe.errprint("max date is avilable")
 			updated_content=GetUpdatedCount(max_date[0][0])
-			#frappe.errprint(updated_content)
-			if updated_content['customer_pages_mcount']==1:
+			frappe.errprint(updated_content)
+			if updated_content['customer_pages_per_100_mcount']==1:
 				#print 'http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/customers?filter[1][attribute]=updated_at&filter[1][gt]='+cstr(max_date[0][0])+'&page=1&limit=50'
-				r =  requests.get(url='http://digitales.com.au/api/rest/customers?filter[1][attribute]=updated_at&filter[1][gt]='+cstr(max_date[0][0])+'&page=1&limit=50' , headers=h, auth=oauth)
+				r =  requests.get(url='http://digitales.com.au/api/rest/customers?filter[1][attribute]=updated_at&filter[1][gt]='+cstr(max_date[0][0])+'&page=1&limit=50&order=updated_at&dir=asc' , headers=h, auth=oauth)
 				#print r
 				#r = requests.get(url='http://staging.digitales.com.au.tmp.anchor.net.au/api/rest/customers?filter[1][attribute]=updated_at&filter[1][gt]='+cstr(max_date[0][0])+'', headers=h, auth=oauth)
 				content=json.loads(r.content)
-				#frappe.errprint(len(content))
+				frappe.errprint(len(content))
 				get_cutomer_data(content)
-			elif updated_content['customer_pages_mcount'] > 1:
-				for i in range(1,updated_content['customer_pages_mcount']):
+			elif updated_content['customer_pages_per_100_mcount'] > 1:
+				for i in range(1,updated_content['customer_pages_per_100_mcount']):
 					r= requests.get(url='http://digitales.com.au/api/rest/customers?filter[1][attribute]=updated_at&filter[1][from]='+cstr(max_date[0][0])+'&page='+cstr(i)+'&limit=50')
 					content=json.loads(r.content)
 					#frappe.errprint(len(content))
 					get_cutomer_data(content)
-			elif updated_content['customer_pages_mcount']==0:
+			elif updated_content['customer_pages_per_100_mcount']==0:
 				pass
 		except Exception,e:
 			print e,'Error'
