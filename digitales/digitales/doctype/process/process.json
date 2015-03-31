@@ -1,6 +1,6 @@
 {
  "allow_copy": 0, 
- "allow_import": 0, 
+ "allow_import": 1, 
  "allow_rename": 0, 
  "autoname": "PROC.#######", 
  "creation": "2014-12-10 19:26:10.094025", 
@@ -363,7 +363,7 @@
  "is_submittable": 1, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2015-01-23 23:47:44.715150", 
+ "modified": "2015-03-31 16:17:56.128170", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Process", 
