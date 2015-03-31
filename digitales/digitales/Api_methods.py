@@ -359,7 +359,7 @@ def create_new_product(item,i,content):
 		else:
 			item_group=create_new_itemgroup(i,content)
 			item.item_group=item_group
-	item.description = content[i].get('short_description') if content[i].get('short_description')!=None else content[i].get('sku')
+	item.description = 'Desc: ' + content[i].get('short_description') if content[i].get('short_description') else content[i].get('sku')
 	item.event_id=i
 	item.item_status='Existing'
 	warehouse=get_own_warehouse()
