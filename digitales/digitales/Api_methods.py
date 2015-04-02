@@ -282,17 +282,17 @@ def validate_qty_on_submit(doc,method):
 def check_APItime():
 	# GetItem()
 	# GetCustomer()
-	GetOrders()
-	# time = frappe.db.sql("""select value from `tabSingles` where doctype='API Configuration Page' and field in ('date','api_type')""",as_list=1)
-	# if time:
-	# 	dates= list(itertools.chain.from_iterable(time))
-	# 	api_date=datetime.datetime.strptime(dates[1], '%Y-%m-%d %H:%M:%S')
-	# 	if datetime.datetime.now() > api_date and dates[0] =='Product':
-	# 		GetItem()
-	# 	elif datetime.datetime.now() > api_date and dates[0]=='Customer':
-	# 		GetCustomer()
-	# 	elif datetime.datetime.now() > api_date and dates[0]=='Order':
-	# 		GetOrders()
+	# GetOrders()
+	time = frappe.db.sql("""select value from `tabSingles` where doctype='API Configuration Page' and field in ('date','api_type')""",as_list=1)
+	if time:
+		dates= list(itertools.chain.from_iterable(time))
+		api_date=datetime.datetime.strptime(dates[1], '%Y-%m-%d %H:%M:%S')
+		if datetime.datetime.now() > api_date and dates[0] =='Product':
+			GetItem()
+		elif datetime.datetime.now() > api_date and dates[0]=='Customer':
+			GetCustomer()
+		elif datetime.datetime.now() > api_date and dates[0]=='Order':
+			GetOrders()
 
 
 def get_Data_count(max_date, document_key):
@@ -419,7 +419,7 @@ def check_uom_conversion(item):
 		return False
 
 def create_new_itemgroup(i,content):
-	frappe.errprint("in item_group")
+	# frappe.errprint("in item_group")
 	itemgroup=frappe.new_doc('Item Group')
 	#frappe.errprint(itemgroup)
 	itemgroup.parent_item_group='All Item Groups'
@@ -429,7 +429,7 @@ def create_new_itemgroup(i,content):
 	return itemgroup.name or 'Products'
 
 def get_own_warehouse():
-		frappe.errprint("get_own_warehouse")
+		# frappe.errprint("get_own_warehouse")
 		warehouse=frappe.db.sql("""select value from `tabSingles` where doctype='Configuration Page'
 					and field='own_warehouse'""",as_list=1)
 		if warehouse:
