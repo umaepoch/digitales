@@ -281,8 +281,8 @@ def validate_qty_on_submit(doc,method):
 
 def check_APItime():
 	GetItem()
-	# GetCustomer()
-	#GetOrders()
+	#GetCustomer()
+	# GetOrders()
 	# time = frappe.db.sql("""select value from `tabSingles` where doctype='API Configuration Page' and field in ('date','api_type')""",as_list=1)
 	# if time:
 	# 	dates= list(itertools.chain.from_iterable(time))
@@ -293,6 +293,7 @@ def check_APItime():
 	# 		GetCustomer()
 	# 	elif datetime.datetime.now() > api_date and dates[0]=='Order':
 	# 		GetOrders()
+
 
 def get_Data_count(max_date, document_key):
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
@@ -305,7 +306,7 @@ def get_Data_count(max_date, document_key):
 
 #Get Item from magento------------------------------------------------------------------------------------------------------------------------------------
 def GetItem():
-	# update_execution_date('Customer')
+	update_execution_date('Customer')
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 	oauth = GetOauthDetails()
 	max_item_date = '1991-09-07 05:43:13'
@@ -369,7 +370,25 @@ def create_new_product(item,i,content):
 	item.modified_date=content[i].get('updated_at')
 	item.distributor=content[i].get('distributor')
 	item.product_release_date=content[i].get('release_date')
+	item.default_supplier = get_supplier(content[i].get('distributor'))
 	return True
+
+def get_supplier(supplier):
+	name = supplier if frappe.db.get_value('Supplier', supplier, 'name') else create_supplier(supplier)
+	return name
+
+def create_supplier(supplier):
+	sl = frappe.new_doc('Supplier')
+	sl.supplier_name = supplier
+	sl.supplier_type = 'Stock supplier' if frappe.db.get_value('Supplier Type', 'Stock supplier', 'name') else create_supplier_type()
+	sl.save(ignore_permissions=True)
+	return sl.name
+
+def create_supplier_type():
+	st = frappe.new_doc('Supplier Type')
+	st.supplier_type = 'Stock supplier'
+	st.save(ignore_permissions=True)
+	return st.name	
 
 def check_uom_conversion(item):
 	#frappe.errprint("in chcek uom conversion")
@@ -418,18 +437,18 @@ def update_execution_date(document):
 
 
 def GetCustomer():
-	frappe.errprint("in get customers")
-	# update_execution_date('Customer')
+	update_execution_date('Product')
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 	oauth = GetOauthDetails()
 	max_customer_date = '1988-09-07 05:43:13'
 	max_date = frappe.db.sql(""" select max(modified_date) as max_date from `tabCustomer` """,as_list=1)
 	if max_date[0][0]!=None:
 		max_customer_date = max_date[0][0]
+	max_customer_date = (datetime.datetime.strptime(max_customer_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
 	status=get_customers_from_magento(1, max_customer_date, h, oauth)
-	if status == False:
-		count = get_Data_count(max_customer_date, 'customer_pages_per_100_mcount')
-		get_missed_customers(count, max_customer_date, h, oauth)		
+	# if status == False:
+	# 	count = get_Data_count(max_customer_date, 'customer_pages_per_100_mcount')
+	# 	get_missed_customers(count, max_customer_date, h, oauth)		
 
 def get_missed_customers(count, max_date, header, oauth_data):
 	frappe.errprint("get misseddd customers")
@@ -437,7 +456,7 @@ def get_missed_customers(count, max_date, header, oauth_data):
 		for index in range(1, count+1):
 			get_customers_from_magento(index, max_date,header, oauth_data, 'missed')
 
-def get_customers_from_magento(page, max_date, header, oauth_data):
+def get_customers_from_magento(page, max_date, header, oauth_data,type_of_data=None):
 	frappe.errprint("get customers from magento")
 	print max_date
 	if page:
@@ -453,9 +472,9 @@ def get_customers_from_magento(page, max_date, header, oauth_data):
 					count = count + 1
 					create_customer(index, customer_data)
 			if count == 0 and type_of_data != 'missed':
-				return False
-	return True
-
+				tot_count = get_Data_count(max_date, 'customer_pages_per_100_mcount')
+				if cint(tot_count)>0 :
+					get_missed_customers(6, max_date, header, oauth_data)
 
 def create_customer(i,content):
 	frappe.errprint("create customer")
@@ -491,12 +510,15 @@ def create_new_customer(customer,i,content):
 	#customer.customer_name=cstr(content[i].get('organisation'))
 	customer.customer_type = 'Company'
 	if content[i].get('group'):
-		if frappe.db.get_value('Customer Group', content[i].get('group'), 'name'):
-			customer.customer_group=content[i].get('group') or 'All Customer Groups'
-		elif frappe.db.get_value('Customer', content[i].get('group'), 'name'):
+		if content[i].get('group').strip() == 'General':
+			customer.customer_group= 'All Customer Groups'
+		# #frappe.errprint(content[i].get('group'))
+		elif frappe.db.get_value('Customer Group', content[i].get('group').strip(), 'name'):
+			customer.customer_group=content[i].get('group').strip() or 'All Customer Groups'
+		elif frappe.db.get_value('Customer', content[i].get('group').strip(), 'name'):
 			customer.customer_group = 'All Customer Groups'
 		else:
-			customer_group=create_customer_group(content[i].get('group'))
+			customer_group=create_customer_group(content[i].get('group').strip())
 			customer.customer_group=customer_group
 	customer.territory = 'Australia'
 	customer.customer_status = 'Existing'
@@ -534,26 +556,28 @@ def create_customer_group(i):
 	frappe.errprint("in the create_customer_group--------------------------------------------------")
 	cg=frappe.new_doc('Customer Group')
 	frappe.errprint(i)
-	cg.customer_group_name = i + ' ' + 'Group'
+	cg.customer_group_name = i
 	cg.parent_customer_group='All Customer Groups'
 	cg.is_group='No'
 	cg.save(ignore_permissions=True)
+	return cg.name or 'All Customer Group'
 
 
 #Get Order data API
 def GetOrders():
 	frappe.errprint("in get orders")
-	# update_execution_date('Customer')
+	#update_execution_date('Product')
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 	oauth = GetOauthDetails()
 	max_order_date = '2001-09-07 05:43:13'
 	max_date = frappe.db.sql(""" select max(modified_date) as max_date from `tabSales Order` """,as_list=1)
 	if max_date[0][0]!=None:
 		max_order_date = max_date[0][0]
+	max_order_date = (datetime.datetime.strptime(max_order_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
 	status=get_orders_from_magento(1, max_order_date, h, oauth)
-	if status == False:
-		count = get_Data_count(max_customer_date, 'orders_pages_per_100_mcount')
-		get_missed_orders(count, max_customer_date, h, oauth)	
+	# if status == False:
+	# 	count = get_Data_count(max_customer_date, 'orders_pages_per_100_mcount')
+	# 	get_missed_orders(count, max_customer_date, h, oauth)	
 
 
 def get_missed_orders(count, max_date, header, oauth_data):
@@ -563,63 +587,100 @@ def get_missed_orders(count, max_date, header, oauth_data):
 			get_orders_from_magento(index, max_date,header, oauth_data, 'missed')	
 
 
-def get_orders_from_magento(page, max_date, header, oauth_data):
-	frappe.errprint("get orders from magento")
-	print max_date
+def get_orders_from_magento(page, max_date, header, oauth_data,type_of_data=None):
 	if page:
 		r = requests.get(url='http://digitales.com.au/api/rest/orders?filter[1][attribute]=updated_at&filter[1][gt]=%s&page=%s&limit=100&order=updated_at&dir=asc'%(max_date, page), headers=header, auth=oauth_data)
-		order_data = json.loads(r.content)
+		order_data = json.loads(r.content)		
 		count = 0
+		k=0
 		if len(order_data) > 0:
 			for index in order_data:
-				customer=frappe.db.sql("""select name from `tabCustomer` where entity_id='%s'"""
-							%order_data[index].get('customer_id'),as_list=1,debug=1)				
+				customer = frappe.db.get_value('Contact', {'entity_id': order_data[index].get('customer_id')}, 'customer')
 				if customer:
-					order=frappe.db.sql("""select name from `tabSales Order` where entity_id='%s'"""%(order_data[index].get('entity_id')),as_list=1)
+					order = frappe.db.get_value('Sales Order', {'entity_id': order_data[index].get('entity_id')}, 'name')
 					if order:
-						update_order(order[0][0],index,order_data,customer[0][0])
+						update_order(order,index,order_data,customer)
 					else:
 						count = count + 1
-						create_order(index,order_data,customer[0][0])
+						create_order(index,order_data,customer)
 				else:
-					frappe.errprint("Customer Is not present")
-
+					k=k+1
+					print k
 			if count == 0 and type_of_data != 'missed':
-				return False
+				tot_count = get_Data_count(max_date, 'orders_pages_per_100_mcount')
+				if cint(tot_count)>0 :
+					get_missed_orders(6, max_date, header, oauth_data)
 	return True
+
+def get_missing_customers(header,oauth_data):
+	list1=[]
+	order=[]
+	for i in range(1,4):
+		r = requests.get(url='http://digitales.com.au/api/rest/orders?&page='+cstr(i)+'&limit=100',headers=header, auth=oauth_data)
+		frappe.errprint("in get get_missing_customers")
+		order_data = json.loads(r.content)
+		for index in order_data:
+			if not frappe.db.get_value('Contact',{'entity_id':order_data[index].get('customer_id')},'name'):
+				list1.append(order_data[index].get('customer_id'))
+				order.append(order_data[index].get('entity_id'))
+
+	frappe.errprint(list1)
+	frappe.errprint(order)
+
+def get_missing_products(header,oauth_data):
+	list2=[]
+	order1=[]
+	frappe.errprint("in get get_missing_products")
+	for i in range(1,4):
+		r = requests.get(url='http://digitales.com.au/api/rest/orders?&page='+cstr(i)+'&limit=100',headers=header, auth=oauth_data)
+		order_data = json.loads(r.content)
+		for index in order_data:
+			if order_data[index].get('order_items'):
+				for i in order_data[index].get('order_items'):
+					frappe.errprint(i['sku'])
+					if not frappe.db.get_value('Item',i.get('sku'),'name'):
+						list2.append(i.get('sku'))
+						order1.append(order_data[index].get('entity_id'))
+	frappe.errprint(list2)
+	frappe.errprint(order1)
 
 def update_order(order,i,content,customer):
 	frappe.errprint("in update sales order")
 	order = frappe.get_doc("Sales Order", order)
-	create_order(i,content,customer)
+	create_new_order(order,i,content,customer)
+	order.save(ignore_permissions=True)
 
 def create_order(i,content,customer):
 	frappe.errprint("in create order")
-	from datetime import date
-	from dateutil.relativedelta import relativedelta
-	delivery_date = date.today() + relativedelta(days=+6)
 	if content[i].get('order_items'):
 		child_status=check_item_presence(i,content)
 		#frappe.errprint(child_status)
 		if child_status==True:
 			order = frappe.new_doc('Sales Order')
-			order.customer=customer
-			# if customer:
-			# 	tender_group=frappe.db.sql(""""select tender_group from `tabCustomer` where name='%s'
-			# 			"""%customer,as_list=1,debug=1)
-			# 	if tender_group:
-			# 		if tender_group[0][0]:
-
-			# 			order.tender_group=tender_group[0][0]
-			# 	else:
-			# 		pass
-			order.entity_id=content[i].get('entity_id')
-			order.modified_date=content[i].get('updated_at')
-			order.delivery_date=delivery_date
-			order.grand_total_export=content[i].get('grand_total')
-			for i in content[i].get('order_items'):
-		 		create_child_item(i,order)
+			create_new_order(order,i,content,customer)
 			order.save(ignore_permissions=True)
+
+def create_new_order(order,i,content,customer):
+	from datetime import date
+	from dateutil.relativedelta import relativedelta
+	delivery_date = date.today() + relativedelta(days=+6)
+	order.customer=customer
+	# if customer:
+	# 	tender_group=frappe.db.sql(""""select tender_group from `tabCustomer` where name='%s'
+	# 			"""%customer,as_list=1,debug=1)
+	# 	if tender_group:
+	# 		if tender_group[0][0]:
+
+	# 			order.tender_group=tender_group[0][0]
+	# 	else:
+	# 		pass
+	order.entity_id=content[i].get('entity_id')
+	order.modified_date=content[i].get('updated_at')
+	order.delivery_date=delivery_date
+	order.grand_total_export=content[i].get('grand_total')
+	for i in content[i].get('order_items'):
+ 		create_child_item(i,order)
+	
 			#frappe.errprint(order.name)
 
 def check_item_presence(i,content):

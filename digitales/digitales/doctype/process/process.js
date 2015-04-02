@@ -7,28 +7,28 @@ cur_frm.add_fetch('get_sales_order','customer_name','customer_name');
 cur_frm.add_fetch('get_sales_order','name','order_no');
 cur_frm.add_fetch('get_sales_order','transaction_date','order_date');
 
-cur_frm.add_fetch('item_code','item_name','item_name');
-cur_frm.add_fetch('item_code','description','description');
+// cur_frm.add_fetch('item_code','item_name','item_name');
+// cur_frm.add_fetch('item_code','description','description');
 
-cur_frm.add_fetch('process','charge','charge');
-cur_frm.add_fetch('process','barcode','barcode');
+// cur_frm.add_fetch('process','charge','charge');
+cur_frm.add_fetch('process','barcode','item_barcode');
 
 cur_frm.cscript.process_type = function(doc, cdt, cdn) {
 	cur_frm.cscript.toggle_related_fields(doc);
 }
 	
-cur_frm.get_field("process_type").get_query=function(doc,cdt,cdn){
-	return {filters: { is_service_item: "Yes"}}
+cur_frm.get_field("get_sales_order").get_query=function(doc,cdt,cdn){
+	return "select s.parent from `tabSales Order Item` s inner join `tabSales Order` so on s.parent=so.name where so.docstatus=1 and s.assigned_qty>0"
 }
 
-cur_frm.cscript.qty = function(doc, cdt, cdn){
-	var d = locals[cdt][cdn];
-	if (d.qty && d.charge){
-		d.amount=d.qty*d.charge;
-		cur_frm.set_value('amount',d.amount)
-	}
-	refresh_field('amount');
-}
+// cur_frm.cscript.qty = function(doc, cdt, cdn){
+// 	var d = locals[cdt][cdn];
+// 	if (d.qty && d.charge){
+// 		d.amount=d.qty*d.charge;
+// 		cur_frm.set_value('amount',d.amount)
+// 	}
+// 	refresh_field('amount');
+// }
 
 cur_frm.cscript.barcode = function(doc, cdt, cdn){
 	var d = locals[cdt][cdn];
@@ -36,11 +36,11 @@ cur_frm.cscript.barcode = function(doc, cdt, cdn){
 }
 
 cur_frm.fields_dict.shelf_ready_service_details.grid.get_field("process").get_query = function(doc){
-    if(doc.process_type){
-		return "select name from `tabShelf Ready Service` where process_type='"+doc.process_type+"'"
+    if(doc.customer_id){
+		return "select name1 from `tabShelf Ready Services` where parent='"+doc.customer_id+"'"
     }
     else
-       	msgprint("First select process type")
+       	msgprint("First select the sales order")
 }
 
 cur_frm.cscript.toggle_related_fields = function(doc) {
@@ -51,6 +51,8 @@ cur_frm.cscript.toggle_related_fields = function(doc) {
 }
 
 
-// cur_frm.cscript.shelf_ready_service_details_add=function(doc,cdt,cdn){
-// 	alert("Hi")
+// cur_frm.fields_dict['shelf_ready_service_details'].grid.get_field('process').get_query = function(doc, cdt, cdn) {
+
+//    	return {filters: { is_service_item: "Yes"}}
+
 // }
