@@ -314,11 +314,13 @@ def GetItem():
 	if max_date[0][0]!=None:
 		max_item_date = max_date[0][0]
 	max_item_date = (datetime.datetime.strptime(max_item_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
+	#made changes
 	status = get_supplier_from_magento(1, max_item_date, h, oauth)		
 	
 def get_missed_items(count, max_date, header, oauth_data):
 	if count > 0:
 		for index in range(1, count+1):
+			#made changes
 			get_supplier_from_magento(index, max_date,header, oauth_data, 'missed')			
 
 def get_products_from_magento(page, max_date, header, oauth_data, type_of_data=None):
@@ -401,6 +403,7 @@ def get_supplier_from_magento(page, max_date, header, oauth_data, type_of_data=N
 				name = frappe.db.get_value('Item', product_data[index].get('sku'), 'name')
 				if name:
 					item = frappe.get_doc('Item', name)
+					item.modified_date = product_data[index].get('updated_at')
 					item.default_supplier = get_supplier(product_data[index].get('distributor'))
 					item.save()
 			if count == 0 and type_of_data != 'missed':
