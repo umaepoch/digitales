@@ -281,8 +281,8 @@ def validate_qty_on_submit(doc,method):
 
 def check_APItime():
 	# GetItem()
-	GetCustomer()
-	# GetOrders()
+	# GetCustomer()
+	GetOrders()
 	# time = frappe.db.sql("""select value from `tabSingles` where doctype='API Configuration Page' and field in ('date','api_type')""",as_list=1)
 	# if time:
 	# 	dates= list(itertools.chain.from_iterable(time))
