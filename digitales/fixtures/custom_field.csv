@@ -18,6 +18,12 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
+"","""Sales Invoice Item-shelf_ready_service_name""","Sales Invoice Item","Data","Shelf Ready Service  Name","description","","","","shelf_ready_service_name",0,0,1,0,"","",1,"",0,0,0,0,0,0
+"","""Sales Order-modified_date""","Sales Order","Datetime","Modified Date","comment","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Customer-modified_date""","Customer","Datetime","Modified Date","tender_group","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Item-modified_date""","Item","Datetime","Modified Date","item_status","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Item-event_id""","Item","Data","Entity  ID","product_release_date","","","","event_id",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Customer-entity_id""","Customer","Data","Entity ID","lead_name","","","","entity_id",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Invoice-new_order_type""","Sales Invoice","Select","Order Type","order_type","","
 Standard Order
 Standing order
@@ -38,7 +44,6 @@ Shopping Cart","","order_type",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Invoice-contract_number""","Sales Invoice","Data","Contract Number","customer","","","","contract_number",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-process_status""","Sales Order","Data","Process Status","currency","","Uncompleted
 Completed","","process_status",0,0,0,0,"","Uncompleted",0,"",0,0,0,0,0,0
-"","""Sales Order-modified_date""","Sales Order","Datetime","Modified Date","comment","","","","modified_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-comment""","Sales Order","Small Text","Comment","po_no","","","","comment",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-sales_order_status""","Sales Order","Select","Sales Order Status","entity_id","","
 Existing
@@ -52,13 +57,11 @@ High","","priority",0,1,0,0,"","",0,"",0,0,0,0,0,0
 "","""Customer-contract_details""","Customer","Table","Contract Details","budget_details","","Contract Details","","contract_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Customer-budget_details""","Customer","Table","Budget Details","shelf_ready_services_details","","Budget Details","","budget_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Customer-shelf_ready_services_details""","Customer","Table","Shelf Ready Services Details","communications","","Shelf Ready Services","","shelf_ready_services_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Customer-modified_date""","Customer","Datetime","Modified Date","tender_group","","","","modified_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Customer-tender_group""","Customer","Link","Tender Group","contract_form_no","","Tender Group","","tender_group",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Customer-contract_form_no""","Customer","Link","Contract Form No","territory","","Customer Contract Form","","contract_form_no",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Customer-customer_status""","Customer","Select","Customer Status","entity_id","","
 Existing
 Non Existing","","customer_status",0,0,0,0,"","",1,"",0,0,0,0,0,0
-"","""Customer-entity_id""","Customer","Data","Entity ID","lead_name","","","","entity_id",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Contact-entity_id""","Contact","Data","Entity ID","customer_name","","","","entity_id",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice Item-line_item""","Sales Invoice Item","Data","Line Item","item_name","","","","line_item",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Item-rrp""","Item","Link","RRP","sale_price","","Price List","","rrp",0,0,0,0,"","",0,"",0,0,0,0,0,0
@@ -75,19 +78,16 @@ Non Existing","","customer_status",0,0,0,0,"","",1,"",0,0,0,0,0,0
 Existing
 Non Existing","","item_status",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Item-sale_price""","Item","Data","Sale Price","selling_cost_center","","","","sale_price",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Item-modified_date""","Item","Datetime","Modified Date","item_status","","","","modified_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-budget""","Sales Order Item","Link","Budget","order_number","","Budget","","budget",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-gst""","Sales Order Item","Data","GST","order_number","","","In %","gst",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-assigned_qty""","Sales Order Item","Float","Assigned Qty","description","","","","assigned_qty",0,0,0,0,"","0.0",0,"",0,0,0,0,0,0
 "","""Sales Order Item-po_child_name""","Sales Order Item","Data","PO Child name","po_name","","","","po_child_name",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order Item-po_name""","Sales Order Item","Link","Po Name","description","","Purchase Order","","po_name",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order Item-release_date_of_item""","Sales Order Item","Date","Release Date Of Item","item_name","","","","release_date_of_item",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Item-event_id""","Item","Data","Entity  ID","product_release_date","","","","event_id",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Attendance-total_break_hours""","Attendance","Float","Total Break Hours","total_hours","2","","","total_break_hours",0,0,1,0,"","",1,"eval:doc.status!='Absent'",0,0,0,0,0,0
 "","""Sales Invoice Item-process_id""","Sales Invoice Item","Link","Process ID","sales_order","","Process","","process_id",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Item-product_release_date""","Item","Date","Product Release Date","item_name","","","","product_release_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Taxes and Charges-discount_percentage""","Sales Taxes and Charges","Data","Discount Percentage","rate","","","","discount_percentage",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Invoice Item-shelf_ready_service_name""","Sales Invoice Item","Data","Shelf Ready Service  Name","description","","","","shelf_ready_service_name",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice Item-marcfile_name""","Sales Invoice Item","Data","MARCfile Name","item_name","","","","marcfile_name",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-column_break_1""","Sales Order Item","Column Break","column break 1","order_number","","","","column_break_1",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-order_number""","Sales Order Item","Data","Order Number","rrp","","","","order_number",0,0,0,0,"","",0,"",0,0,0,0,0,0
