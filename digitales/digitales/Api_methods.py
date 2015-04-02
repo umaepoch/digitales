@@ -319,7 +319,7 @@ def GetItem():
 def get_missed_items(count, max_date, header, oauth_data):
 	if count > 0:
 		for index in range(1, count+1):
-			get_products_from_magento(index, max_date,header, oauth_data, 'missed')			
+			get_supplier_from_magento(index, max_date,header, oauth_data, 'missed')			
 
 def get_products_from_magento(page, max_date, header, oauth_data, type_of_data=None):
 	if page:
