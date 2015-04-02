@@ -393,10 +393,22 @@ def create_new_product(item,i,content):
 	return True
 
 def get_supplier(supplier):
+	temp = ''
 	if supplier:
+		if frappe.db.get_value('Customer', supplier, 'name'):
+			supplier = supplier + '(s)'
+			temp = supplier
 		name = supplier if frappe.db.get_value('Supplier', supplier, 'name') else create_supplier(supplier)
+		if temp:
+			update_supplier(supplier)
 		return name
 	return ''
+
+def update_supplier(supplier):
+	obj = frappe.get_doc('Supplier', supplier)
+	obj.supplier_name = supplier.replace('(s)', '')
+	obj.save(ignore_permissions=True)
+	return True
 
 def create_supplier(supplier):
 	sl = frappe.new_doc('Supplier')
