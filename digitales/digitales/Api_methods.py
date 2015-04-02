@@ -506,6 +506,8 @@ def update_customer_name(customer_name):
 	customer.save(ignore_permissions=True)
 
 def update_customer(customer,i ,content):
+	print 'ddddddddddddddddd'
+	frappe.errprint(customer)
 	customer = frappe.get_doc("Customer", customer)
 	create_new_customer(customer,i,content)
 	contact=frappe.db.sql("""select name from `tabContact` where entity_id='%s'"""%content[i].get('entity_id'),as_list=1)
@@ -525,7 +527,6 @@ def create_contact(customer,i,content):
 
 def create_new_customer(customer,i,content):
 	import itertools
-	frappe.errprint("in create new customer")
 	customer.entity_id = content[i].get('entity_id') 
 	#frappe.errprint("eeeeeeeeeeeeeeeeeeeeeee")
 	#frappe.errprint(cstr(content[i].get('organisation')).replace("'",""))
