@@ -314,7 +314,7 @@ def GetItem():
 	if max_date[0][0]!=None:
 		max_item_date = max_date[0][0]
 	max_item_date = (datetime.datetime.strptime(max_item_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
-	status = get_products_from_magento(1, max_item_date, h, oauth)		
+	status = get_supplier_from_magento(1, max_item_date, h, oauth)		
 	
 def get_missed_items(count, max_date, header, oauth_data):
 	if count > 0:
@@ -389,6 +389,25 @@ def create_supplier_type():
 	st.supplier_type = 'Stock supplier'
 	st.save(ignore_permissions=True)
 	return st.name	
+
+
+def get_supplier_from_magento(page, max_date, header, oauth_data, type_of_data=None):
+	if page:
+		r = requests.get(url='http://digitales.com.au/api/rest/products?filter[1][attribute]=updated_at&filter[1][gt]=%s&page=%s&limit=100&order=updated_at&dir=asc'%(max_date, page), headers=header, auth=oauth_data)
+		product_data = json.loads(r.content)
+		count = 0
+		if len(product_data) > 0:
+			for index in product_data:
+				name = frappe.db.get_value('Item', product_data[index].get('sku'), 'name')
+				if name:
+					item = frappe.get_doc('Item', name)
+					item.default_supplier = get_supplier(product_data[index].get('distributor'))
+					item.save()
+			if count == 0 and type_of_data != 'missed':
+				tot_count = get_Data_count(max_date, 'product_pages_per_100_mcount')
+				if cint(tot_count)>0 :
+					get_missed_items(6, max_date, header, oauth_data)
+	return True
 
 def check_uom_conversion(item):
 	#frappe.errprint("in chcek uom conversion")

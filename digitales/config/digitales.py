@@ -9,7 +9,7 @@ def get_data():
 				{
 					"type": "doctype",
 					"name": "Customer Contract Form",
-					"description": _("Customer contact details.")
+					"description": _("Customer contract details.")
 				},
 				{
 					"type": "doctype",
@@ -24,7 +24,7 @@ def get_data():
 				{
 					"type": "doctype",
 					"name": "Configuration Page",
-					"description": _("Warehouse Configuration page.")
+					"description": _("Warehouse Configuration Page.")
 				},
 				{
 					"type": "doctype",
