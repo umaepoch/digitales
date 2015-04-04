@@ -18,6 +18,10 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
+"","""Sales Invoice-new_order_type""","Sales Invoice","Select","Order Type","order_type","","
+Standard Order
+Standing Order
+Reader Request","","new_order_type",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-release_date_of_item""","Sales Order Item","Date","Release Date Of Item","item_name","","","","release_date_of_item",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-assigned_qty""","Sales Order Item","Float","Assigned Qty","description","","","","assigned_qty",0,0,1,0,"","0.0",0,"",0,0,0,0,0,0
 "","""Sales Order-new_order_type""","Sales Order","Select","Order Type","order_type","","
@@ -32,10 +36,6 @@ Completed","","process_status",0,0,0,0,"","Uncompleted",1,"",0,0,0,0,0,0
 "","""Item-modified_date""","Item","Datetime","Modified Date","item_status","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Item-event_id""","Item","Data","Entity  ID","product_release_date","","","","event_id",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Customer-entity_id""","Customer","Data","Entity ID","lead_name","","","","entity_id",0,0,0,0,"","",1,"",0,0,0,0,0,0
-"","""Sales Invoice-new_order_type""","Sales Invoice","Select","Order Type","order_type","","
-Standard Order
-Standing order
-Reader Request","","new_order_type",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-organisation""","Sales Invoice","Data","Organisation","currency","","","","organisation",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Invoice-comment""","Sales Invoice","Small Text","Comment","due_date","","","","comment",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-tender_group""","Sales Invoice","Link","Tender Group","budget","","Tender Group","","tender_group",0,0,0,0,"","",0,"",0,0,0,0,0,0
