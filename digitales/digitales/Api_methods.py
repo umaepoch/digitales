@@ -280,19 +280,22 @@ def validate_qty_on_submit(doc,method):
 #For calling API through Poster--------------------------------------------------------------------------------------------
 
 def check_APItime():
-	# GetItem()
-	# GetCustomer()
-	# GetOrders()
-	time = frappe.db.sql("""select value from `tabSingles` where doctype='API Configuration Page' and field in ('date','api_type')""",as_list=1)
-	if time:
-		dates= list(itertools.chain.from_iterable(time))
-		api_date=datetime.datetime.strptime(dates[1], '%Y-%m-%d %H:%M:%S')
-		if datetime.datetime.now() > api_date and dates[0] =='Product':
-			GetItem()
-		elif datetime.datetime.now() > api_date and dates[0]=='Customer':
-			GetCustomer()
-		elif datetime.datetime.now() > api_date and dates[0]=='Order':
-			GetOrders()
+	GetItem()
+	# # GetCustomer()
+	# # GetOrders()
+	# time = frappe.db.sql("""select value from `tabSingles` where doctype='API Configuration Page' and field in ('date','api_type')""",as_list=1)
+	# if time:
+	# 	dates= list(itertools.chain.from_iterable(time))
+	# 	api_date=datetime.datetime.strptime(dates[1], '%Y-%m-%d %H:%M:%S')
+	# 	if datetime.datetime.now() > api_date and dates[0] =='Product':
+	# 		#frappe.errprint("in get item")
+	# 		GetItem()
+	# 	elif datetime.datetime.now() > api_date and dates[0]=='Customer':
+	# 		#frappe.errprint("in get item")
+	# 		GetCustomer()
+	# 	elif datetime.datetime.now() > api_date and dates[0]=='Order':
+	# 		#frappe.errprint("in get item")
+	# 		GetOrders()
 
 
 def get_Data_count(max_date, document_key):
@@ -306,7 +309,7 @@ def get_Data_count(max_date, document_key):
 
 #Get Item from magento------------------------------------------------------------------------------------------------------------------------------------
 def GetItem():
-	update_execution_date('Customer')
+	#update_execution_date('Customer')
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 	oauth = GetOauthDetails()
 	max_item_date = '1991-09-07 05:43:13'
@@ -331,6 +334,7 @@ def get_products_from_magento(page, max_date, header, oauth_data, type_of_data=N
 				name = frappe.db.get_value('Item', product_data[index].get('sku'), 'name')
 				if name:
 					update_item(name, index, product_data)
+					check_item_price(name,index,product_data)
 				else:
 					count = count + 1
 					create_item(index, product_data)
@@ -345,11 +349,53 @@ def create_item(i,content):
 	item.item_code = content[i].get('sku')
 	create_new_product(item,i,content)
 	item.save(ignore_permissions=True)	
+	check_item_price(item.name,i,content)
+
+def check_item_price(name,i,content):
+	if content[i].get('price'):
+		price_list=get_price_list()
+		#frappe.errprint(price_list)
+		if price_list:
+			item_price_list_name=frappe.db.get_value('Item Price',{'item_code':name,'price_list':price_list},'name')
+			#frappe.errprint(item_price_list_name)
+			if item_price_list_name:
+				update_price_list(item_price_list_name,i,content,price_list)
+			else:
+				create_price_list(name,i,content,price_list)
+
+def get_price_list():
+		price_list=frappe.db.sql("""select value from `tabSingles` where doctype='Configuration Page'
+					and field='price_list'""",as_list=1)
+		if price_list:
+			return price_list[0][0]
+		else:
+			frappe.msgprint("Please specify default price list in Configuration Page",raise_exception=1)
+
+def update_price_list(price_list_name,i,content,price_list):
+	#frappe.errprint("in update item price list")
+	item_price = frappe.get_doc("Item Price", price_list_name)
+	create_new_item_price(item_price,i,content,price_list)
+	item_price.save(ignore_permissions=True)
+
+def create_price_list(item,i,content,price_list):
+	item_price=frappe.new_doc("Item Price")
+	create_new_item_price(item_price,i,content,price_list)
+	item_price.save(ignore_permissions=True)
+
+def create_new_item_price(item_price,i,content,price_list):
+	item_price.price_list=price_list
+	item_price.item_code=content[i].get('sku')
+	item_price.price_list_rate=content[i].get('price')
+	return True
+	
 
 def update_item(name,i,content):
+	#frappe.errprint("update_item")
+	#frappe.errprint(content[i].get('sku'))
 	item = frappe.get_doc("Item", name)
 	create_new_product(item,i,content)
 	item.save(ignore_permissions=True)
+	#check_item_price(item.name,i,content)
 
 def create_new_product(item,i,content):
 	item.item_name=content[i].get('name') or content[i].get('sku')
@@ -367,6 +413,7 @@ def create_new_product(item,i,content):
 	item.item_status='Existing'
 	warehouse=get_own_warehouse()
 	item.default_warehouse=warehouse
+	item.barcode=content[i].get('barcode')
 	item.modified_date=content[i].get('updated_at')
 	item.distributor=content[i].get('distributor')
 	item.product_release_date=content[i].get('release_date')
@@ -437,8 +484,9 @@ def get_own_warehouse():
 		else:
 			frappe.msgprint("Please specify default own warehouse in Configuration Page",raise_exception=1)
 
+
 def GetOauthDetails():
-	frappe.errprint("in get oauth details")
+	#frappe.errprint("in get oauth details")
 	oauth=OAuth(client_key='5a3bc10d3ba1615f5466de92e7cae501', client_secret='3a03ffff8d9a5b203eb4cad26ffa5b16', resource_owner_key='3d695c38d659411c8ca0d90ff0ac0c0c', resource_owner_secret='ef332ab23c09df818426909db9639351')	
 	return oauth
 
@@ -451,7 +499,7 @@ def update_execution_date(document):
 
 
 def GetCustomer():
-	update_execution_date('Product')
+	update_execution_date('Order')
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 	oauth = GetOauthDetails()
 	max_customer_date = '1988-09-07 05:43:13'
@@ -468,7 +516,7 @@ def get_missed_customers(count, max_date, header, oauth_data):
 			get_customers_from_magento(index, max_date,header, oauth_data, 'missed')
 
 def get_customers_from_magento(page, max_date, header, oauth_data,type_of_data=None):
-	frappe.errprint("get customers from magento")
+	#frappe.errprint("get customers from magento")
 	print max_date
 	if page:
 		r = requests.get(url='http://digitales.com.au/api/rest/customers?filter[1][attribute]=updated_at&filter[1][gt]=%s&page=%s&limit=100&order=updated_at&dir=asc'%(max_date, page), headers=header, auth=oauth_data)
@@ -491,7 +539,7 @@ def create_customer(i,content):
 	temp_customer = ''
 	customer = frappe.new_doc('Customer')
 	if frappe.db.get_value('Supplier',content[i].get('organisation').replace("'",""),'name') or frappe.db.get_value('Customer Group',content[i].get('organisation').replace("'",""),'name'):
-		temp = customer.customer_name = cstr(content[i].get('organisation')).replace("'","") + '(C)'
+		temp_customer= customer.customer_name = cstr(content[i].get('organisation')).replace("'","") + '(C)'
 	else:
 		customer.customer_name=cstr(content[i].get('organisation')).replace("'","") 
 	if not frappe.db.get_value('Customer', customer.customer_name, 'name'):
@@ -506,7 +554,7 @@ def update_customer_name(customer_name):
 	customer.save(ignore_permissions=True)
 
 def update_customer(customer,i ,content):
-	print 'ddddddddddddddddd'
+	#print 'ddddddddddddddddd'
 	frappe.errprint(customer)
 	customer = frappe.get_doc("Customer", customer)
 	create_new_customer(customer,i,content)
@@ -549,7 +597,7 @@ def create_new_customer(customer,i,content):
 	customer.save(ignore_permissions=True)
 	
 def create_customer_contact(customer,i,content,contact):
-	frappe.errprint("create customer contact")
+	#frappe.errprint("create customer contact")
 	if content[i].get('firstname'):
 		contact.first_name=content[i].get('firstname')
 		contact.last_name=content[i].get('lastname')
@@ -589,7 +637,7 @@ def create_customer_group(i):
 #Get Order data API
 def GetOrders():
 	frappe.errprint("in get orders")
-	#update_execution_date('Product')
+	update_execution_date('Product')
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 	oauth = GetOauthDetails()
 	max_order_date = '2001-09-07 05:43:13'
@@ -635,12 +683,27 @@ def create_or_update_customer_address(address_details, customer):
 	if address_details:
 		for address in address_details:
 			address_type = address_type_mapper.get(address.get('address_type'))
-			if not frappe.db.get_value('Address',{'address_title': address.get('firstname') +' '+address.get('lastname'), 'address_type': address_type},'name'):
+			if not frappe.db.get_value('Address',{'address_title': address.get('firstname') +' '+address.get('lastname') +' '+address.get('street'), 'address_type': address_type},'name'):
 				create_address_forCustomer(address, customer, address_type)
+			else:
+				cust_address=frappe.db.get_value('Address',{'address_title': address.get('firstname') +' '+address.get('lastname') +' '+address.get('street'), 'address_type': address_type},'name')
+				update_address_forCustomer(cust_address,address,customer,address_type)
 
 def create_address_forCustomer(address_details, customer, address_type):
 	cad = frappe.new_doc('Address')
-	cad.address_title = address_details.get('firstname')+' '+address_details.get('lastname')
+	cad.address_title = address_details.get('firstname')+' '+address_details.get('lastname') +' '+address_details.get('street')
+	cad.address_type = address_type
+	cad.address_line1 = address_details.get('street')
+	cad.city = address_details.get('city')
+	cad.state = address_details.get('region')
+	cad.pincode = address_details.get('postcode')
+	cad.phone = address_details.get('telephone') or '00000'
+	cad.customer = customer
+	cad.save(ignore_permissions=True)
+
+def update_address_forCustomer(cust_address,address_details, customer, address_type):
+	cad = frappe.get_doc('Address',cust_address)
+	#cad.address_title = address_details.get('firstname')+' '+address_details.get('lastname')
 	cad.address_type = address_type
 	cad.address_line1 = address_details.get('street')
 	cad.city = address_details.get('city')
@@ -701,6 +764,9 @@ def create_new_order(order,i,content,customer):
 	order.modified_date=content[i].get('updated_at')
 	order.delivery_date=delivery_date
 	order.grand_total_export=content[i].get('grand_total')
+	#order.discount_amount=content[i].get('discount_amount')
+	order.po_no=content[i].get('po_number')
+	order.order_type=content[i].get('order_type')
 	for i in content[i].get('order_items'):
  		create_child_item(i,order)
 
