@@ -413,7 +413,8 @@ def create_new_product(item,i,content):
 	item.item_status='Existing'
 	warehouse=get_own_warehouse()
 	item.default_warehouse=warehouse
-	item.barcode=content[i].get('barcode')
+	if content[i].get('barcode') and not frappe.db.get_value('Item', {'barcode':content[i].get('barcode')}, 'name'):	
+		item.barcode=content[i].get('barcode')
 	item.modified_date=content[i].get('updated_at')
 	item.distributor=content[i].get('distributor')
 	item.product_release_date=content[i].get('release_date')
@@ -555,7 +556,7 @@ def update_customer_name(customer_name):
 
 def update_customer(customer,i ,content):
 	#print 'ddddddddddddddddd'
-	frappe.errprint(customer)
+	#frappe.errprint(customer)
 	customer = frappe.get_doc("Customer", customer)
 	create_new_customer(customer,i,content)
 	contact=frappe.db.sql("""select name from `tabContact` where entity_id='%s'"""%content[i].get('entity_id'),as_list=1)
