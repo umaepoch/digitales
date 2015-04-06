@@ -18,6 +18,7 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
+"","""Delivery Note Item-assigned_qty""","Delivery Note Item","Float","Assigned Qty","description","","","","assigned_qty",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice Item-assigned_qty""","Sales Invoice Item","Float","Assigned Qty","stock_uom","","","","assigned_qty",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-new_order_type""","Sales Invoice","Select","Order Type","order_type","","
 Standard Order
@@ -100,5 +101,4 @@ No","","digitales_salary_structure",0,1,0,0,"","",0,"",0,0,0,0,0,0
 "","""Attendance-total_hours""","Attendance","Float","Total Worked Hours","attendance_time_sheet","2","","","total_hours",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Attendance-1""","Attendance","Column Break","1","total_break_hours","","","","1",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Attendance-attendance_time_sheet""","Attendance","Table","Attendance Time Sheet","attendance_time_sheet","","Attendance Time Sheets","","attendance_time_sheet",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Delivery Note Item-assigned_qty""","Delivery Note Item","Float","Assigned Qty","description","","","","assigned_qty",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Packing Slip Item-against_sales_order""","Packing Slip Item","Link","Against Sales Order","weight_uom","","Sales Order","","against_sales_order",0,0,1,0,"","",0,"",0,0,0,0,0,0
