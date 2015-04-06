@@ -32,3 +32,28 @@ class Process(Document):
 							where name='%s'"""%self.get_sales_order)
 		frappe.db.commit()
 
+
+	def on_update(self):
+		#frappe.errprint("in on update")
+		self.check_occurence_of_service()
+		self.check_itemis_service_item()
+
+
+	def check_occurence_of_service
+		list1=[]
+		for d in self.get('shelf_ready_service_details'):
+			if d.process:
+				list1.append(d.process)
+		frappe.errprint(list1)
+		if list1.count(d.process) > 1:
+			frappe.throw(" '"+d.process+"' shelf ready serice is added muliple times in child table",raise_exception=1)
+
+		
+	def check_itemis_service_item(self):
+		for d in self.get('shelf_ready_services_details'):
+			if d.process:
+				service_item=frappe.db.sql("""select is_Service_item from `tabItem` where name='%s'"""%d.process,as_list=1)
+				if service_item:
+					if service_item[0][0]=='No':
+						frappe.throw(" '"+d.process+"' is not service item.",raise_exception=1)
+				

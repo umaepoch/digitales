@@ -194,12 +194,13 @@ def create_stock_assignment(purchase_receipt,d,sales_order,ordered_qty,assigned_
 def stock_cancellation(doc,method):
 	# frappe.errprint("in stock cancellation")
 	delivered_note=frappe.db.sql("""select delivery_note from `tabStock Assignment Log`
-										where purchase_receipt='%s'"""
+										where purchase_receipt='%s' and delivery_note is not null"""
 										%doc.name,as_list=1)
-	if delivered_note:
-		frappe.msgprint("Delivery Note is already generated against this purchase receipt,so first you have to delete delivery note='"+delivered_note[0][0]+"'")
-	else:
+	if not delivered_note:
 		pass
+	else:
+		frappe.throw("Delivery Note is already generated against this purchase receipt,so first you have to delete delivery note='"+cstr(delivered_note[0][0])+"'")
+
 
 # On sibmission of delivery Note---------------------------------------------------------------------------------------------------------------------------------
 def update_stock_assignment_log_on_submit(doc,method):
@@ -214,7 +215,7 @@ def update_stock_assignment_log_on_submit(doc,method):
 		#frappe.errprint(sales_order_name[0][0])
 		if sales_order_name:
 			delivery_note_name=frappe.db.sql(""" select delivery_note  from `tabStock Assignment Log` where
-							sales_order='%s' and item_code='%s'"""%(sales_order_name[0][0],d.item_code))
+							sales_order='%s' and item_code='%s' and delivery_note is not null"""%(sales_order_name[0][0],d.item_code))
 			#frappe.errprint(delivery_note_name)
 			#frappe.errprint(len(delivery_note_name))
 			if not delivery_note_name:
@@ -262,7 +263,7 @@ def update_stock_assignment_log_on_cancel(doc,method):
 				if name:
 
 					frappe.db.sql("""update `tabStock Assignment Log` 
-								set delivered_qty='%s',delivery_note='%s' where item_code='%s'"""%(qty,','.join(delivery_note_name),d.item_code))
+								set delivered_qty='%s',delivery_note='%s' where item_code='%s' """%(qty,','.join(delivery_note_name),d.item_code))
 					frappe.db.commit()
 
 

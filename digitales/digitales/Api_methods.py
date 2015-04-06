@@ -25,42 +25,42 @@ def create_purchase_order(doc,method):
 									from `tabSales Order Item` s inner join `tabSales Order` so 
 										on s.parent=so.name where s.item_code='%s' and so.docstatus=1 """
 										%d.item_code,as_list=1)
-		#frappe.errprint(so_ordered_qty)
 		
 		po_ordered_qty=frappe.db.sql("""select ifnull(sum(p.qty),0) as qty 
 									from `tabPurchase Order Item` p inner join `tabPurchase Order` po 
 										on p.parent=po.name where p.item_code='%s' and po.docstatus=1 """
 										%d.item_code,as_list=1)
 		#frappe.errprint(po_ordered_qty)
-
 		qty=flt(so_ordered_qty[0][0]-po_ordered_qty[0][0])
-		#frappe.errprint(qty)
 		if qty>0:
 				supplier=frappe.db.sql("""select default_supplier from `tabItem` where 
 											name='%s'"""%d.item_code,as_list=1)
-				#frappe.errprint(supplier[0][0])
-				purchase_order=frappe.db.sql("""select name from `tabPurchase Order` where supplier='%s'
-												 and docstatus=0"""%supplier[0][0],as_list=1)
-				#frappe.errprint(purchase_order)
-				if purchase_order:
-					purchase_order_item=frappe.db.sql("""select item_code from `tabPurchase Order Item`
-															 where parent='%s' and item_code='%s'"""
-															 %(purchase_order[0][0],d.item_code),as_list=1)
-					#frappe.errprint(purchase_order_item)
-					if purchase_order_item:
-						for item in purchase_order_item:
-							#frappe.errprint(item[0])
-							if item[0]==d.item_code:
-					 			#frappe.errprint(item[0])
-						 		update_qty(doc,d,item[0],purchase_order[0][0],qty)			 		
-							else:
-								#frappe.errprint(["not equal",d.item_code])
-								child_entry=update_child_entry(doc,d,purchase_order[0][0],qty)
+				if supplier:
+					purchase_order=frappe.db.sql("""select name from `tabPurchase Order` where supplier='%s'
+													 and docstatus=0"""%supplier[0][0],as_list=1)
+					#frappe.errprint(purchase_order)
+					if purchase_order:
+						purchase_order_item=frappe.db.sql("""select item_code from `tabPurchase Order Item`
+																 where parent='%s' and item_code='%s'"""
+																 %(purchase_order[0][0],d.item_code),as_list=1)
+						#frappe.errprint(purchase_order_item)
+						if purchase_order_item:
+							for item in purchase_order_item:
+								#frappe.errprint(item[0])
+								if item[0]==d.item_code:
+						 			#frappe.errprint(item[0])
+							 		update_qty(doc,d,item[0],purchase_order[0][0],qty)			 		
+								else:
+									#frappe.errprint(["not equal",d.item_code])
+									child_entry=update_child_entry(doc,d,purchase_order[0][0],qty)
+						else:
+							#frappe.errprint(["not equal",d.item_code])
+							child_entry=update_child_entry(doc,d,purchase_order[0][0],qty)
 					else:
-						#frappe.errprint(["not equal",d.item_code])
-						child_entry=update_child_entry(doc,d,purchase_order[0][0],qty)
+						create_new_po(doc,d,supplier[0][0],qty)
+
 				else:
-					create_new_po(doc,d,supplier[0][0],qty)
+					frappe.throw("Suppliser must be specify for items in Item Master Form.")
 
 def create_new_po(doc,d,supplier,qty):
 	po = frappe.new_doc('Purchase Order')
@@ -98,7 +98,7 @@ def update_child_entry(doc,d,purchase_order,qty):
 	poi.base_rate=d.rate
 	poi.base_amount=d.amount
 	poi.warehouse=d.warehouse
-	poi.schedule_date=d.transaction_date
+	poi.schedule_date=d.transaction_date or nowdate()
 	doc1.save(ignore_permissions=True)
 	#update_so_details(doc,d,d.item_code,doc1.name)
 	
@@ -194,12 +194,13 @@ def create_stock_assignment(purchase_receipt,d,sales_order,ordered_qty,assigned_
 def stock_cancellation(doc,method):
 	# frappe.errprint("in stock cancellation")
 	delivered_note=frappe.db.sql("""select delivery_note from `tabStock Assignment Log`
-										where purchase_receipt='%s'"""
+										where purchase_receipt='%s' and delivery_note is not null"""
 										%doc.name,as_list=1)
-	if delivered_note:
-		frappe.msgprint("Delivery Note is already generated against this purchase receipt,so first you have to delete delivery note='"+delivered_note[0][0]+"'")
-	else:
+	if not delivered_note:
 		pass
+	else:
+		frappe.throw("Delivery Note is already generated against this purchase receipt,so first you have to delete delivery note='"+cstr(delivered_note[0][0])+"'")
+
 
 # On sibmission of delivery Note---------------------------------------------------------------------------------------------------------------------------------
 def update_stock_assignment_log_on_submit(doc,method):
@@ -214,7 +215,7 @@ def update_stock_assignment_log_on_submit(doc,method):
 		#frappe.errprint(sales_order_name[0][0])
 		if sales_order_name:
 			delivery_note_name=frappe.db.sql(""" select delivery_note  from `tabStock Assignment Log` where
-							sales_order='%s' and item_code='%s'"""%(sales_order_name[0][0],d.item_code))
+							sales_order='%s' and item_code='%s' and delivery_note is not null"""%(sales_order_name[0][0],d.item_code))
 			#frappe.errprint(delivery_note_name)
 			#frappe.errprint(len(delivery_note_name))
 			if not delivery_note_name:
@@ -766,7 +767,8 @@ def create_new_order(order,i,content,customer):
 	order.delivery_date=delivery_date
 	order.grand_total_export=content[i].get('grand_total')
 	#order.discount_amount=content[i].get('discount_amount')
-	order.po_no=content[i].get('po_number')
+	if content[i].get('po_number'):
+		order.po_no=content[i].get('po_number')
 	order.order_type=content[i].get('order_type')
 	for i in content[i].get('order_items'):
  		create_child_item(i,order)
