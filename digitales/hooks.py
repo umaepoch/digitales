@@ -72,18 +72,18 @@ doc_events = {
 	# 	"on_trash": "method"
 	# }
 	"Sales Order": {
-		"on_submit": "digitales.digitales.custom_methods.create_purchase_order"
+		"on_submit": "digitales.digitales.Api_methods.create_purchase_order"
 	},
 
 	"Purchase Receipt": {
-		"on_submit": "digitales.digitales.custom_methods.stock_assignment",
-		"on_cancel": "digitales.digitales.custom_methods.stock_cancellation"
+		"on_submit": "digitales.digitales.Api_methods.stock_assignment",
+		"on_cancel": "digitales.digitales.Api_methods.stock_cancellation"
 	},
 
 	"Delivery Note": {
-		"on_submit": ["digitales.digitales.custom_methods.update_stock_assignment_log_on_submit",
-						"digitales.digitales.custom_methods.validate_qty_on_submit"],
-		"on_cancel": "digitales.digitales.custom_methods.update_stock_assignment_log_on_cancel"
+		"on_submit": ["digitales.digitales.Api_methods.update_stock_assignment_log_on_submit",
+						"digitales.digitales.Api_methods.validate_qty_on_submit"],
+		"on_cancel": "digitales.digitales.Api_methods.update_stock_assignment_log_on_cancel"
 		
 	}
 	

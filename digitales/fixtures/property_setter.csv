@@ -18,6 +18,7 @@
 "Type:","Data (text)","Select","Link","Data","Text","Data","Data","Data"
 "Info:","","One of: DocField, DocType","Valid DocType","","","","",""
 "Start entering data below this line"
+"","""Sales Invoice Item-assigned_qty-previous_field""","DocField","Sales Invoice Item","previous_field","stock_uom","assigned_qty","Data",""
 "","""Sales Invoice-new_order_type-previous_field""","DocField","Sales Invoice","previous_field","order_type","new_order_type","Data",""
 "","""Sales Order Item-release_date_of_item-previous_field""","DocField","Sales Order Item","previous_field","item_name","release_date_of_item","Data",""
 "","""Sales Order Item-assigned_qty-previous_field""","DocField","Sales Order Item","previous_field","description","assigned_qty","Data",""

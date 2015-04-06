@@ -77,7 +77,9 @@ def create_new_po(doc,d,supplier,qty):
 	e.base_rate=d.rate
 	e.base_amount=d.amount
 	e.warehouse=d.warehouse
-	e.schedule_date=d.transaction_date or nowdate()
+	frappe.errprint(e.warehouse)
+	e.schedule_date=nowdate()
+	#frappe.errprint(e.schedule_date)
 	#po.taxes_and_charges=doc.taxes_and_charges
 	po.save(ignore_permissions=True)
 	#frappe.errprint(po.name)
@@ -98,7 +100,8 @@ def update_child_entry(doc,d,purchase_order,qty):
 	poi.base_rate=d.rate
 	poi.base_amount=d.amount
 	poi.warehouse=d.warehouse
-	poi.schedule_date=d.transaction_date or nowdate()
+	poi.schedule_date=nowdate()
+	#frappe.errprint(poi.schedule_date)
 	doc1.save(ignore_permissions=True)
 	#update_so_details(doc,d,d.item_code,doc1.name)
 	
@@ -196,6 +199,7 @@ def stock_cancellation(doc,method):
 	delivered_note=frappe.db.sql("""select delivery_note from `tabStock Assignment Log`
 										where purchase_receipt='%s' and delivery_note is not null"""
 										%doc.name,as_list=1)
+	frappe.errprint(delivered_note)
 	if not delivered_note:
 		pass
 	else:
