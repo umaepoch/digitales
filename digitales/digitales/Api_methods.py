@@ -77,7 +77,7 @@ def create_new_po(doc,d,supplier,qty):
 	e.base_rate=d.rate
 	e.base_amount=d.amount
 	e.warehouse=d.warehouse
-	frappe.errprint(e.warehouse)
+	#frappe.errprint(e.warehouse)
 	e.schedule_date=nowdate()
 	#frappe.errprint(e.schedule_date)
 	#po.taxes_and_charges=doc.taxes_and_charges
@@ -199,7 +199,6 @@ def stock_cancellation(doc,method):
 	delivered_note=frappe.db.sql("""select delivery_note from `tabStock Assignment Log`
 										where purchase_receipt='%s' and delivery_note is not null"""
 										%doc.name,as_list=1)
-	frappe.errprint(delivered_note)
 	if not delivered_note:
 		pass
 	else:
