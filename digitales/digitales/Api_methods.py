@@ -33,6 +33,8 @@ def create_purchase_order(doc,method):
 		#frappe.errprint(po_ordered_qty)
 		qty=flt(so_ordered_qty[0][0]-po_ordered_qty[0][0])
 		if qty>0:
+
+				#check_available_qty_instock(d,qty)
 				supplier=frappe.db.sql("""select default_supplier from `tabItem` where 
 											name='%s'"""%d.item_code,as_list=1)
 				if supplier:
@@ -61,6 +63,11 @@ def create_purchase_order(doc,method):
 
 				else:
 					frappe.throw("Suppliser must be specify for items in Item Master Form.")
+
+def check_available_qty_instock(self,d,qty):
+	frappe.errprint("check_available_qty_instock")
+
+
 
 def create_new_po(doc,d,supplier,qty):
 	po = frappe.new_doc('Purchase Order')
@@ -145,18 +152,20 @@ def stock_assignment(doc,method):
 					assigned_qty=frappe.db.sql(""" select assigned_qty from `tabSales Order Item` 
 													where parent='%s' and item_code='%s'"""
 														%(i[0],d.item_code),as_list=1)
-					if qty>0 and i[1]>0:
-						if qty>=i[1]:
-							qty=qty-i[1]
-							
-							assigned_qty=(assigned_qty[0][0]+i[1])
-							update_assigned_qty(assigned_qty,i[0],d.item_code)				
-							create_stock_assignment(doc.name,d,i[0],i[1],i[1])
-						else:
-							assigned_qty=flt(assigned_qty[0][0]+qty)
-							update_assigned_qty(assigned_qty,i[0],d.item_code)
-							create_stock_assignment(doc.name,d,i[0],i[1],qty)
-							qty=0.0
+					if assigned_qty:
+						
+						if qty>0 and i[1]>0:
+							if qty>=i[1]:
+								qty=qty-i[1]
+								
+								assigned_qty=(assigned_qty[0][0]+i[1])
+								update_assigned_qty(assigned_qty,i[0],d.item_code)				
+								create_stock_assignment(doc.name,d,i[0],i[1],i[1])
+							else:
+								assigned_qty=flt(assigned_qty[0][0]+qty)
+								update_assigned_qty(assigned_qty,i[0],d.item_code)
+								create_stock_assignment(doc.name,d,i[0],i[1],qty)
+								qty=0.0
 
 def update_assigned_qty(assigned_qty,sales_order,item_code):
 	frappe.db.sql("""update `tabSales Order Item` 
