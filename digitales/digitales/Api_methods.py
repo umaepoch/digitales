@@ -541,7 +541,7 @@ def update_execution_date(document):
 
 
 def GetCustomer():
-	#update_execution_date('Order')
+	update_execution_date('Order')
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 	oauth = GetOauthDetails()
 	max_customer_date = '1988-09-07 05:43:13'
