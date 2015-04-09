@@ -141,19 +141,21 @@ def stock_assignment(doc,method):
 				for i in sales_order:
 					assigned_qty=frappe.db.sql(""" select assigned_qty from `tabSales Order Item` 
 													where parent='%s' and item_code='%s'"""
-														%(i[0],d.item_code),as_list=1)
-					if qty>0 and i[1]>0:
-						if qty>=i[1]:
-							qty=qty-i[1]
+													%(i[0],d.item_code),as_list=1)
+					if assigned_qty:
 							
-							assigned_qty=(assigned_qty[0][0]+i[1])
-							update_assigned_qty(assigned_qty,i[0],d.item_code)				
-							create_stock_assignment(doc.name,d,i[0],i[1],i[1])
-						else:
-							assigned_qty=flt(assigned_qty[0][0]+qty)
-							update_assigned_qty(assigned_qty,i[0],d.item_code)
-							create_stock_assignment(doc.name,d,i[0],i[1],qty)
-							qty=0.0
+						if qty>0 and i[1]>0:
+							if qty>=i[1]:
+								qty=qty-i[1]
+								
+								assigned_qty=(assigned_qty[0][0]+i[1])
+								update_assigned_qty(assigned_qty,i[0],d.item_code)				
+								create_stock_assignment(doc.name,d,i[0],i[1],i[1])
+							else:
+								assigned_qty=flt(assigned_qty[0][0]+qty)
+								update_assigned_qty(assigned_qty,i[0],d.item_code)
+								create_stock_assignment(doc.name,d,i[0],i[1],qty)
+								qty=0.0
 
 def update_assigned_qty(assigned_qty,sales_order,item_code):
 	frappe.db.sql("""update `tabSales Order Item` 
@@ -383,7 +385,7 @@ def create_new_product(item,i,content):
 			item.item_group=item_group
 	item.description=content[i].get('short_description') or content[i].get('description') or content[i].get('sku')
 	item.event_id=i
-	item.item_status='Existing'
+	#item.item_status='Existing'
 	warehouse=get_own_warehouse()
 	item.default_warehouse=warehouse
 	item.modified_date=content[i].get('updated_at')

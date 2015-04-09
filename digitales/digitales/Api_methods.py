@@ -1,4 +1,3 @@
-
 from __future__ import unicode_literals
 import frappe
 from frappe.widgets.reportview import get_match_cond
@@ -19,54 +18,87 @@ import itertools
 
 # On submission of sales order---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def create_purchase_order(doc,method):
+	check_ispurchase_item(doc,method)
 
+def check_ispurchase_item(doc,method):
 	for d in doc.get('sales_order_details'):
-		so_ordered_qty=frappe.db.sql("""select ifnull(sum(s.qty),0) as qty  
-									from `tabSales Order Item` s inner join `tabSales Order` so 
-										on s.parent=so.name where s.item_code='%s' and so.docstatus=1 """
-										%d.item_code,as_list=1)
-		
-		po_ordered_qty=frappe.db.sql("""select ifnull(sum(p.qty),0) as qty 
+		if frappe.db.get_value("Item",{'is_purchase_item':'Yes','name':d.item_code},'name'):
+			#frappe.errprint(d.item_code)
+			if frappe.db.get_value("Item",{'is_stock_item':'Yes','name':d.item_code},'name'):
+				#frappe.errprint(d.item_code)
+				check_stock_availability(doc,d)
+			else:
+				create_purchase_order_record(doc,d,d.qty)
+
+
+def check_stock_availability(doc,d):
+	Quantities=frappe.db.sql("""select actual_qty,ordered_qty,reserved_qty from `tabBin` 
+								where item_code='%s' and warehouse='%s'"""%(d.item_code,d.warehouse),as_list=1)
+	#frappe.errprint(Quantities)
+	draft_po_qty=frappe.db.sql("""select ifnull(sum(p.qty),0) as qty 
 									from `tabPurchase Order Item` p inner join `tabPurchase Order` po 
-										on p.parent=po.name where p.item_code='%s' and po.docstatus=1 """
-										%d.item_code,as_list=1)
-		#frappe.errprint(po_ordered_qty)
-		qty=flt(so_ordered_qty[0][0]-po_ordered_qty[0][0])
-		if qty>0:
+										on p.parent=po.name where p.item_code='%s' and p.warehouse='%s' and po.docstatus=0"""
+										%(d.item_code,d.warehouse),as_list=1)
+	#frappe.errprint(draft_po_qty[0][0])
+	if Quantities and draft_po_qty:
+		available_qty=(Quantities[0][0]+Quantities[0][1]-Quantities[0][2]+draft_po_qty[0][0])
+		frappe.errprint(available_qty)
+		frappe.errprint("in available_qty")
+		if available_qty>0:
+			if d.qty==available_qty:
+				create_stock_assignment_document(d,doc.nmae,d.qty,d.qty)
+				update_assigned_qty(d.qty,doc.name,d.item_code)
+			elif d.qty>available_qty:
+				qty_ordered=d.qty-available_qty
+				create_stock_assignment_document(d,doc.name,d.qty,available_qty)
+				update_assigned_qty(available_qty,doc.name,d.item_code)
+				create_purchase_order_record(doc,d,qty_ordered)
+			elif d.qty<available_qty:
+				create_stock_assignment_document(d,doc.name,d.qty,d.qty)
+				update_assigned_qty(d.qty,doc.name,d.item_code)
+		elif available_qty==0:
+			frappe.errprint("qty is 00")
+			create_purchase_order_record(doc,d,d.qty)
+		elif available_qty<0:
+			frappe.errprint("qty is less tahn zero")
+			available_qty=available_qty*(-1)
+			create_purchase_order_record(doc,d,available_qty)
 
-				#check_available_qty_instock(d,qty)
-				supplier=frappe.db.sql("""select default_supplier from `tabItem` where 
-											name='%s'"""%d.item_code,as_list=1)
-				if supplier:
-					purchase_order=frappe.db.sql("""select name from `tabPurchase Order` where supplier='%s'
-													 and docstatus=0"""%supplier[0][0],as_list=1)
-					#frappe.errprint(purchase_order)
-					if purchase_order:
-						purchase_order_item=frappe.db.sql("""select item_code from `tabPurchase Order Item`
-																 where parent='%s' and item_code='%s'"""
-																 %(purchase_order[0][0],d.item_code),as_list=1)
-						#frappe.errprint(purchase_order_item)
-						if purchase_order_item:
-							for item in purchase_order_item:
-								#frappe.errprint(item[0])
-								if item[0]==d.item_code:
-						 			#frappe.errprint(item[0])
-							 		update_qty(doc,d,item[0],purchase_order[0][0],qty)			 		
-								else:
-									#frappe.errprint(["not equal",d.item_code])
-									child_entry=update_child_entry(doc,d,purchase_order[0][0],qty)
-						else:
-							#frappe.errprint(["not equal",d.item_code])
-							child_entry=update_child_entry(doc,d,purchase_order[0][0],qty)
+
+def create_purchase_order_record(doc,d,qty):
+
+	supplier=frappe.db.sql("""select default_supplier from `tabItem` where 
+								name='%s'"""%d.item_code,as_list=1)
+	frappe.errprint(supplier)
+	if supplier:
+		purchase_order=frappe.db.sql("""select name from `tabPurchase Order` where supplier='%s'
+										 and docstatus=0"""%supplier[0][0],as_list=1)
+		frappe.errprint(purchase_order)
+		if purchase_order:
+			purchase_order_item=frappe.db.sql("""select item_code from `tabPurchase Order Item`
+													 where parent='%s' and item_code='%s'"""
+													 %(purchase_order[0][0],d.item_code),as_list=1)
+			if purchase_order_item:
+				for item in purchase_order_item:
+					if item[0]==d.item_code:
+						purchase_order_qty=frappe.db.sql("""select qty,rate from `tabPurchase Order Item`
+													 where parent='%s' and item_code='%s'"""
+													 %(purchase_order[0][0],d.item_code),as_list=1)
+						frappe.errprint(purchase_order_qty)
+						qty_new=qty+purchase_order_qty[0][0]
+						frappe.errprint(qty)
+				 		update_qty(doc,d,item[0],purchase_order[0][0],qty_new,purchase_order_qty[0][1])			 		
 					else:
-						create_new_po(doc,d,supplier[0][0],qty)
+						child_entry=update_child_entry(doc,d,purchase_order[0][0],qty)
+			else:
+				child_entry=update_child_entry(doc,d,purchase_order[0][0],qty)
+		else:
+			frappe.errprint("po not present")
+			frappe.errprint(qty)
+			create_new_po(doc,d,supplier[0][0],qty)
 
-				else:
-					frappe.throw("Suppliser must be specify for items in Item Master Form.")
-
-def check_available_qty_instock(self,d,qty):
-	frappe.errprint("check_available_qty_instock")
-
+	else:
+		frappe.throw("Suppliser must be specify for items in Item Master Form.")
 
 
 def create_new_po(doc,d,supplier,qty):
@@ -84,12 +116,8 @@ def create_new_po(doc,d,supplier,qty):
 	e.base_rate=d.rate
 	e.base_amount=d.amount
 	e.warehouse=d.warehouse
-	#frappe.errprint(e.warehouse)
 	e.schedule_date=nowdate()
-	#frappe.errprint(e.schedule_date)
-	#po.taxes_and_charges=doc.taxes_and_charges
 	po.save(ignore_permissions=True)
-	#frappe.errprint(po.name)
 	#update_so_details(doc,d,d.item_code,po.name)
 	#update_sales_order(doc,d.item_code,po.name,e.name)
 
@@ -108,19 +136,15 @@ def update_child_entry(doc,d,purchase_order,qty):
 	poi.base_amount=d.amount
 	poi.warehouse=d.warehouse
 	poi.schedule_date=nowdate()
-	#frappe.errprint(poi.schedule_date)
 	doc1.save(ignore_permissions=True)
 	#update_so_details(doc,d,d.item_code,doc1.name)
 	
-def update_qty(doc,d,item,purchase_order,qty):
-	#frappe.errprint("in update qty")
-	# qty11=frappe.db.sql("""select qty from `tabPurchase Order Item` where 
-	# 						item_code='%s' and parent='%s'"""
-	# 							%(item,purchase_order),as_list=1)
-	# qty1=flt(qty11[0][0]+flt(qty))
-	frappe.db.sql("""update `tabPurchase Order Item` set qty='%s' 
+def update_qty(doc,d,item,purchase_order,qty,rate):
+	amount=rate*qty
+	frappe.db.sql("""update `tabPurchase Order Item` set qty='%s', amount='%s'
 						where parent='%s' and item_code='%s'"""
-							%(qty,purchase_order,item))
+							%(qty,amount,purchase_order,item),debug=1)
+
 	frappe.db.commit()
 	#update_so_details(doc,d,item,purchase_order)
 
@@ -131,8 +155,6 @@ def update_so_details(doc,d,item,purchase_order):
 	so.qty=d.qty
 	so.sales_order_name=doc.name
 	doc2.save(ignore_permissions=True)
-
-
 
 
 # On submission of Purchase Receipt--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -160,11 +182,11 @@ def stock_assignment(doc,method):
 								
 								assigned_qty=(assigned_qty[0][0]+i[1])
 								update_assigned_qty(assigned_qty,i[0],d.item_code)				
-								create_stock_assignment(doc.name,d,i[0],i[1],i[1])
+								create_stock_assignment(d,i[0],i[1],i[1])
 							else:
 								assigned_qty=flt(assigned_qty[0][0]+qty)
 								update_assigned_qty(assigned_qty,i[0],d.item_code)
-								create_stock_assignment(doc.name,d,i[0],i[1],qty)
+								create_stock_assignment(d,i[0],i[1],qty)
 								qty=0.0
 
 def update_assigned_qty(assigned_qty,sales_order,item_code):
@@ -175,7 +197,7 @@ def update_assigned_qty(assigned_qty,sales_order,item_code):
 	frappe.db.commit()
 
 
-def create_stock_assignment(purchase_receipt,d,sales_order,ordered_qty,assigned_qty):
+def create_stock_assignment(d,sales_order,ordered_qty,assigned_qty):
 	#frappe.errprint("in stock assignment")
 	stock_assignment=frappe.db.sql("""select name from `tabStock Assignment Log` where 
 									sales_order='%s' and item_code='%s'"""
@@ -186,16 +208,18 @@ def create_stock_assignment(purchase_receipt,d,sales_order,ordered_qty,assigned_
 			     where name='%s'"""%stock_assignment[0][0])
 		#frappe.errprint(ass_qty)
 		qty=assigned_qty+ass_qty[0][0]
-		frappe.db.sql("""update `tabStock Assignment Log` set purchase_receipt='%s',
+		frappe.db.sql("""update `tabStock Assignment Log` set
 					    sales_order='%s',assigned_qty='%s'
 						where name='%s'"""
-						%(purchase_receipt,sales_order,qty,stock_assignment[0][0]))
+						%(sales_order,qty,stock_assignment[0][0]))
 		frappe.db.commit()
 
 	else:
+		create_stock_assignment_document(purchase_receipt,d,sales_order,ordered_qty,assigned_qty)
 
+def create_stock_assignment_document(d,sales_order,ordered_qty,assigned_qty):
 		sa = frappe.new_doc('Stock Assignment Log')
-		sa.purchase_receipt=purchase_receipt
+		#sa.purchase_receipt=purchase_receipt
 		sa.sales_order=sales_order
 		sa.ordered_qty=ordered_qty
 		sa.assign_qty=assigned_qty
@@ -294,7 +318,7 @@ def validate_qty_on_submit(doc,method):
 
 def check_APItime():
 	#GetItem()
-	# # GetCustomer()
+	# GetCustomer()
 	# # GetOrders()
 	time = frappe.db.sql("""select value from `tabSingles` where doctype='API Configuration Page' and field in ('date','api_type')""",as_list=1)
 	if time:
@@ -423,7 +447,7 @@ def create_new_product(item,i,content):
 			item.item_group=item_group
 	item.description = 'Desc: ' + content[i].get('short_description') if content[i].get('short_description') else content[i].get('sku')
 	item.event_id=i
-	item.item_status='Existing'
+	#item.item_status='Existing'
 	warehouse=get_own_warehouse()
 	item.default_warehouse=warehouse
 	if content[i].get('barcode') and not frappe.db.get_value('Item', {'barcode':content[i].get('barcode')}, 'name'):	
@@ -513,7 +537,7 @@ def update_execution_date(document):
 
 
 def GetCustomer():
-	update_execution_date('Order')
+	#update_execution_date('Order')
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 	oauth = GetOauthDetails()
 	max_customer_date = '1988-09-07 05:43:13'
@@ -521,7 +545,8 @@ def GetCustomer():
 	if max_date[0][0]!=None:
 		max_customer_date = max_date[0][0]
 	max_customer_date = (datetime.datetime.strptime(max_customer_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
-	status=get_customers_from_magento(1, max_customer_date, h, oauth)		
+	status=get_customers_from_magento(1, max_customer_date, h, oauth)	
+
 
 def get_missed_customers(count, max_date, header, oauth_data):
 	#frappe.errprint("get misseddd customers")
@@ -541,9 +566,11 @@ def get_customers_from_magento(page, max_date, header, oauth_data,type_of_data=N
 				name = frappe.db.get_value('Customer', customer_data[index].get('organisation').replace("'",""), 'name')
 				if name:
 					update_customer(name, index, customer_data)
+					# GetAddress(index,customer_data)
 				else:
 					count = count + 1
 					create_customer(index, customer_data)
+					# GetAddress(index,customer_data)
 			if count == 0 and type_of_data != 'missed':
 				tot_count = get_Data_count(max_date, 'customer_pages_per_100_mcount')
 				if cint(tot_count)>0 :
@@ -647,6 +674,48 @@ def create_customer_group(i):
 	cg.save(ignore_permissions=True)
 	return cg.name or 'All Customer Group'
 
+
+def GetAddress(index,customer_data):
+	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+	oauth = GetOauthDetails()
+	customer=frappe.db.get_value('Customer',{'entity_id':customer_data[index].get('entity_id')},'name')
+	if customer:
+		r = requests.get(url='http://digitales.com.au/api/rest/customers/'+cstr(customer_data[index].get('entity_id'))+'/addresses', headers=h, auth=oauth)
+		content=json.loads(r.content)
+		if content:
+			for i in content:
+				print cstr(i.get('entity_id')), customer_data[index].get('entity_id'), i.get('street'), i.get('firstname'), i.get('lastname')
+				if not frappe.db.get_value('Address',{'entity_id': cstr(i.get('entity_id')),'address_title':cstr(i.get('firstname'))+' '+cstr(i.get('lastname')) +' '+cstr(i.get('street')[0])},'name'):
+					create_onother_address_forCustomer(i, customer)
+				else:
+					print "hh"
+					cust_address=frappe.db.get_value('Address',{'entity_id': cstr(i.get('entity_id')),'address_title':cstr(i.get('firstname'))+' '+cstr(i.get('lastname')) +' '+cstr(i.get('street')[0])},'name')
+					update_onother_address_forCustomer(cust_address,i,customer)
+
+
+def create_onother_address_forCustomer(i, customer):
+	cad = frappe.new_doc('Address')
+	cad.address_title = cstr(i.get('firstname'))+' '+cstr(i.get('lastname')) +' '+cstr(i.get('street')[0])
+	cad.entity_id = cstr(i.get('entity_id'))
+	cad.address_line1 = cstr(i.get('street')[0])
+	cad.city = cstr(i.get('city'))
+	cad.state = cstr(i.get('region'))
+	cad.pincode = cstr(i.get('postcode'))
+	cad.phone = cstr(i.get('telephone')) or '00000'
+	cad.customer = customer
+	cad.save(ignore_permissions=True)
+
+def update_onother_address_forCustomer(cust_address,i, customer):
+	cad = frappe.get_doc('Address',cust_address)
+	#cad.address_title = address_details.get('firstname')+' '+address_details.get('lastname')
+	cad.entity_id = cstr(i.get('entity_id'))
+	cad.address_line1 = cstr(i.get('street')[0])
+	cad.city = cstr(i.get('city'))
+	cad.state = cstr(i.get('region'))
+	cad.pincode = cstr(i.get('postcode'))
+	cad.phone = cstr(i.get('telephone')) or '00000'
+	cad.customer = customer
+	cad.save(ignore_permissions=True)
 
 #Get Order data API
 def GetOrders():

@@ -18,6 +18,10 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
+"","""Sales Order-modified_date""","Sales Order","Data","Modified Date","comment","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Customer-modified_date""","Customer","Data","Modified Date","tender_group","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Item-modified_date""","Item","Data","Modified Date","item_status","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Address-entity_id""","Address","Data","Entity ID","lead_name","","","","entity_id",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-line_item""","Sales Order Item","Data","Line Order Item","item_name","","","","line_item",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice Item-budget""","Sales Invoice Item","Link","Budget","delivered_qty","","Budget","","budget",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Invoice Item-process_id""","Sales Invoice Item","Link","Process ID","sales_order","","Process","","process_id",0,0,1,0,"","",0,"",0,0,0,0,0,0
@@ -44,7 +48,6 @@ Shopping Cart","","order_type",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order-order_end_date""","Sales Order","Date","End Date","start_date","","","","order_end_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-process_status""","Sales Order","Data","Process Status","currency","","Uncompleted
 Completed","","process_status",0,0,0,0,"","Uncompleted",1,"",0,0,0,0,0,0
-"","""Sales Order-modified_date""","Sales Order","Datetime","Modified Date","comment","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order-comment""","Sales Order","Small Text","Comment","po_no","","","","comment",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-start_date""","Sales Order","Date","Start Date","po_no","","","","start_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Delivery Note Item-assigned_qty""","Delivery Note Item","Float","Assigned Qty","description","","","","assigned_qty",0,0,1,0,"","",0,"",0,0,0,0,0,0
@@ -55,8 +58,6 @@ Standard Order
 Standing Order
 Reader Request","","new_order_type",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice Item-shelf_ready_service_name""","Sales Invoice Item","Data","Shelf Ready Service  Name","description","","","","shelf_ready_service_name",0,0,1,0,"","",1,"",0,0,0,0,0,0
-"","""Customer-modified_date""","Customer","Datetime","Modified Date","tender_group","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
-"","""Item-modified_date""","Item","Datetime","Modified Date","item_status","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Item-event_id""","Item","Data","Entity  ID","product_release_date","","","","event_id",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Customer-entity_id""","Customer","Data","Entity ID","lead_name","","","","entity_id",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Invoice-po_no""","Sales Invoice","Data","PO No","mode_of_payment","","","","po_no",0,0,0,0,"","",0,"",0,0,0,0,0,0
