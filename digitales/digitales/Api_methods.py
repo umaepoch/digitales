@@ -594,7 +594,7 @@ def create_customer(i,content):
 		update_customer_name(temp_customer)
 
 def update_customer_name(customer_name):
-	customer = frappe.get_doc("Customer", customer)
+	customer = frappe.get_doc("Customer", customer_name)
 	customer.customer_name= customer_name.replace("(C)","")
 	customer.save(ignore_permissions=True)
 
