@@ -215,16 +215,17 @@ def create_stock_assignment(d,sales_order,ordered_qty,assigned_qty):
 		frappe.db.commit()
 
 	else:
-		create_stock_assignment_document(purchase_receipt,d,sales_order,ordered_qty,assigned_qty)
+		create_stock_assignment_document(d,sales_order,ordered_qty,assigned_qty)
 
 def create_stock_assignment_document(d,sales_order,ordered_qty,assigned_qty):
-		sa = frappe.new_doc('Stock Assignment Log')
-		#sa.purchase_receipt=purchase_receipt
-		sa.sales_order=sales_order
-		sa.ordered_qty=ordered_qty
-		sa.assign_qty=assigned_qty
-		sa.item_code=d.item_code
-		sa.save(ignore_permissions=True)
+	#frappe.errprint("in stock")
+	sa = frappe.new_doc('Stock Assignment Log')
+	#sa.purchase_receipt=purchase_receipt
+	sa.sales_order=sales_order
+	sa.ordered_qty=ordered_qty
+	sa.assign_qty=assigned_qty
+	sa.item_code=d.item_code
+	sa.save(ignore_permissions=True)
 
 	
 def stock_cancellation(doc,method):
