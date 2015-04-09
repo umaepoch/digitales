@@ -46,7 +46,7 @@ def check_stock_availability(doc,d):
 		frappe.errprint("in available_qty")
 		if available_qty>0:
 			if d.qty==available_qty:
-				create_stock_assignment_document(d,doc.nmae,d.qty,d.qty)
+				create_stock_assignment_document(d,doc.name,d.qty,d.qty)
 				update_assigned_qty(d.qty,doc.name,d.item_code)
 			elif d.qty>available_qty:
 				qty_ordered=d.qty-available_qty
@@ -326,6 +326,7 @@ def check_APItime():
 		dates= list(itertools.chain.from_iterable(time))
 		api_configured_date = dates[1].split('.')[0] if '.' in dates[1] else dates[1]
 		api_date=datetime.datetime.strptime(api_configured_date , '%Y-%m-%d %H:%M:%S')
+
 		if datetime.datetime.now() > api_date and dates[0] =='Product':
 			#frappe.errprint("in get item")
 			GetItem()

@@ -72,7 +72,7 @@ doc_events = {
 	# 	"on_trash": "method"
 	# }
 	"Sales Order": {
-		"on_update": "digitales.digitales.Api_methods.create_purchase_order",
+		# "on_update": "digitales.digitales.Api_methods.create_purchase_order",
 		"on_submit": "digitales.digitales.Api_methods.create_purchase_order"
 	},
 
