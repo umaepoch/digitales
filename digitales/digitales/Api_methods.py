@@ -354,6 +354,7 @@ def GetItem():
 	max_date = frappe.db.sql(""" select max(modified_date) as max_date from `tabItem` """,as_list=1)
 	if max_date[0][0]!=None:
 		max_item_date = max_date[0][0]
+	max_item_date = max_item_date.split('.')[0] if '.' in max_item_date else max_item_date
 	max_item_date = (datetime.datetime.strptime(max_item_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
 	status = get_products_from_magento(1, max_item_date, h, oauth)		
 	
@@ -545,6 +546,7 @@ def GetCustomer():
 	max_date = frappe.db.sql(""" select max(modified_date) as max_date from `tabCustomer` """,as_list=1)
 	if max_date[0][0]!=None:
 		max_customer_date = max_date[0][0]
+	max_customer_date = max_customer_date.split('.')[0] if '.' in max_customer_date else max_customer_date
 	max_customer_date = (datetime.datetime.strptime(max_customer_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
 	status=get_customers_from_magento(1, max_customer_date, h, oauth)	
 
@@ -728,6 +730,7 @@ def GetOrders():
 	max_date = frappe.db.sql(""" select max(modified_date) as max_date from `tabSales Order` """,as_list=1)
 	if max_date[0][0]!=None:
 		max_order_date = max_date[0][0]
+	max_order_date = max_order_date.split('.')[0] if '.' in max_order_date else max_order_date
 	max_order_date = (datetime.datetime.strptime(max_order_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
 	status=get_orders_from_magento(1, max_order_date, h, oauth)
 
