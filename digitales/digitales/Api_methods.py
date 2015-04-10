@@ -171,7 +171,7 @@ def stock_assignment(doc,method):
 			qty=d.qty
 			if sales_order:
 				for i in sales_order:
-					assigned_qty=frappe.db.sql(""" select assigned_qty from `tabSales Order Item` 
+					assigned_qty=frappe.db.sql(""" select ifnull(assigned_qty,0) from `tabSales Order Item` 
 													where parent='%s' and item_code='%s'"""
 														%(i[0],d.item_code),as_list=1)
 					if assigned_qty:
