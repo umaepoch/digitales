@@ -82,8 +82,8 @@ doc_events = {
 	},
 
 	"Delivery Note": {
-		"on_submit": ["digitales.digitales.Api_methods.update_stock_assignment_log_on_submit",
-								"digitales.digitales.Api_methods.validate_qty_on_submit"],
+		"on_submit": "digitales.digitales.Api_methods.update_stock_assignment_log_on_submit",
+		"validate": "digitales.digitales.Api_methods.validate_qty_on_submit",
 		"on_cancel": "digitales.digitales.Api_methods.update_stock_assignment_log_on_cancel"
 		
 	}
