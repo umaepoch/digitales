@@ -91,7 +91,7 @@ def create_purchase_order_record(doc,d,qty):
 		else:
 			create_new_po(doc,d,supplier[0][0],qty)
 	else:
-		frappe.throw("Suppliser must be specify for items in Item Master Form.")
+		frappe.throw("Supplier must be specify for items in Item Master Form.")
 
 
 def create_new_po(doc,d,supplier,qty):
@@ -154,7 +154,7 @@ def update_so_details(doc,d,item,purchase_order):
 def stock_assignment(doc,method):
 	#frappe.errprint("in stock assignment")
 	for d in doc.get('purchase_receipt_details'):
-		if d.item_code:
+		if frappe.db.get_value("Item",{'is_stock_item':'Yes','name':d.item_code},'name'):
 			sales_order=frappe.db.sql("""select s.parent,s.qty-s.assigned_qty as qty from `tabSales Order Item` s 
 										inner join `tabSales Order` so on s.parent=so.name 
 										 where s.item_code='%s' and so.docstatus=1 and 
@@ -181,6 +181,8 @@ def stock_assignment(doc,method):
 								update_assigned_qty(assigned_qty,i[0],d.item_code)
 								create_stock_assignment(d,i[0],i[1],qty)
 								qty=0.0
+		else:
+			pass
 
 def update_assigned_qty(assigned_qty,sales_order,item_code):
 	frappe.db.sql("""update `tabSales Order Item` 
@@ -211,6 +213,7 @@ def create_stock_assignment_document(d,sales_order,ordered_qty,assigned_qty):
 	#frappe.errprint("in stock")
 	sa = frappe.new_doc('Stock Assignment Log')
 	#sa.purchase_receipt=purchase_receipt
+	sa.item_name=d.item_name
 	sa.sales_order=sales_order
 	sa.ordered_qty=ordered_qty
 	sa.assign_qty=assigned_qty
@@ -284,7 +287,7 @@ def update_stock_assignment_log_on_cancel(doc,method):
 def validate_qty_on_submit(doc,method):
 	for d in doc.get('delivery_note_details'):
 		if not d.assigned_qty>=d.qty:
-			frappe.throw("Delivered Quantity must be less than assigned_qty for item_code='"+d.item_code+"'")
+			frappe.throw("Delivered Quantity must be less than or equal to assigned_qty for item_code='"+d.item_code+"'")
 
 
 
@@ -496,7 +499,7 @@ def GetOauthDetails():
 
 #update configuration
 def update_execution_date(document):
-	now_plus_10 = datetime.datetime.now() + datetime.timedelta(minutes = 5)
+	now_plus_10 = datetime.datetime.now() + datetime.timedelta(minutes = 10)
 	frappe.db.sql("""update `tabSingles` set value='%s' where doctype='API Configuration Page' and field='date'"""%(now_plus_10.strftime('%Y-%m-%d %H:%M:%S')))
 	frappe.db.sql("""update `tabSingles` set value='%s' where doctype='API Configuration Page' and field='api_type'"""%(document))
 	frappe.db.commit()
