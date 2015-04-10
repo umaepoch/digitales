@@ -42,8 +42,8 @@ def check_stock_availability(doc,d):
 	#frappe.errprint(draft_po_qty[0][0])
 	if Quantities and draft_po_qty:
 		available_qty=(Quantities[0][0]+Quantities[0][1]-Quantities[0][2]+draft_po_qty[0][0])
-		frappe.errprint(available_qty)
-		frappe.errprint("in available_qty")
+		#frappe.errprint(available_qty)
+		#frappe.errprint("in available_qty")
 		if available_qty>0:
 			if d.qty==available_qty:
 				create_stock_assignment_document(d,doc.name,d.qty,d.qty)
@@ -57,10 +57,10 @@ def check_stock_availability(doc,d):
 				create_stock_assignment_document(d,doc.name,d.qty,d.qty)
 				update_assigned_qty(d.qty,doc.name,d.item_code)
 		elif available_qty==0:
-			frappe.errprint("qty is 00")
+			#frappe.errprint("qty is 00")
 			create_purchase_order_record(doc,d,d.qty)
 		elif available_qty<0:
-			frappe.errprint("qty is less tahn zero")
+			#frappe.errprint("qty is less tahn zero")
 			available_qty=available_qty*(-1)
 			create_purchase_order_record(doc,d,available_qty)
 
@@ -69,7 +69,7 @@ def create_purchase_order_record(doc,d,qty):
 
 	supplier=frappe.db.sql("""select default_supplier from `tabItem` where 
 								name='%s'"""%d.item_code,as_list=1)
-	frappe.errprint(supplier)
+	#frappe.errprint(supplier)
 	if supplier:
 		purchase_order=frappe.db.sql("""select name from `tabPurchase Order` where supplier='%s'
 										 and docstatus=0"""%supplier[0][0],as_list=1)
@@ -93,8 +93,8 @@ def create_purchase_order_record(doc,d,qty):
 			else:
 				child_entry=update_child_entry(doc,d,purchase_order[0][0],qty)
 		else:
-			frappe.errprint("po not present")
-			frappe.errprint(qty)
+			#frappe.errprint("po not present")
+			#frappe.errprint(qty)
 			create_new_po(doc,d,supplier[0][0],qty)
 
 	else:

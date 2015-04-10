@@ -18,9 +18,9 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
+"","""Item-modified_date""","Item","Data","Modified Date","item_status","","","","modified_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-modified_date""","Sales Order","Data","Modified Date","comment","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Customer-modified_date""","Customer","Data","Modified Date","tender_group","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
-"","""Item-modified_date""","Item","Data","Modified Date","item_status","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Address-entity_id""","Address","Data","Entity ID","lead_name","","","","entity_id",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-line_item""","Sales Order Item","Data","Line Order Item","item_name","","","","line_item",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice Item-budget""","Sales Invoice Item","Link","Budget","delivered_qty","","Budget","","budget",0,0,0,0,"","",1,"",0,0,0,0,0,0
