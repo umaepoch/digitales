@@ -54,9 +54,6 @@ def check_stock_availability(doc,d):
 				if d.qty > actual_qty:
 					qty_order = d.qty - actual_qty
 					create_purchase_order_record(doc,d,qty_order)
-					# assign the actual qty
-					create_stock_assignment_document(d,doc.name,d.qty, actual_qty)
-					update_assigned_qty(d.qty,doc.name,d.item_code)
 
 				# else create stock assignment
 				else:
