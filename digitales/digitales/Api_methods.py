@@ -32,16 +32,16 @@ def check_ispurchase_item(doc,method):
 def check_stock_availability(doc,d):
 	Quantities=frappe.db.sql("""select actual_qty,ordered_qty,reserved_qty from `tabBin` 
 								where item_code='%s' and warehouse='%s'"""%(d.item_code,d.warehouse),as_list=1)
-	#frappe.errprint(Quantities)
 	draft_po_qty=frappe.db.sql("""select ifnull(sum(p.qty),0) as qty 
 									from `tabPurchase Order Item` p inner join `tabPurchase Order` po 
 										on p.parent=po.name where p.item_code='%s' and p.warehouse='%s' and po.docstatus=0"""
 										%(d.item_code,d.warehouse),as_list=1)
-	#frappe.errprint(draft_po_qty[0][0])
 	if Quantities and draft_po_qty:
 		available_qty=(Quantities[0][0]+Quantities[0][1]-Quantities[0][2]+draft_po_qty[0][0])
+		actual_qty = Quantities[0][0] or 0.0
+
 		if available_qty>0:
-			if d.qty==available_qty:
+			if d.qty==available_qty:		# que?should be less than equal to
 				create_stock_assignment_document(d,doc.name,d.qty,d.qty)
 				update_assigned_qty(d.qty,doc.name,d.item_code)
 			elif d.qty>available_qty:
@@ -50,22 +50,41 @@ def check_stock_availability(doc,d):
 				update_assigned_qty(available_qty,doc.name,d.item_code)
 				create_purchase_order_record(doc,d,qty_ordered)
 			elif d.qty<available_qty:
-				create_stock_assignment_document(d,doc.name,d.qty,d.qty)
-				update_assigned_qty(d.qty,doc.name,d.item_code)
+				# if actual quantity is zero or less than orderd qty then create purchase order
+				if d.qty > actual_qty:
+					qty_order = d.qty - actual_qty
+					create_purchase_order_record(doc,d,qty_order)
+					# assign the actual qty
+					create_stock_assignment_document(d,doc.name,d.qty, actual_qty)
+					update_assigned_qty(d.qty,doc.name,d.item_code)
+
+				# else create stock assignment
+				else:
+					create_stock_assignment_document(d,doc.name,d.qty,d.qty)
+					update_assigned_qty(d.qty,doc.name,d.item_code)
+				
+
 		elif available_qty==0:
-			#frappe.errprint("qty is 00")
 			create_purchase_order_record(doc,d,d.qty)
 		elif available_qty<0:
-			#frappe.errprint("qty is less tahn zero")
-			available_qty=available_qty*(-1)
-			create_purchase_order_record(doc,d,available_qty)
+			# if actual quantity is zero or less than orderd qty then create purchase order
+			if d.qty > actual_qty:
+				qty_order = d.qty - actual_qty
+				create_purchase_order_record(doc,d,qty_order)
+				# assign the actual qty
+				create_stock_assignment_document(d,doc.name,d.qty, actual_qty)
+				update_assigned_qty(d.qty,doc.name,d.item_code)
+
+			# else create stock assignment
+			else:
+				create_stock_assignment_document(d,doc.name,d.qty,d.qty)
+				update_assigned_qty(d.qty,doc.name,d.item_code)
 
 
 def create_purchase_order_record(doc,d,qty):
 
 	supplier=frappe.db.sql('''select default_supplier from `tabItem` where 
 								name="%s"'''%d.item_code,as_list=1)
-	#frappe.errprint(supplier)
 	if supplier:
 		purchase_order=frappe.db.sql('''select name from `tabPurchase Order` where supplier="%s"
 										 and docstatus=0'''%supplier[0][0],as_list=1)
