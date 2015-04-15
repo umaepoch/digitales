@@ -180,6 +180,15 @@
    "reqd": 0, 
    "search_index": 0, 
    "set_only_once": 0
+  }, 
+  {
+   "fieldname": "purchase_receipt_no", 
+   "fieldtype": "Link", 
+   "label": "Purchase Receipt No ", 
+   "options": "Purchase Receipt", 
+   "permlevel": 0, 
+   "precision": "", 
+   "read_only": 1
   }
  ], 
  "hide_heading": 0, 
@@ -190,7 +199,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2015-04-14 23:37:12.191853", 
+ "modified": "2015-04-15 14:55:43.070842", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Stock Assignment Log", 

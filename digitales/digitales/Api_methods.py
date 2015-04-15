@@ -39,7 +39,6 @@ def check_stock_availability(doc,d):
 	if Quantities and draft_po_qty:
 		available_qty=(Quantities[0][0]+Quantities[0][1]-Quantities[0][2]+draft_po_qty[0][0])
 		actual_qty = Quantities[0][0] or 0.0
-
 		if available_qty>0:
 			if d.qty==available_qty:		# que?should be less than equal to
 				create_stock_assignment_document(d,doc.name,d.qty,d.qty)
@@ -54,13 +53,10 @@ def check_stock_availability(doc,d):
 				if d.qty > actual_qty:
 					qty_order = d.qty - actual_qty
 					create_purchase_order_record(doc,d,qty_order)
-
 				# else create stock assignment
 				else:
 					create_stock_assignment_document(d,doc.name,d.qty,d.qty)
 					update_assigned_qty(d.qty,doc.name,d.item_code)
-				
-
 		elif available_qty==0:
 			create_purchase_order_record(doc,d,d.qty)
 		elif available_qty<0:
@@ -68,10 +64,6 @@ def check_stock_availability(doc,d):
 			if d.qty > actual_qty:
 				qty_order = d.qty - actual_qty
 				create_purchase_order_record(doc,d,qty_order)
-				# assign the actual qty
-				create_stock_assignment_document(d,doc.name,d.qty, actual_qty)
-				update_assigned_qty(d.qty,doc.name,d.item_code)
-
 			# else create stock assignment
 			else:
 				create_stock_assignment_document(d,doc.name,d.qty,d.qty)
@@ -168,10 +160,10 @@ def update_so_details(doc,d,item,purchase_order):
 def stock_assignment(doc,method):
 	for d in doc.get('purchase_receipt_details'):
 		if frappe.db.get_value("Item",{'is_stock_item':'Yes','name':d.item_code},'name'):
-			sales_order=frappe.db.sql("""select s.parent,s.qty-s.assigned_qty as qty from `tabSales Order Item` s 
+			sales_order=frappe.db.sql("""select s.parent,ifnull(s.qty,0)-ifnull(s.assigned_qty,0) AS qty from `tabSales Order Item` s 
 										inner join `tabSales Order` so on s.parent=so.name 
 										 where s.item_code='%s' and so.docstatus=1 and 
-										 s.qty!=s.assigned_qty and so.delivery_status='Not Delivered' 
+										 ifnull(s.qty,0)!=ifnull(s.assigned_qty,0) and so.delivery_status='Not Delivered' 
 										 or so.delivery_status='Partly Delivered' order by 
 										 so.priority,so.creation"""%d.item_code,as_list=1)
 			qty=d.qty
@@ -180,19 +172,18 @@ def stock_assignment(doc,method):
 					assigned_qty=frappe.db.sql(""" select ifnull(assigned_qty,0) from `tabSales Order Item` 
 													where parent='%s' and item_code='%s'"""
 														%(i[0],d.item_code),as_list=1)
+					# frappe.errprint(assigned_qty)
 					if assigned_qty:
-						
 						if qty>0 and i[1]>0:
 							if qty>=i[1]:
-								qty=qty-i[1]
-								
+								qty=qty-i[1]								
 								assigned_qty=(assigned_qty[0][0]+i[1])
-								update_assigned_qty(assigned_qty,i[0],d.item_code)				
 								create_stock_assignment(d,i[0],i[1],i[1])
+								update_assigned_qty(assigned_qty,i[0],d.item_code)				
 							else:
 								assigned_qty=flt(assigned_qty[0][0]+qty)
-								update_assigned_qty(assigned_qty,i[0],d.item_code)
 								create_stock_assignment(d,i[0],i[1],qty)
+								update_assigned_qty(assigned_qty,i[0],d.item_code)				
 								qty=0.0
 		else:
 			pass
@@ -228,6 +219,7 @@ def create_stock_assignment_document(d,sales_order,ordered_qty,assigned_qty):
 	sa.sales_order=sales_order
 	sa.ordered_qty=ordered_qty
 	sa.assign_qty=assigned_qty
+	sa.purchase_receipt_no = d.parent
 	sa.item_code=d.item_code
 	sa.save(ignore_permissions=True)
 
