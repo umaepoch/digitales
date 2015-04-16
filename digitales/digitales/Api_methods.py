@@ -219,8 +219,9 @@ def create_stock_assignment_document(d,sales_order,ordered_qty,assigned_qty):
 	sa.sales_order=sales_order
 	sa.ordered_qty=ordered_qty
 	sa.assign_qty=assigned_qty
-	sa.purchase_receipt_no = d.parent
+	sa.purchase_receipt_no = d.parent if d.doctype == 'Purchase Receipt Item' else ''
 	sa.item_code=d.item_code
+	sa.customer_name = frappe.db.get_value('Sales Order',sa.sales_order,'customer_name')
 	sa.save(ignore_permissions=True)
 
 	
@@ -294,6 +295,7 @@ def validate_qty_on_submit(doc,method):
 
 #For calling API through Poster---------------------------------------------------------------------------------------
 def check_APItime():
+	frappe.errprint('hiiii')
 	#GetItem()
 	#GetCustomer()
 	#GetOrders()
