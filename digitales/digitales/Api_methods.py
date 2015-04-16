@@ -295,7 +295,7 @@ def validate_qty_on_submit(doc,method):
 
 #For calling API through Poster---------------------------------------------------------------------------------------
 def check_APItime():
-	frappe.errprint('hiiii')
+	print "hiiii"
 	#GetItem()
 	#GetCustomer()
 	#GetOrders()
