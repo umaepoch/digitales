@@ -73,7 +73,8 @@ doc_events = {
 	# }
 	"Sales Order": {
 		# "on_update": "digitales.digitales.Api_methods.create_purchase_order",
-		"on_submit": "digitales.digitales.Api_methods.create_purchase_order"
+		"on_submit": "digitales.digitales.Api_methods.create_purchase_order",
+		"on_cancel": "digitales.digitales.Api_methods.delete_stock_assignment"
 	},
 
 	"Purchase Receipt": {
