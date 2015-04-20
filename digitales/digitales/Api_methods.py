@@ -212,7 +212,7 @@ def update_qty(doc,d,item,purchase_order,qty,rate):
 	amount=rate*qty
 	frappe.db.sql("""update `tabPurchase Order Item` set qty='%s', amount='%s'
 						where parent='%s' and item_code='%s'"""
-							%(qty,amount,purchase_order,item),debug=1)
+							%(qty,amount,purchase_order,item))
 
 	frappe.db.commit()
 	#update_so_details(doc,d,item,purchase_order)
