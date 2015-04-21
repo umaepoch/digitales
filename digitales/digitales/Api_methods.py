@@ -69,7 +69,7 @@ def Stock_Availability(so_doc, child_args):
 			update_assigned_qty(child_args.qty , so_doc.name, child_args.item_code)
 		elif flt(bin_qty) <= 0.0:
 			assigned_qty = flt(bin_details.actual_qty) - flt(bin_details.reserved_qty) + flt(child_args.qty)
-			po_qty = flt(child_args.qty) - flt(assigned_qty)
+			po_qty = (flt(child_args.qty) - flt(assigned_qty)) if flt(assigned_qty) > 0.0 else flt(child_args.qty)
 			if flt(assigned_qty) > 0.0:
 				create_stock_assignment_document(child_args, so_doc.name, assigned_qty)
 				update_assigned_qty(assigned_qty , so_doc.name, child_args.item_code)
