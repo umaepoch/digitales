@@ -23,6 +23,7 @@ def create_purchase_order(doc,method):
 def check_ispurchase_item(doc,method):
 	for d in doc.get('sales_order_details'):
 		if frappe.db.get_value("Item",{'is_purchase_item':'Yes','name':d.item_code},'name'):
+			supplier_validate(d.item_code)
 			if frappe.db.get_value("Item",{'is_stock_item':'Yes','name':d.item_code},'name'):
 				Stock_Availability(doc,d)
 			else:
@@ -75,6 +76,10 @@ def Stock_Availability(so_doc, child_args):
 				update_assigned_qty(assigned_qty , so_doc.name, child_args.item_code)
 			if flt(po_qty) > 0.0:
 				create_purchase_order_record(so_doc, child_args, po_qty)
+
+def supplier_validate(item_code):
+	if not frappe.db.get_value('Item', item_code, 'default_supplier'):
+		frappe.throw(_("Default supplier is not defined against the item code {0}").format(item_code))
 
 def create_stock_assignment_document(args, sales_order, assigned_qty, ordered_qty=None):
 	sa = frappe.new_doc('Stock Assignment Log')
@@ -528,6 +533,10 @@ def GetCustomer():
 		max_customer_date = max_date[0][0]
 	max_customer_date = max_customer_date.split('.')[0] if '.' in max_customer_date else max_customer_date
 	max_customer_date = (datetime.datetime.strptime(max_customer_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
+
+	#delete
+	max_customer_date = '2015-03-01 05:43:13'
+
 	status=get_customers_from_magento(1, max_customer_date, h, oauth)	
 
 def get_missed_customers(count, max_date, header, oauth_data):
@@ -647,42 +656,83 @@ def create_customer_group(i):
 def GetAddress(index,customer_data):
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 	oauth = GetOauthDetails()
-	customer=frappe.db.get_value('Customer',{'entity_id':customer_data[index].get('entity_id')},'name')
+	customer=frappe.db.get_value('Contact',{'entity_id':customer_data[index].get('entity_id')},'customer')
 	if customer:
+	# for customer in customers:
 		r = requests.get(url='http://digitales.com.au/api/rest/customers/'+cstr(customer_data[index].get('entity_id'))+'/addresses', headers=h, auth=oauth)
+		
 		content=json.loads(r.content)
+		# print content, "cust_entity_id", cstr(customer_data[index].get('entity_id')) 
 		if content:
 			for i in content:
-				print cstr(i.get('entity_id')), customer_data[index].get('entity_id'), i.get('street'), i.get('firstname'), i.get('lastname')
-				if not frappe.db.get_value('Address',{'entity_id': cstr(i.get('entity_id')),'address_title':cstr(i.get('firstname'))+' '+cstr(i.get('lastname')) +' '+cstr(i.get('street')[0])},'name'):
+				# if not frappe.db.get_value('Address',{'entity_id': cstr(i.get('entity_id')),'address_title':cstr(i.get('firstname'))+' '+cstr(i.get('lastname')) +' '+cstr(i.get('street')[0])},'name'):
+				# if not frappe.db.get_value('Address',{'entity_id': cstr(i.get('entity_id')),'address_title':cstr(i.get('firstname'))+' '+cstr(i.get('lastname')) +' '+cstr(i.get('entity_id'))},'name'):
+				# 	create_onother_address_forCustomer(i, customer)
+				# else:
+				# 	# cust_address=frappe.db.get_value('Address',{'entity_id': cstr(i.get('entity_id')),'address_title':cstr(i.get('firstname'))+' '+cstr(i.get('lastname')) +' '+cstr(i.get('street')[0])},'name')
+				# 	cust_address=frappe.db.get_value('Address',{'entity_id': cstr(i.get('entity_id')),'address_title':cstr(i.get('firstname'))+' '+cstr(i.get('lastname')) +' '+cstr(i.get('entity_id'))},'name')
+				# 	update_onother_address_forCustomer(cust_address,i,customer)
+
+				#Makarand
+				addr_filter = {'entity_id': cstr(i.get('entity_id'))}
+				cust_address = frappe.db.get_value('Address',addr_filter,'name')
+				if not cust_address:
 					create_onother_address_forCustomer(i, customer)
 				else:
-					print "hh"
-					cust_address=frappe.db.get_value('Address',{'entity_id': cstr(i.get('entity_id')),'address_title':cstr(i.get('firstname'))+' '+cstr(i.get('lastname')) +' '+cstr(i.get('street')[0])},'name')
 					update_onother_address_forCustomer(cust_address,i,customer)
 
 
+def get_address_type(content):
+	if content.get('is_default_billing'):
+		return {"type":"Billing", "is_primary_address":1, "is_shipping_address":0}
+	elif content.get('is_default_shipping'):
+		return {"type":"Shipping", "is_primary_address":0, "is_shipping_address":1}
+	else:
+		return {"type":"Other", "is_primary_address":0, "is_shipping_address":0}
+
 def create_onother_address_forCustomer(i, customer):
+	# print "create addr"
 	cad = frappe.new_doc('Address')
-	cad.address_title = cstr(i.get('firstname'))+' '+cstr(i.get('lastname')) +' '+cstr(i.get('street')[0])
+	r_set = get_address_type(i)
+	cad.address_title = cstr(i.get('firstname'))+' '+cstr(i.get('lastname')) +' '+cstr(i.get('entity_id'))
+
+	# Address Type is Billing or is Shipping??
+	cad.address_type = get_address_type(i).get('type')
 	cad.entity_id = cstr(i.get('entity_id'))
 	cad.address_line1 = cstr(i.get('street')[0])
+
+	# cad.address_title = cstr(i.get('firstname'))+' '+cstr(i.get('lastname')) +' '+cstr(i.get('street')[0])
+	# cad.address_line2 = cstr(i.get('street')[1] or "")
+	# cad.address_line3 = cstr(i.get('street')[2] or "")
 	cad.city = cstr(i.get('city'))
 	cad.state = cstr(i.get('region'))
 	cad.pincode = cstr(i.get('postcode'))
 	cad.phone = cstr(i.get('telephone')) or '00000'
+	cad.fax = cstr(i.get('fax')) or '00000'
 	cad.customer = customer
 	cad.save(ignore_permissions=True)
+	# frappe.db.commit()
 
 def update_onother_address_forCustomer(cust_address,i, customer):
+	# print "update addr"
 	cad = frappe.get_doc('Address',cust_address)
-	#cad.address_title = address_details.get('firstname')+' '+address_details.get('lastname')
+
+	r_set = get_address_type(i)
+	cad.address_title = cstr(i.get('firstname'))+' '+cstr(i.get('lastname')) +' '+cstr(i.get('entity_id'))
+
+	# Address Type is Billing or is Shipping??
+	cad.address_type = get_address_type(i).get('type')
 	cad.entity_id = cstr(i.get('entity_id'))
 	cad.address_line1 = cstr(i.get('street')[0])
+
+	#cad.address_title = address_details.get('firstname')+' '+address_details.get('lastname')
+	# cad.address_line2 = cstr(i.get('street')[1] or "")
+	# cad.address_line3 = cstr(i.get('street')[2] or "")
 	cad.city = cstr(i.get('city'))
 	cad.state = cstr(i.get('region'))
 	cad.pincode = cstr(i.get('postcode'))
 	cad.phone = cstr(i.get('telephone')) or '00000'
+	cad.fax = cstr(i.get('fax')) or '00000'
 	cad.customer = customer
 	cad.save(ignore_permissions=True)
 
@@ -705,6 +755,8 @@ def get_missed_orders(count, max_date, header, oauth_data):
 			get_orders_from_magento(index, max_date,header, oauth_data, 'missed')	
 
 
+addr_details = {}
+
 def get_orders_from_magento(page, max_date, header, oauth_data,type_of_data=None):
 	if page:
 		r = requests.get(url='http://digitales.com.au/api/rest/orders?filter[1][attribute]=updated_at&filter[1][gt]=%s&page=%s&limit=100&order=updated_at&dir=asc'%(max_date, page), headers=header, auth=oauth_data)
@@ -713,11 +765,16 @@ def get_orders_from_magento(page, max_date, header, oauth_data,type_of_data=None
 		k=0
 		if len(order_data) > 0:
 			for index in order_data:
+				print index
+				# print "*" * 20
 				customer = frappe.db.get_value('Contact', {'entity_id': order_data[index].get('customer_id')}, 'customer')
 				if customer:
 					create_or_update_customer_address(order_data[index].get('addresses'), customer)
 					order = frappe.db.get_value('Sales Order', {'entity_id': order_data[index].get('entity_id')}, 'name')
 					if not order:
+						# addr_details = order_data[index].get('addresses')
+						# print addr_details
+
 						count = count + 1
 						create_order(index,order_data,customer)
 				else:
@@ -801,21 +858,58 @@ def create_order(i,content,customer):
 			create_new_order(order,i,content,customer)
 			order.save(ignore_permissions=True)
 
-def create_new_order(order,i,content,customer):
+# def create_new_order(order,i,content,customer):
+# 	from datetime import date
+# 	from dateutil.relativedelta import relativedelta
+# 	delivery_date = date.today() + relativedelta(days=+6)
+# 	order.customer=customer
+# 	order.entity_id=content[i].get('entity_id')
+# 	order.modified_date=content[i].get('updated_at')
+# 	order.delivery_date=delivery_date
+# 	order.grand_total_export=content[i].get('grand_total')
+# 	#order.discount_amount=content[i].get('discount_amount')
+# 	if content[i].get('po_number'):
+# 		order.po_no=content[i].get('po_number')
+# 	order.order_type=content[i].get('order_type')
+# 	for i in content[i].get('order_items'):
+#  		create_child_item(i,order)
+
+#  	# # set shipping and billing address
+#  	# set_sales_order_address(content[i].get('addresses'))
+
+# Makarand
+def create_new_order(order,index,content,customer):
 	from datetime import date
 	from dateutil.relativedelta import relativedelta
 	delivery_date = date.today() + relativedelta(days=+6)
 	order.customer=customer
-	order.entity_id=content[i].get('entity_id')
-	order.modified_date=content[i].get('updated_at')
+	order.entity_id=content[index].get('entity_id')
+	order.modified_date=content[index].get('updated_at')
 	order.delivery_date=delivery_date
-	order.grand_total_export=content[i].get('grand_total')
+	order.grand_total_export=content[index].get('grand_total')
 	#order.discount_amount=content[i].get('discount_amount')
-	if content[i].get('po_number'):
-		order.po_no=content[i].get('po_number')
-	order.order_type=content[i].get('order_type')
-	for i in content[i].get('order_items'):
+	if content[index].get('po_number'):
+		order.po_no=content[index].get('po_number')
+	order.new_order_type=content[index].get('order_type')
+	for i in content[index].get('order_items'):
  		create_child_item(i,order)
+
+ 	# # set shipping and billing address
+ 	set_sales_order_address(content[index].get('addresses'),order)
+
+def set_sales_order_address(address_details, order):
+	# Check if Address is available if it is then set addr id in SO else set None
+	address_type_mapper = {'billing': 'Billing', 'shipping': 'Shipping'}
+	if address_details:
+		for address in address_details:
+			addr_filter = {'entity_id': cstr(address.get('customer_address_id'))}
+			cust_address = frappe.db.get_value('Address',addr_filter,'name')
+			if cust_address:
+				# Check the address type if billing the set to billing addr likewise for shipping
+				if cstr(address.get('address_type')) == "billing":
+					order.billing_address_name = frappe.db.get_value('Address',{'entity_id':cust_address},'name')
+				else:
+					order.shipping_address_name = frappe.db.get_value('Address',{'entity_id':cust_address},'name')
 
 def check_item_presence(i,content):
 	for i in content[i].get('order_items'):

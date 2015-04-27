@@ -56,4 +56,10 @@ class Process(Document):
 				if service_item:
 					if service_item[0][0]=='No':
 						frappe.throw(" '"+d.process+"' is not service item.")
-				
+
+@frappe.whitelist()
+def get_process_from_barcode(barcode):
+	"""
+		return the process name from barcode
+	"""
+	return frappe.db.get_value('Item', {'barcode': barcode}, 'name')

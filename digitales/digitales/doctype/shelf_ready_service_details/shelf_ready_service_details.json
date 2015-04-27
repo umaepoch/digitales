@@ -38,9 +38,10 @@
    "set_only_once": 0
   }, 
   {
-   "fieldname": "file_name", 
+   "fieldname": "item_barcode", 
    "fieldtype": "Data", 
-   "label": "MARCfile Name", 
+   "in_list_view": 1, 
+   "label": "Item Barcode", 
    "permlevel": 0, 
    "precision": "", 
    "read_only": 0
@@ -120,21 +121,20 @@
    "read_only": 1
   }, 
   {
+   "fieldname": "file_name", 
+   "fieldtype": "Data", 
+   "label": "MARCfile Name", 
+   "permlevel": 0, 
+   "precision": "", 
+   "read_only": 0
+  }, 
+  {
    "fieldname": "file_attachment", 
    "fieldtype": "Data", 
    "label": "MARCfile Attachment", 
    "permlevel": 0, 
    "precision": "", 
    "read_only": 0
-  }, 
-  {
-   "fieldname": "item_barcode", 
-   "fieldtype": "Data", 
-   "in_list_view": 1, 
-   "label": "Item Barcode", 
-   "permlevel": 0, 
-   "precision": "", 
-   "read_only": 1
   }
  ], 
  "hide_heading": 0, 
@@ -144,7 +144,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 1, 
- "modified": "2015-04-04 21:48:39.695264", 
+ "modified": "2015-04-24 17:14:52.073041", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Shelf Ready Service Details", 

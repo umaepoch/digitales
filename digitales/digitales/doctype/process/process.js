@@ -12,13 +12,26 @@ cur_frm.add_fetch('get_sales_order','transaction_date','order_date');
 
 // cur_frm.add_fetch('process','charge','charge');
 cur_frm.add_fetch('process','barcode','item_barcode');
+cur_frm.cscript.item_barcode = function(doc, cdt, cdn){
+	var d = locals[cdt][cdn];
+	return frappe.call({
+		method: "digitales.digitales.doctype.process.process.get_process_from_barcode",
+		args: {'barcode': d.item_barcode},
+		callback: function(r) {
+			console.log(r.message);
+			d.process = r.message
+			// cur_frm.set_value()
+			refresh_field('shelf_ready_service_details');
+		}
+	});
+}
 
 cur_frm.cscript.process_type = function(doc, cdt, cdn) {
 	cur_frm.cscript.toggle_related_fields(doc);
 }
 	
 cur_frm.get_field("get_sales_order").get_query=function(doc,cdt,cdn){
-	return "select s.parent from `tabSales Order Item` s inner join `tabSales Order` so on s.parent=so.name where so.docstatus=1 and s.assigned_qty>0"
+	return "select distinct s.parent from `tabSales Order Item` s inner join `tabSales Order` so on s.parent=so.name where so.docstatus=1 and s.assigned_qty>0"
 }
 
 // cur_frm.cscript.qty = function(doc, cdt, cdn){
