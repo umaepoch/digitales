@@ -18,6 +18,22 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
+"","""Sales Order-billing_address_name""","Sales Order","Link","Dummy Billing Address","customer_address_column","","Address","","billing_address_name",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Sales Order-bill_to_address""","Sales Order","Small Text","Billing Address","customer_address","","","","bill_to_address",0,0,1,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order-customer_address_column""","Sales Order","Column Break","Customer Address Column","shipping_address","","","","customer_address_column",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order-customer_addresses""","Sales Order","Section Break","Customer Addresses","contact_person","","","","customer_addresses",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order-process_status""","Sales Order","Data","Process Status","currency","","Uncompleted
+Completed","","process_status",0,0,0,0,"","Uncompleted",1,"",0,0,0,0,0,0
+"","""Sales Order-modified_date""","Sales Order","Data","Modified Date","comment","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Sales Order-comment""","Sales Order","Small Text","Comment","po_no","","","","comment",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order-sales_order_status""","Sales Order","Select","Sales Order Status","entity_id","","Existing
+Non Existing","","sales_order_status",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Sales Order-tender_group""","Sales Order","Link","Tender Group","budget","","Tender Group","","tender_group",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order-budget""","Sales Order","Link","Budget","entity_id","","Budget","","budget",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order-entity_id""","Sales Order","Data","Order Number","organisation","","","","entity_id",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order-organisation""","Sales Order","Data","Organisation","priority","","","","organisation",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Sales Order-priority""","Sales Order","Select","Priority","order_type","","Low
+High","","priority",0,1,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-new_order_type""","Sales Order","Select","Order Type","order_type","","General
 Standard Order
 Standing Order
@@ -32,24 +48,8 @@ Reader Request","","new_order_type",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice Item-shelf_ready_service_name""","Sales Invoice Item","Data","Shelf Ready Service  Name","description","","","","shelf_ready_service_name",0,0,1,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Invoice Item-line_item""","Sales Invoice Item","Data","Line Order Number","item_name","","","","line_item",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice Item-marcfile_name""","Sales Invoice Item","Data","MARCfile Name","item_name","","","","marcfile_name",0,0,1,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-billing_address""","Sales Order","Small Text","Address","billing_address_name","","","","billing_address",0,0,1,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-billing_address_name""","Sales Order","Link","Billing Address","customer_address_column","","Address","","billing_address_name",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-customer_address_column""","Sales Order","Column Break","Customer Address Column","shipping_address","","","","customer_address_column",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-customer_addresses""","Sales Order","Section Break","Customer Addresses","contact_person","","","","customer_addresses",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-process_status""","Sales Order","Data","Process Status","currency","","Uncompleted
-Completed","","process_status",0,0,0,0,"","Uncompleted",1,"",0,0,0,0,0,0
 "","""Sales Order-start_date""","Sales Order","Date","Start Date","po_no","","","","start_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-order_end_date""","Sales Order","Date","End Date","start_date","","","","order_end_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-modified_date""","Sales Order","Data","Modified Date","comment","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
-"","""Sales Order-comment""","Sales Order","Small Text","Comment","po_no","","","","comment",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-sales_order_status""","Sales Order","Select","Sales Order Status","entity_id","","Existing
-Non Existing","","sales_order_status",0,0,0,0,"","",1,"",0,0,0,0,0,0
-"","""Sales Order-tender_group""","Sales Order","Link","Tender Group","budget","","Tender Group","","tender_group",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-budget""","Sales Order","Link","Budget","entity_id","","Budget","","budget",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-entity_id""","Sales Order","Data","Order Number","organisation","","","","entity_id",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-organisation""","Sales Order","Data","Organisation","priority","","","","organisation",0,0,0,0,"","",1,"",0,0,0,0,0,0
-"","""Sales Order-priority""","Sales Order","Select","Priority","order_type","","Low
-High","","priority",0,1,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-organisation""","Sales Invoice","Data","Organisation","currency","","","","organisation",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Invoice-bill_to_address""","Sales Invoice","Small Text","Billing Address","customer_addresses","","","","bill_to_address",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-column_break""","Sales Invoice","Column Break","Column Break","shipping_address","","","","column_break",0,0,0,0,"","",0,"",0,0,0,0,0,0

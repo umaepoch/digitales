@@ -60,6 +60,21 @@
    "label": "URL", 
    "permlevel": 0, 
    "precision": ""
+  }, 
+  {
+   "default": "0", 
+   "fieldname": "offset_limit", 
+   "fieldtype": "Int", 
+   "label": "offset_limit", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "execute_duration", 
+   "fieldtype": "Data", 
+   "label": "API Execute Duration", 
+   "permlevel": 0, 
+   "precision": ""
   }
  ], 
  "hide_heading": 0, 
@@ -70,7 +85,7 @@
  "is_submittable": 0, 
  "issingle": 1, 
  "istable": 0, 
- "modified": "2015-03-30 22:53:29.395464", 
+ "modified": "2015-04-29 00:19:28.969601", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "API Configuration Page", 
