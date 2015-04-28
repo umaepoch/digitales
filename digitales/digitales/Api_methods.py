@@ -667,7 +667,7 @@ def GetAddress(entity_id):
 		r = requests.get(url='http://digitales.com.au/api/rest/customers/%s/addresses'%(entity_id), headers=h, auth=oauth)
 		cust_address_data=json.loads(r.content)
 		if cust_address_data:
-			cust_address_data
+			print cust_address_data
 			for data in cust_address_data:
 				address_entity_id = data.get('entity_id')
 				address_name = frappe.db.get_value('Address', {'entity_id': address_entity_id}, 'name')
