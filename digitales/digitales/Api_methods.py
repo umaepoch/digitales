@@ -886,7 +886,7 @@ def set_sales_order_address(address_details, order):
 				# Check the address type if billing the set to billing addr likewise for shipping
 				if cstr(address.get('address_type')) == "billing":
 					order.customer_address = frappe.db.get_value('Address',{'entity_id':cust_address},'name')
-				else:
+				if cstr(address.get('address_type')) == "shipping":
 					order.shipping_address_name = frappe.db.get_value('Address',{'entity_id':cust_address},'name')
 
 def check_item_presence(i,content):
