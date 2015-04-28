@@ -318,18 +318,18 @@ def validate_qty_on_submit(doc,method):
 
 #For calling API through Poster---------------------------------------------------------------------------------------
 def check_APItime():
-	sync_existing_customers_address()
-	# time = frappe.db.sql("""select value from `tabSingles` where doctype='API Configuration Page' and field in ('date','api_type')""",as_list=1)
-	# if time:
-	# 	dates= list(itertools.chain.from_iterable(time))
-	# 	api_configured_date = dates[1].split('.')[0] if '.' in dates[1] else dates[1]
-	# 	api_date=datetime.datetime.strptime(api_configured_date , '%Y-%m-%d %H:%M:%S')
-	# 	if datetime.datetime.now() > api_date and dates[0] =='Product':
-	# 		GetItem()
-	# 	elif datetime.datetime.now() > api_date and dates[0]=='Customer':
-	# 		GetCustomer()
-	# 	elif datetime.datetime.now() > api_date and dates[0]=='Order':
-	# 		GetOrders()
+	# sync_existing_customers_address()
+	time = frappe.db.sql("""select value from `tabSingles` where doctype='API Configuration Page' and field in ('date','api_type')""",as_list=1)
+	if time:
+		dates= list(itertools.chain.from_iterable(time))
+		api_configured_date = dates[1].split('.')[0] if '.' in dates[1] else dates[1]
+		api_date=datetime.datetime.strptime(api_configured_date , '%Y-%m-%d %H:%M:%S')
+		if datetime.datetime.now() > api_date and dates[0] =='Product':
+			GetItem()
+		elif datetime.datetime.now() > api_date and dates[0]=='Customer':
+			GetCustomer()
+		elif datetime.datetime.now() > api_date and dates[0]=='Order':
+			GetOrders()
 
 def get_Data_count(max_date, document_key):
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
