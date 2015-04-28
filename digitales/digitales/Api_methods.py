@@ -660,21 +660,29 @@ def sync_existing_customers_address():
 				GetAddress(data.entity_id)
 
 def GetAddress(entity_id):
-	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
-	oauth = GetOauthDetails()
-	customer=frappe.db.get_value('Contact',{'entity_id':entity_id},'customer')
-	if customer:
-		r = requests.get(url='http://digitales.com.au/api/rest/customers/%s/addresses'%(entity_id), headers=h, auth=oauth)
-		cust_address_data=json.loads(r.content)
-		if cust_address_data:
-			print cust_address_data
-			for data in cust_address_data:
-				address_entity_id = data.get('entity_id')
-				address_name = frappe.db.get_value('Address', {'entity_id': address_entity_id}, 'name')
-				if not address_name:
-					create_new_address(data, customer)
-				else:
-					update_customer_address(data, address_name, customer)
+	try:
+		h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+		oauth = GetOauthDetails()
+		customer=frappe.db.get_value('Contact',{'entity_id':entity_id},'customer')
+		if customer:
+			r = requests.get(url='http://digitales.com.au/api/rest/customers/%s/addresses'%(entity_id), headers=h, auth=oauth)
+			cust_address_data=json.loads(r.content)
+			if cust_address_data:
+				for data in cust_address_data:
+					address_entity_id = data.get('entity_id')
+					address_name = frappe.db.get_value('Address', {'entity_id': address_entity_id}, 'name')
+					if not address_name:
+						create_new_address(data, customer)
+					else:
+						update_customer_address(data, address_name, customer)
+	except Exception, e:
+		create_scheduler_exception(e)
+
+def create_scheduler_exception(msg):
+	se = frappe.new_doc('Scheduler Log')
+	se.method = 'GetAddress'
+	se.error = msg
+	se.save(ignore_permissions=True)
 
 def create_new_address(data, customer):
 	obj = frappe.new_doc('Address')
