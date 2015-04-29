@@ -436,6 +436,14 @@ def create_new_product(item,i,content):
 		else:
 			item_group=create_new_itemgroup(i,content)
 			item.item_group=item_group
+
+	# Check item group and assign the default expence and income account
+	if content[i].get('media') in ['DVD', 'CD', 'BLURAY', 'Graphic Novel', 'CDROM', 'Audio Book', 'Manga', 'Online Resource', 'Blu-Ray', 'PC Games', 'Hardcover', 'Playstation 3', 'Xbox 360', 'Xbox One', 'Playstation 4', 'Nintendo Wii U', '2CD and DVD', 'Graphics', '3D', 'UV', 'BLURAY, 3D', 'Nintendo 3DS', 'Nintendo Wii', 'DVD, UV', 'BLURAY, DVD', 'BLURAY, DVD, UV', 'Playstation Vita', 'Paperback']:
+		# print "setting default income and expense account for item", item.item_name
+		item.expense_account = "5-1100 Cost of Goods Sold : COGS Stock"
+		item.income_account = "4-1100 Product Sales"
+
+
 	item.description = 'Desc: ' + content[i].get('short_description') if content[i].get('short_description') else content[i].get('sku')
 	item.event_id=i
 	#item.item_status='Existing'
