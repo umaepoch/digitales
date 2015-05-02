@@ -18,6 +18,9 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
+"","""Sales Order-new_order_type""","Sales Order","Select","Order Type","order_type","","Standard Order
+Standing Order
+Reader Request","","new_order_type",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-billing_address_name""","Sales Order","Link","Dummy Billing Address","customer_address_column","","Address","","billing_address_name",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order-bill_to_address""","Sales Order","Small Text","Billing Address","customer_address","","","","bill_to_address",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-customer_address_column""","Sales Order","Column Break","Customer Address Column","shipping_address","","","","customer_address_column",0,0,0,0,"","",0,"",0,0,0,0,0,0
@@ -34,10 +37,6 @@ Non Existing","","sales_order_status",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order-organisation""","Sales Order","Data","Organisation","priority","","","","organisation",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order-priority""","Sales Order","Select","Priority","order_type","","Low
 High","","priority",0,1,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-new_order_type""","Sales Order","Select","Order Type","order_type","","General
-Standard Order
-Standing Order
-Reader Request","","new_order_type",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice Item-budget""","Sales Invoice Item","Link","Budget","delivered_qty","","Budget","","budget",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Invoice Item-process_id""","Sales Invoice Item","Link","Process ID","sales_order","","Process","","process_id",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice Item-gst_value""","Sales Invoice Item","Data","GST Value","gst","","","","gst_value",0,0,0,0,"","",1,"",0,0,0,0,0,0

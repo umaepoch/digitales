@@ -876,7 +876,12 @@ def create_new_order(order,index,content,customer):
 	#order.discount_amount=content[i].get('discount_amount')
 	if content[index].get('po_number'):
 		order.po_no=content[index].get('po_number')
-	order.new_order_type=content[index].get('order_type')
+	
+	# If Order type is general then set SO order type as Standard Order
+	if content[index].get('order_type') == "General":
+		order.new_order_type="Standard Order"
+	else:
+		order.new_order_type=content[index].get('order_type')
 	for i in content[index].get('order_items'):
  		create_child_item(i,order)
 
