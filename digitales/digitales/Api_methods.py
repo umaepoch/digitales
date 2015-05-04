@@ -692,7 +692,6 @@ def create_customer_group(i):
 
 def sync_existing_customers_address():
 	offset = frappe.db.get_value('API Configuration Page', None, 'offset_limit')
-	print offset
 	if offset:
 		customer_data = frappe.db.sql(''' Select entity_id from tabContact order by creation limit %s, 100'''%(offset), as_dict=1)
 		frappe.db.sql(''' update `tabSingles` set value = "%s" where doctype = "API Configuration Page" and field="offset_limit"'''%(cint(offset)+100), auto_commit =True)
