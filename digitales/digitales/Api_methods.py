@@ -36,8 +36,7 @@ def stock_assignment(doc,method):
 			sales_order=frappe.db.sql("""select s.parent,ifnull(s.qty,0)-ifnull(s.assigned_qty,0) AS qty from `tabSales Order Item` s
 										inner join `tabSales Order` so on s.parent=so.name
 										 where s.item_code='%s' and so.docstatus=1 and
-										 ifnull(s.qty,0)!=ifnull(s.assigned_qty,0) and so.delivery_status='Not Delivered'
-										 or so.delivery_status='Partly Delivered' order by
+										 ifnull(s.qty,0)!=ifnull(s.assigned_qty,0) order by
 										 so.priority,so.creation"""%d.item_code,as_list=1)
 			qty=d.qty
 			if sales_order:
@@ -379,11 +378,22 @@ def get_products_from_magento(page, max_date, header, oauth_data, type_of_data=N
 	return True
 
 def create_item(i,content):
-	item = frappe.new_doc('Item')
-	item.item_code = content[i].get('sku')
-	create_new_product(item,i,content)
-	item.save(ignore_permissions=True)	
-	check_item_price(item.name,i,content)
+	try:
+		item = frappe.new_doc('Item')
+		item.item_code = content[i].get('sku')
+		create_new_product(item,i,content)
+		item.save(ignore_permissions=True)	
+		check_item_price(item.name,i,content)
+	except Exception, e:
+		create_scheduler_exception(e , 'create_item ', content[i])
+
+def update_item(name,i,content):
+	try:
+		item = frappe.get_doc("Item", name)
+		create_new_product(item,i,content)
+		item.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e , 'method name update_item: ' ,content[i])		
 
 def check_item_price(name,i,content):
 	if content[i].get('price'):
@@ -404,26 +414,26 @@ def get_price_list():
 			frappe.msgprint("Please specify default price list in Configuration Page",raise_exception=1)
 
 def update_price_list(price_list_name,i,content,price_list):
-	item_price = frappe.get_doc("Item Price", price_list_name)
-	create_new_item_price(item_price,i,content,price_list)
-	item_price.save(ignore_permissions=True)
+	try:
+		item_price = frappe.get_doc("Item Price", price_list_name)
+		create_new_item_price(item_price,i,content,price_list)
+		item_price.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e , 'method name update_price_list: ' , content[i])
 
 def create_price_list(item,i,content,price_list):
-	item_price=frappe.new_doc("Item Price")
-	create_new_item_price(item_price,i,content,price_list)
-	item_price.save(ignore_permissions=True)
+	try:
+		item_price=frappe.new_doc("Item Price")
+		create_new_item_price(item_price,i,content,price_list)
+		item_price.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e , 'method name create_price_list: ' ,content[i])
 
 def create_new_item_price(item_price,i,content,price_list):
 	item_price.price_list=price_list
 	item_price.item_code=content[i].get('sku')
 	item_price.price_list_rate=content[i].get('price')
 	return True
-	
-def update_item(name,i,content):
-	item = frappe.get_doc("Item", name)
-	create_new_product(item,i,content)
-	item.save(ignore_permissions=True)
-	#check_item_price(item.name,i,content)
 
 def create_new_product(item,i,content):
 	item.item_name=content[i].get('name') or content[i].get('sku')
@@ -470,22 +480,31 @@ def get_supplier(supplier):
 	return ''
 
 def update_supplier(supplier):
-	obj = frappe.get_doc('Supplier', supplier)
-	obj.supplier_name = supplier.replace('(s)', '')
-	obj.save(ignore_permissions=True)
+	try:
+		obj = frappe.get_doc('Supplier', supplier)
+		obj.supplier_name = supplier.replace('(s)', '')
+		obj.save(ignore_permissions=True)
+	except Exception,e:
+		create_scheduler_exception(e , 'method name update_supplier: ' ,supplier)
 	return True
 
 def create_supplier(supplier):
-	sl = frappe.new_doc('Supplier')
-	sl.supplier_name = supplier
-	sl.supplier_type = 'Stock supplier' if frappe.db.get_value('Supplier Type', 'Stock supplier', 'name') else create_supplier_type()
-	sl.save(ignore_permissions=True)
+	try:
+		sl = frappe.new_doc('Supplier')
+		sl.supplier_name = supplier
+		sl.supplier_type = 'Stock supplier' if frappe.db.get_value('Supplier Type', 'Stock supplier', 'name') else create_supplier_type()
+		sl.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e , 'method name create_supplier: ' , supplier)	
 	return sl.name
 
 def create_supplier_type():
-	st = frappe.new_doc('Supplier Type')
-	st.supplier_type = 'Stock supplier'
-	st.save(ignore_permissions=True)
+	try:
+		st = frappe.new_doc('Supplier Type')
+		st.supplier_type = 'Stock supplier'
+		st.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e, 'method name create_supplier_type: ' , 'supplier type')
 	return st.name	
 
 def check_uom_conversion(item):
@@ -502,11 +521,14 @@ def check_uom_conversion(item):
 		return False
 
 def create_new_itemgroup(i,content):
-	itemgroup=frappe.new_doc('Item Group')
-	itemgroup.parent_item_group='All Item Groups'
-	itemgroup.item_group_name=content[i].get('media')
-	itemgroup.is_group='No'
-	itemgroup.save()
+	try:
+		itemgroup=frappe.new_doc('Item Group')
+		itemgroup.parent_item_group='All Item Groups'
+		itemgroup.item_group_name=content[i].get('media')
+		itemgroup.is_group='No'
+		itemgroup.save()
+	except Exception, e:
+		create_scheduler_exception(e , 'method name create_new_itemgroup: ' , content[i])
 	return itemgroup.name or 'Products'
 
 def get_own_warehouse():
@@ -583,9 +605,12 @@ def create_customer(i,content):
 		update_customer_name(temp_customer)
 
 def update_customer_name(customer_name):
-	customer = frappe.get_doc("Customer", customer_name)
-	customer.customer_name= customer_name.replace("(C)","")
-	customer.save(ignore_permissions=True)
+	try:
+		customer = frappe.get_doc("Customer", customer_name)
+		customer.customer_name= customer_name.replace("(C)","")
+		customer.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e , 'Method name update_customer_name: ' , customer_name)
 
 def update_customer(customer,i ,content):
 	customer = frappe.get_doc("Customer", customer)
@@ -607,54 +632,62 @@ def create_contact(customer,i,content):
 
 def create_new_customer(customer,i,content):
 	import itertools
-	customer.entity_id = content[i].get('entity_id') 
-	customer.customer_type = 'Company'
-	if content[i].get('group'):
-		if content[i].get('group').strip() == 'General':
-			customer.customer_group= 'All Customer Groups'
-		elif frappe.db.get_value('Customer Group', content[i].get('group').strip(), 'name'):
-			customer.customer_group=content[i].get('group').strip() or 'All Customer Groups'
-		elif frappe.db.get_value('Customer', content[i].get('group').strip(), 'name'):
-			customer.customer_group = 'All Customer Groups'
-		else:
-			customer_group=create_customer_group(content[i].get('group').strip())
-			customer.customer_group=customer_group
-	customer.territory = 'Australia'
-	customer.customer_status = 'Existing'
-	customer.modified_date=content[i].get('updated_at')
-	customer.save(ignore_permissions=True)
+	try:
+		customer.entity_id = content[i].get('entity_id') 
+		customer.customer_type = 'Company'
+		if content[i].get('group'):
+			if content[i].get('group').strip() == 'General':
+				customer.customer_group= 'All Customer Groups'
+			elif frappe.db.get_value('Customer Group', content[i].get('group').strip(), 'name'):
+				customer.customer_group=content[i].get('group').strip() or 'All Customer Groups'
+			elif frappe.db.get_value('Customer', content[i].get('group').strip(), 'name'):
+				customer.customer_group = 'All Customer Groups'
+			else:
+				customer_group=create_customer_group(content[i].get('group').strip())
+				customer.customer_group=customer_group
+		customer.territory = 'Australia'
+		customer.customer_status = 'Existing'
+		customer.modified_date=content[i].get('updated_at')
+		customer.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e , 'Method name create_new_customer: ', content[i])
 	
 def create_customer_contact(customer,i,content,contact):
-	if content[i].get('firstname'):
-		contact.first_name=content[i].get('firstname')
-		contact.last_name=content[i].get('lastname')
-		contact.customer= customer.name
-		contact.customer_name=customer.customer_name
-		contact.entity_id = content[i].get('entity_id')
-		contact.email_id=content[i].get('email')
-		contact.save(ignore_permissions=True)
-	else:
-		pass
+	try:
+		if content[i].get('firstname'):
+			contact.first_name=content[i].get('firstname')
+			contact.last_name=content[i].get('lastname')
+			contact.customer= customer.name
+			contact.customer_name=customer.customer_name
+			contact.entity_id = content[i].get('entity_id')
+			contact.email_id=content[i].get('email')
+			contact.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e , 'Method name create_customer_contact: ', content[i])
 
 def create_new_contact(customer,i,content):
-	contact=frappe.new_doc('Contact')
-	if content[i].get('firstname'):
-		contact.first_name=content[i].get('firstname')
-		contact.last_name=content[i].get('lastname')
-		contact.customer= customer
-		contact.customer_name=customer
-		contact.entity_id = content[i].get('entity_id')
-		contact.email_id=content[i].get('email')
-		contact.save(ignore_permissions=True)
-	else:
-		pass
+	try:
+		contact=frappe.new_doc('Contact')
+		if content[i].get('firstname'):
+			contact.first_name=content[i].get('firstname')
+			contact.last_name=content[i].get('lastname')
+			contact.customer= customer
+			contact.customer_name=customer
+			contact.entity_id = content[i].get('entity_id')
+			contact.email_id=content[i].get('email')
+			contact.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e , 'Method name create_new_contact: ', content[i])
 
 def create_customer_group(i):
-	cg=frappe.new_doc('Customer Group')
-	cg.customer_group_name = i
-	cg.parent_customer_group='All Customer Groups'
-	cg.is_group='No'
-	cg.save(ignore_permissions=True)
+	try:
+		cg=frappe.new_doc('Customer Group')
+		cg.customer_group_name = i
+		cg.parent_customer_group='All Customer Groups'
+		cg.is_group='No'
+		cg.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e , 'Method name create_customer_group: ', i)
 	return cg.name or 'All Customer Group'
 
 def sync_existing_customers_address():
@@ -684,24 +717,31 @@ def GetAddress(entity_id):
 					else:
 						update_customer_address(data, address_name, customer)
 	except Exception, e:
-		create_scheduler_exception(e)
+		create_scheduler_exception(e, 'Get Address', entity_id)
 
-def create_scheduler_exception(msg):
+def create_scheduler_exception(msg, method, obj=None):
 	se = frappe.new_doc('Scheduler Log')
-	se.method = 'GetAddress'
+	se.method = method
 	se.error = msg
+	se.obj_traceback = cstr(obj)
 	se.save(ignore_permissions=True)
 
 def create_new_address(data, customer):
-	obj = frappe.new_doc('Address')
-	obj.address_title = cstr(data.get('firstname'))+' '+cstr(data.get('lastname')) +' '+cstr(data.get('entity_id'))
-	customer_address(data, obj, customer)
-	obj.save(ignore_permissions=True)
+	try:
+		obj = frappe.new_doc('Address')
+		obj.address_title = cstr(data.get('firstname'))+' '+cstr(data.get('lastname')) +' '+cstr(data.get('entity_id'))
+		customer_address(data, obj, customer)
+		obj.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e, 'create_new_address', customer)
 
 def update_customer_address(data, address_name, customer):
-	obj = frappe.get_doc('Address', address_name)
-	customer_address(data, obj, customer)
-	obj.save(ignore_permissions=True)
+	try:
+		obj = frappe.get_doc('Address', address_name)
+		customer_address(data, obj, customer)
+		obj.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e ,'Method name update_customer_address: ', customer)
 
 def customer_address(data, obj, customer):
 	obj.address_type = get_address_type(data).get('type') # Address Type is Billing or is Shipping??
@@ -758,7 +798,7 @@ def get_orders_from_magento(page, max_date, header, oauth_data,type_of_data=None
 			for index in order_data:
 				customer = frappe.db.get_value('Contact', {'entity_id': order_data[index].get('customer_id')}, 'customer')
 				if customer:
-					create_or_update_customer_address(order_data[index].get('addresses'), customer)
+					# create_or_update_customer_address(order_data[index].get('addresses'), customer)
 					order = frappe.db.get_value('Sales Order', {'entity_id': order_data[index].get('entity_id')}, 'name')
 					if not order:
 						# addr_details = order_data[index].get('addresses')
@@ -784,28 +824,33 @@ def create_or_update_customer_address(address_details, customer):
 				update_address_forCustomer(cust_address,address,customer,address_type)
 
 def create_address_forCustomer(address_details, customer, address_type):
-	cad = frappe.new_doc('Address')
-	cad.address_title = address_details.get('firstname')+' '+address_details.get('lastname') +' '+address_details.get('street')
-	cad.address_type = address_type
-	cad.address_line1 = address_details.get('street')
-	cad.city = address_details.get('city')
-	cad.state = address_details.get('region')
-	cad.pincode = address_details.get('postcode')
-	cad.phone = address_details.get('telephone') or '00000'
-	cad.customer = customer
-	cad.save(ignore_permissions=True)
+	try:
+		cad = frappe.new_doc('Address')
+		cad.address_title = address_details.get('firstname')+' '+address_details.get('lastname') +' '+address_details.get('street')
+		cad.address_type = address_type
+		cad.address_line1 = address_details.get('street')
+		cad.city = address_details.get('city')
+		cad.state = address_details.get('region')
+		cad.pincode = address_details.get('postcode')
+		cad.phone = address_details.get('telephone') or '00000'
+		cad.customer = customer
+		cad.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e , 'Method name create_address_forCustomer: ' , customer)
 
 def update_address_forCustomer(cust_address,address_details, customer, address_type):
-	cad = frappe.get_doc('Address',cust_address)
-	#cad.address_title = address_details.get('firstname')+' '+address_details.get('lastname')
-	cad.address_type = address_type
-	cad.address_line1 = address_details.get('street')
-	cad.city = address_details.get('city')
-	cad.state = address_details.get('region')
-	cad.pincode = address_details.get('postcode')
-	cad.phone = address_details.get('telephone') or '00000'
-	cad.customer = customer
-	cad.save(ignore_permissions=True)
+	try:
+		cad = frappe.get_doc('Address',cust_address)
+		cad.address_type = address_type
+		cad.address_line1 = address_details.get('street')
+		cad.city = address_details.get('city')
+		cad.state = address_details.get('region')
+		cad.pincode = address_details.get('postcode')
+		cad.phone = address_details.get('telephone') or '00000'
+		cad.customer = customer
+		cad.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e , 'Method name update_address_forCustomer: ', customer)
 
 def get_missing_customers(header,oauth_data):
 	list1=[]
@@ -832,17 +877,23 @@ def get_missing_products(header,oauth_data):
 						order1.append(order_data[index].get('entity_id'))
 
 def update_order(order,i,content,customer):
-	order = frappe.get_doc("Sales Order", order)
-	create_new_order(order,i,content,customer)
-	order.save(ignore_permissions=True)
+	try:
+		order = frappe.get_doc("Sales Order", order)
+		create_new_order(order,i,content,customer)
+		order.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e , 'Method name update_order: ', content[i])
 
 def create_order(i,content,customer):
-	if content[i].get('order_items'):
-		child_status=check_item_presence(i,content)
-		if child_status==True:
-			order = frappe.new_doc('Sales Order')
-			create_new_order(order,i,content,customer)
-			order.save(ignore_permissions=True)
+	try:
+		if content[i].get('order_items'):
+			child_status=check_item_presence(i,content)
+			if child_status==True:
+				order = frappe.new_doc('Sales Order')
+				create_new_order(order,i,content,customer)
+				order.save(ignore_permissions=True)
+	except Exception, e:
+		create_scheduler_exception(e ,'Method name create_order: ', content[i])
 
 # def create_new_order(order,i,content,customer):
 # 	from datetime import date
@@ -878,7 +929,7 @@ def create_new_order(order,index,content,customer):
 		order.po_no=content[index].get('po_number')
 	
 	# If Order type is general then set SO order type as Standard Order
-	if content[index].get('order_type') == "General":
+	if content[index].get('order_type') == "General" or content[index].get('order_type') == None:
 		order.new_order_type="Standard Order"
 	else:
 		order.new_order_type=content[index].get('order_type')

@@ -18,6 +18,7 @@
 "Type:","Data (text)","Select","Link","Data","Text","Data","Data","Data"
 "Info:","","One of: DocField, DocType","Valid DocType","","","","",""
 "Start entering data below this line"
+"","""Scheduler Log-obj_traceback-previous_field""","DocField","Scheduler Log","previous_field","error","obj_traceback","Data",""
 "","""Sales Order-new_order_type-previous_field""","DocField","Sales Order","previous_field","order_type","new_order_type","Data",""
 "","""Sales Invoice-net_total_export-label""","DocField","Sales Invoice","label","Gross Total","net_total_export","Data",""
 "","""Sales Invoice-read_only_onload""","DocType","Sales Invoice","read_only_onload","","","Check",""

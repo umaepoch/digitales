@@ -18,6 +18,7 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
+"","""Scheduler Log-obj_traceback""","Scheduler Log","Text","obj_traceback","error","","","","obj_traceback",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-new_order_type""","Sales Order","Select","Order Type","order_type","","Standard Order
 Standing Order
 Reader Request","","new_order_type",0,0,0,0,"","",0,"",0,0,0,0,0,0
