@@ -18,16 +18,20 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
+"","""Sales Order-process_status""","Sales Order","Data","Process Status","currency","","Uncompleted
+Completed","","process_status",0,0,0,0,"","Uncompleted",1,"",0,0,0,0,0,0
+"","""Sales Order-bill_to_address""","Sales Order","Small Text","Billing Address","customer_address","","","","bill_to_address",0,0,1,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order-customer_address_column""","Sales Order","Column Break","Customer Address Column","shipping_address","","","","customer_address_column",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order-customer_addresses""","Sales Order","Section Break","Customer Addresses","contact_person","","","","customer_addresses",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice-tender_group""","Sales Invoice","Link","Tender Group","budget","","Tender Group","","tender_group",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice-comment""","Sales Invoice","Small Text","Comment","due_date","","","","comment",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Invoice-order_end_date""","Sales Invoice","Date","End Date","start_date","","","","order_end_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
+"","""Sales Invoice-start_date""","Sales Invoice","Date","Start Date","tender_group","","","","start_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Scheduler Log-obj_traceback""","Scheduler Log","Text","obj_traceback","error","","","","obj_traceback",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-new_order_type""","Sales Order","Select","Order Type","order_type","","Standard Order
 Standing Order
 Reader Request","","new_order_type",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-billing_address_name""","Sales Order","Link","Dummy Billing Address","customer_address_column","","Address","","billing_address_name",0,0,0,0,"","",1,"",0,0,0,0,0,0
-"","""Sales Order-bill_to_address""","Sales Order","Small Text","Billing Address","customer_address","","","","bill_to_address",0,0,1,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-customer_address_column""","Sales Order","Column Break","Customer Address Column","shipping_address","","","","customer_address_column",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-customer_addresses""","Sales Order","Section Break","Customer Addresses","contact_person","","","","customer_addresses",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order-process_status""","Sales Order","Data","Process Status","currency","","Uncompleted
-Completed","","process_status",0,0,0,0,"","Uncompleted",1,"",0,0,0,0,0,0
 "","""Sales Order-modified_date""","Sales Order","Data","Modified Date","comment","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order-comment""","Sales Order","Small Text","Comment","po_no","","","","comment",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-sales_order_status""","Sales Order","Select","Sales Order Status","entity_id","","Existing
@@ -54,10 +58,6 @@ High","","priority",0,1,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-bill_to_address""","Sales Invoice","Small Text","Billing Address","customer_addresses","","","","bill_to_address",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-column_break""","Sales Invoice","Column Break","Column Break","shipping_address","","","","column_break",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-customer_addresses""","Sales Invoice","Section Break","Customer Addresses","shipping_address","","","","customer_addresses",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Invoice-comment""","Sales Invoice","Small Text","Comment","due_date","","","","comment",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Invoice-order_end_date""","Sales Invoice","Date","End Date","start_date","","","","order_end_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Invoice-start_date""","Sales Invoice","Date","Start Date","tender_group","","","","start_date",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Invoice-tender_group""","Sales Invoice","Link","Tender Group","budget","","Tender Group","","tender_group",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-budget""","Sales Invoice","Link","Budget","order_type","","Budget","","budget",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-new_order_type""","Sales Invoice","Select","Order Type","order_type","","Standard Order
 Standing Order
