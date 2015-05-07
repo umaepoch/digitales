@@ -18,6 +18,7 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
+"","""Sales Order Item-po_data""","Sales Order Item","Data","PO Data","gst_value","","","","po_data",0,0,0,0,"","",0,"",1,1,0,0,0,0
 "","""Sales Order-process_status""","Sales Order","Data","Process Status","currency","","Uncompleted
 Completed","","process_status",0,0,0,0,"","Uncompleted",1,"",0,0,0,0,0,0
 "","""Sales Order-bill_to_address""","Sales Order","Small Text","Billing Address","customer_address","","","","bill_to_address",0,0,1,0,"","",0,"",0,0,0,0,0,0

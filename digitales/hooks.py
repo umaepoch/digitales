@@ -78,8 +78,8 @@ doc_events = {
 	},
 
 	"Purchase Receipt": {
-		"on_submit": "digitales.digitales.Api_methods.stock_assignment"
-		#"on_cancel": "digitales.digitales.Api_methods.stock_cancellation"
+		"on_submit": "digitales.digitales.Api_methods.stock_assignment",
+		"on_cancel": "digitales.digitales.Api_methods.stock_cancellation"
 	},
 
 	"Delivery Note": {
