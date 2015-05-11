@@ -408,7 +408,7 @@ def get_products_from_magento(page, max_date, header, oauth_data, type_of_data=N
 			if count == 0 and type_of_data != 'missed':
 				tot_count = get_Data_count(max_date, 'product_pages_per_100_mcount')
 				if cint(tot_count)>0 :
-					get_missed_items(tot_count, max_date, header, oauth_data)
+					get_missed_items(20, max_date, header, oauth_data)
 	return True
 
 def create_item(i,content):
