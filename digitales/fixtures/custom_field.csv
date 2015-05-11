@@ -18,6 +18,7 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
+"","""Item-modified_date""","Item","Data","Modified Date","item_status","","","","modified_date",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-po_data""","Sales Order Item","Data","PO Data","gst_value","","","","po_data",0,0,0,0,"","",0,"",1,1,0,0,0,0
 "","""Sales Order-process_status""","Sales Order","Data","Process Status","currency","","Uncompleted
 Completed","","process_status",0,0,0,0,"","Uncompleted",1,"",0,0,0,0,0,0
@@ -109,4 +110,3 @@ Non Existing","","customer_status",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Delivery Note Item-assigned_qty""","Delivery Note Item","Float","Assigned Qty","description","","","","assigned_qty",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Address-entity_id""","Address","Data","Entity ID","lead_name","","","","entity_id",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Customer-modified_date""","Customer","Data","Modified Date","tender_group","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
-"","""Item-modified_date""","Item","Data","Modified Date","item_status","","","","modified_date",0,0,0,0,"","",0,"",0,0,0,0,0,0

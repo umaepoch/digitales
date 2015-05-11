@@ -34,13 +34,18 @@ def Stock_Availability(so_doc, child_args):
 	if bin_details:
 		bin_qty = flt(bin_details.actual_qty) - flt(bin_details.reserved_qty)
 		if flt(bin_qty) > 0.0 and flt(bin_details.actual_qty) >= flt(child_args.qty):
-			create_stock_assignment_document(child_args, so_doc.name, child_args.qty)
+			sal = create_stock_assignment_document(child_args, so_doc.name, child_args.qty)
+
+			# Stock in Hand
+			make_history_of_assignment(sal, so_doc.transaction_date, "Stock In Hand", "", child_args.qty)
 			update_assigned_qty(child_args.qty , so_doc.name, child_args.item_code)
 		elif flt(bin_qty) <= 0.0:
 			assigned_qty = flt(bin_details.actual_qty) - flt(bin_details.reserved_qty) + flt(child_args.qty)
 			po_qty = (flt(child_args.qty) - flt(assigned_qty)) if flt(assigned_qty) > 0.0 else flt(child_args.qty)
 			if flt(assigned_qty) > 0.0:
-				create_stock_assignment_document(child_args, so_doc.name, assigned_qty)
+				sal = create_stock_assignment_document(child_args, so_doc.name, assigned_qty)
+				# Stock in Hand
+				make_history_of_assignment(sal, so_doc.transaction_date, "Stock In Hand", "", assigned_qty)
 				update_assigned_qty(assigned_qty , so_doc.name, child_args.item_code)
 			if flt(po_qty) > 0.0:
 				create_purchase_order_record(so_doc, child_args, po_qty)
@@ -96,6 +101,20 @@ def create_stock_assignment_document(args, sales_order, assigned_qty):
 	sa.purchase_receipt_no = args.parent if args.doctype == 'Purchase Receipt Item' else ''
 	sa.item_code = args.item_code
 	sa.customer_name = frappe.db.get_value('Sales Order',sa.sales_order,'customer_name')
+
+	# # creating Document Stock Assignment entry
+	# bin_details = frappe.db.get_value('Bin', {'item_code': child_args.item_code, 'warehouse': child_args.warehouse}, '*', as_dict=1)
+	# if bin_details:
+	# 	bin_qty = flt(bin_details.actual_qty) - flt(bin_details.reserved_qty)
+	# 	if flt(bin_qty) > 0.0 and flt(bin_details.actual_qty) >= flt(child_args.qty):
+	# 		# make_history_of_assignment
+	# 		print "stock in hand"+sales_order
+	# 		sal_child = sa.append('document_stock_assignment', {})
+	# 		sal_child.created_date = frappe.get_value("Sales Order",sales_order,"transcation_date")
+	# 		sal_child.document_type = "Stock In Hand"
+	# 		sal_child.document_no = ""
+	# 		sal_child.qty = assigned_qty
+
 	sa.save(ignore_permissions=True)
 	return sa.name
 
@@ -162,7 +181,10 @@ def create_stock_assignment(stock_assigned_qty, sales_order_data, pr_details):
 	sal = frappe.db.get_value('Stock Assignment Log', {'sales_order': sales_order_data.parent, 'item_code': pr_details.item_code},'*', as_dict=1)
 	stock_assigned_qty = sales_order_data.qty if sales_order_data.qty < stock_assigned_qty else stock_assigned_qty
 	sal_name = create_stock_assignment_document(pr_details, sales_order_data.parent, stock_assigned_qty) if not sal else update_stock_assigned_qty(sal, stock_assigned_qty)
-	make_history_of_assignment(sal_name, pr_details.parent, stock_assigned_qty)
+
+	date = frappe.db.get_value("Purchase Receipt",pr_details.parent,"posting_date")
+
+	make_history_of_assignment(sal_name,date,"Purchase Receipt", pr_details.parent, stock_assigned_qty)
 
 def update_assign_qty(assigned_qty, sales_order, item_code):
 	frappe.db.sql(''' update `tabSales Order Item` set assigned_qty = assigned_qty + %s where parent = "%s" and 
@@ -173,9 +195,18 @@ def update_stock_assigned_qty(stock_assignment_details, assigned_qty):
 		where name = '%s' """%(flt(assigned_qty), stock_assignment_details.name), auto_commit=1)
 	return stock_assignment_details.name
 
-def make_history_of_assignment(sal, pr_name, qty):
+# def make_history_of_assignment(sal, pr_name, qty):
+# 	sal= frappe.get_doc('Stock Assignment Log', sal)
+# 	sal_child = sal.append('document_stock_assignment', {})
+# 	sal_child.document_no = pr_name
+# 	sal_child.qty = qty
+# 	sal.save(ignore_permissions=True)
+
+def make_history_of_assignment(sal, date, doc_type, pr_name, qty):
 	sal= frappe.get_doc('Stock Assignment Log', sal)
 	sal_child = sal.append('document_stock_assignment', {})
+	sal_child.created_date = date;
+	sal_child.document_type = doc_type
 	sal_child.document_no = pr_name
 	sal_child.qty = qty
 	sal.save(ignore_permissions=True)
@@ -377,7 +408,7 @@ def get_products_from_magento(page, max_date, header, oauth_data, type_of_data=N
 			if count == 0 and type_of_data != 'missed':
 				tot_count = get_Data_count(max_date, 'product_pages_per_100_mcount')
 				if cint(tot_count)>0 :
-					get_missed_items(6, max_date, header, oauth_data)
+					get_missed_items(tot_count, max_date, header, oauth_data)
 	return True
 
 def create_item(i,content):
@@ -592,7 +623,7 @@ def get_customers_from_magento(page, max_date, header, oauth_data,type_of_data=N
 			if count == 0 and type_of_data != 'missed':
 				tot_count = get_Data_count(max_date, 'customer_pages_per_100_mcount')
 				if cint(tot_count)>0 :
-					get_missed_customers(6, max_date, header, oauth_data)
+					get_missed_customers(tot_count, max_date, header, oauth_data)
 
 def create_customer(i,content):
 	temp_customer = ''
@@ -812,7 +843,7 @@ def get_orders_from_magento(page, max_date, header, oauth_data,type_of_data=None
 			if count == 0 and type_of_data != 'missed':
 				tot_count = get_Data_count(max_date, 'orders_pages_per_100_mcount')
 				if cint(tot_count)>0 :
-					get_missed_orders(6, max_date, header, oauth_data)
+					get_missed_orders(tot_count, max_date, header, oauth_data)
 	return True
 
 def create_or_update_customer_address(address_details, customer):
