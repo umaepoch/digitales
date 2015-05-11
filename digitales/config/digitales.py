@@ -35,5 +35,18 @@ def get_data():
 				
 			]
 		},
+		{
+			"label": _("Reports"),
+			"icon": "icon-table",
+			"items": [
+				{
+					"type": "report",
+					"is_query_report": True,
+					"name": "Stock Assignment Log",
+					"doctype": "Stock Assignment Log"
+				},
+				
+			]
+		},
 
 	]
