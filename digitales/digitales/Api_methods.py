@@ -579,7 +579,7 @@ def GetOauthDetails():
 
 #update configuration
 def update_execution_date(document):
-	now_plus_10 = datetime.datetime.now() + datetime.timedelta(minutes = 10)
+	now_plus_10 = datetime.datetime.now() + datetime.timedelta(minutes = 30)
 	frappe.db.sql("""update `tabSingles` set value='%s' where doctype='API Configuration Page' and field='date'"""%(now_plus_10.strftime('%Y-%m-%d %H:%M:%S')))
 	frappe.db.sql("""update `tabSingles` set value='%s' where doctype='API Configuration Page' and field='api_type'"""%(document))
 	frappe.db.commit()
