@@ -59,7 +59,7 @@
   {
    "allow_on_submit": 0, 
    "fieldname": "delivery_note", 
-   "fieldtype": "Link", 
+   "fieldtype": "Data", 
    "hidden": 0, 
    "ignore_user_permissions": 0, 
    "in_filter": 0, 
@@ -223,7 +223,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2015-05-08 17:34:00.272953", 
+ "modified": "2015-05-14 20:49:22.607416", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Stock Assignment Log", 

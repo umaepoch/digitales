@@ -26,7 +26,7 @@ def get_columns():
 			_("Stock Assign/Receive Date") + "::100",
 			_("Ordered Qty") + "::100",
 			_("Assigned Qty") + "::100",
-			# _("Total Assigned Qty") + "::100",
+			_("Total Assigned Qty") + "::100",
 			_("Delivered Qty") + "::100",
 			_("Delivery Date") + "::100"
 			]
@@ -44,6 +44,14 @@ def get_stock_assignment_log_data(filters):
 									dsa.created_date AS dsa_date,
 									sal.ordered_qty AS ordered_qty,
 									dsa.qty AS assigned_qty,
+									(
+										SELECT
+											 sum(qty)
+										FROM
+										    `tabDocument Stock Assignment` d
+										WHERE
+											d.parent=dsa.parent AND (d.idx=1 or d.idx<=dsa.idx)
+									) AS Total_Qty,
 									sal.delivered_qty AS delivered_qty,
 									dn.posting_date AS delivery_date 
 							FROM 
@@ -65,13 +73,15 @@ def get_stock_assignment_log_data(filters):
 							ON
 								dn.name = sal.delivery_note
 							WHERE dsa.created_date between '{0}' and '{1}' {conditions}
+							ORDER BY 
+								sal.sales_order ASC, sal.item_code ASC,dsa.created_date
 						""".format(filters['from_date'],filters['to_date'],conditions=get_conditions(filters)),debug=True)
 
 def get_conditions(filters):
 	conditions = []
 	if filters.get("sales_order"):
 		conditions.append("sal.sales_order='%(sales_order)s'"%filters)
-	if filters.get("customer"):
-		conditions.append("sal.customer='%(customer)s'"%filters)
+	if filters.get("item_name"):
+		conditions.append("sal.item_name='%(item_name)s'"%filters)
 
 	return " and {}".format(" and ".join(conditions)) if conditions else ""

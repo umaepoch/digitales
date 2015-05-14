@@ -27,7 +27,11 @@ def check_ispurchase_item(doc,method):
 			if frappe.db.get_value("Item",{'is_stock_item':'Yes','name':d.item_code},'name'):
 				Stock_Availability(doc,d)
 			else:
-				create_purchase_order_record(doc,d,d.qty)
+				bin_details = frappe.db.get_value('Bin', {'item_code': child_args.item_code, 'warehouse': child_args.warehouse}, '*', as_dict=1)
+				so_qty = flt(bin_details.reserved_qty) if bin_details else 0.0
+				po_qty = get_po_qty(child_args.item_code, child_args.warehouse) - so_qty # if negative then make po
+				if po_qty < 0:
+					create_purchase_order_record(doc,d, flt(po_qty*-1))
 
 def Stock_Availability(so_doc, child_args):
 	bin_details = frappe.db.get_value('Bin', {'item_code': child_args.item_code, 'warehouse': child_args.warehouse}, '*', as_dict=1)
@@ -48,7 +52,16 @@ def Stock_Availability(so_doc, child_args):
 				make_history_of_assignment(sal, so_doc.transaction_date, "Stock In Hand", "", assigned_qty)
 				update_assigned_qty(assigned_qty , so_doc.name, child_args.item_code)
 			if flt(po_qty) > 0.0:
-				create_purchase_order_record(so_doc, child_args, po_qty)
+				new_po_qty = get_po_qty(child_args.item_code, child_args.warehouse) + flt(bin_details.actual_qty) - flt(bin_details.reserved_qty) # if negative then make po
+				if new_po_qty < 0:
+					create_purchase_order_record(so_doc, child_args, flt(new_po_qty * -1))
+
+def get_po_qty(item_code, warehouse=None):
+	cond = 'warehouse ="%s"'%(warehouse) if warehouse else '1=1'
+	qty = frappe.db.sql(''' select sum(qty) from `tabPurchase Order Item` 
+		where docstatus <> 2 and item_code = "%s" and %s'''%(item_code, cond), as_list=1)
+	qty = flt(qty[0][0]) if qty else 0.0
+	return qty
 
 def supplier_validate(item_code):
 	if not frappe.db.get_value('Item', item_code, 'default_supplier'):
@@ -78,7 +91,7 @@ def create_purchase_order_record(doc,d,qty):
 													 where parent="%s" and item_code="%s"'''
 													 %(purchase_order[0][0],d.item_code),as_list=1)
 
-						qty_new=qty+purchase_order_qty[0][0]
+						qty_new= qty + flt(purchase_order_qty[0][0])
 						update_qty(doc,d,item[0],purchase_order[0][0],qty_new,purchase_order_qty[0][1])
 					else:
 						child_entry=update_child_entry(doc,d,purchase_order[0][0],qty)
@@ -87,8 +100,9 @@ def create_purchase_order_record(doc,d,qty):
 			purchase_order = purchase_order[0][0]
 		else:
 			purchase_order = create_new_po(doc,d,supplier[0][0],qty)
+
 		if purchase_order:
-			frappe.db.sql(''' update `tabSales Order Item` set po_data = "%s" where name = "%s"	'''%(purchase_order, d.name))
+			frappe.db.sql(''' update `tabSales Order Item` set po_data = "%s", po_qty="%s" where name = "%s"	'''%(purchase_order, qty, d.name), auto_commit=1)
 	else:
 		frappe.throw("Supplier must be specify for items in Item Master Form.")
 
@@ -131,8 +145,10 @@ def delete_stl(stl_name):
 
 def update_stock_assigned_qty_to_zero(doc):
 	for data in doc.get('sales_order_details'):
+		frappe.db.sql(''' update `tabSales Order Item` set po_data = (select true from dual where 1=2), po_qty=0.0, assigned_qty=0.0 where name = "%s"	'''%(data.name), auto_commit=1)
 		data.assigned_qty = 0.0
 		data.po_data = ''
+		data.po_qty = 0.0
 
 def reduce_po(doc):
 	for data in doc.get('sales_order_details'):
@@ -143,7 +159,8 @@ def reduce_po(doc):
 
 def update_child_table(po_details, data):
 	if po_details:
-		qty = flt(po_details.qty) - (flt(data.qty) - flt(data.assigned_qty))
+		po_qty = flt(data.po_qty) or flt(data.qty)
+		qty = flt(po_details.qty) - (po_qty - flt(data.assigned_qty))
 		if flt(qty) >= 1.0:
 			frappe.db.sql(""" update `tabPurchase Order Item` set qty = '%s' where name ='%s'"""%(qty, po_details.name), auto_commit=1)
 		elif flt(qty)==0.0:
@@ -473,20 +490,34 @@ def create_new_product(item,i,content):
 	item.item_name=content[i].get('name') or content[i].get('sku')
 	item.item_group = 'Products'
 	if content[i].get('media'):
-		if frappe.db.get_value('Item Group', content[i].get('media'), 'name'):
-			item.item_group=content[i].get('media') or 'Products'
-		elif frappe.db.get_value('Item', content[i].get('media'), 'name'):
-			item.item_group = 'Products'
+		# check if media contains comma, if Yes, then spit and set media from fist item
+		media = content[i].get('media')
+		media = media.split(',')[0]
+		print item.item_name, content[i].get('media'), media
+		# if frappe.db.get_value('Item Group', content[i].get('media'), 'name'):
+		# 	item.item_group=content[i].get('media') or 'Products'
+		# elif frappe.db.get_value('Item', content[i].get('media'), 'name'):
+		# 	item.item_group = 'Products'
+		# else:
+		# 	item_group=create_new_itemgroup(i,content)
+		# 	item.item_group=item_group
+
+		if frappe.db.get_value('Item Group', media, 'name'):
+			item.item_group=media or 'Products'
 		else:
-			item_group=create_new_itemgroup(i,content)
-			item.item_group=item_group
+			item.item_group=create_new_itemgroup(media)
 
-	# Check item group and assign the default expence and income account
-	if content[i].get('media') in ['DVD', 'CD', 'BLURAY', 'Graphic Novel', 'CDROM', 'Audio Book', 'Manga', 'Online Resource', 'Blu-Ray', 'PC Games', 'Hardcover', 'Playstation 3', 'Xbox 360', 'Xbox One', 'Playstation 4', 'Nintendo Wii U', '2CD and DVD', 'Graphics', '3D', 'UV', 'BLURAY, 3D', 'Nintendo 3DS', 'Nintendo Wii', 'DVD, UV', 'BLURAY, DVD', 'BLURAY, DVD, UV', 'Playstation Vita', 'Paperback']:
-		# print "setting default income and expense account for item", item.item_name
-		item.expense_account = "5-1100 Cost of Goods Sold : COGS Stock"
-		item.income_account = "4-1100 Product Sales"
-
+		# Check item group and assign the default expence and income account
+		if media in ['DVD', 'CD', 'BLURAY', 'Graphic Novel', 'CDROM', 'Audio Book', 'Manga',
+					'Online Resource', 'Blu-Ray', 'PC Games', 'Hardcover', 'Playstation 3',
+					'Xbox 360', 'Xbox One', 'Playstation 4', 'Nintendo Wii U', '2CD and DVD',
+					'Graphics', '3D', 'UV', 'BLURAY, 3D', 'Nintendo 3DS', 'Nintendo Wii', 'DVD, UV',
+					'BLURAY, DVD', 'BLURAY, DVD, UV', 'Playstation Vita', 'Paperback']:
+			# print "setting default income and expense account for item", item.item_name
+			item.expense_account = "5-1100 Cost of Goods Sold : COGS Stock"
+			item.income_account = "4-1100 Product Sales"
+	else:
+		item.item_group = 'Products'
 
 	item.description = 'Desc: ' + content[i].get('short_description') if content[i].get('short_description') else content[i].get('sku')
 	item.event_id=i
@@ -554,15 +585,26 @@ def check_uom_conversion(item):
 	else:
 		return False
 
-def create_new_itemgroup(i,content):
+# def create_new_itemgroup(i,content):
+# 	try:
+# 		itemgroup=frappe.new_doc('Item Group')
+# 		itemgroup.parent_item_group='All Item Groups'
+# 		itemgroup.item_group_name=content[i].get('media')
+# 		itemgroup.is_group='No'
+# 		itemgroup.save()
+# 	except Exception, e:
+# 		create_scheduler_exception(e , 'method name create_new_itemgroup: ' , content[i])
+# 	return itemgroup.name or 'Products'
+
+def create_new_itemgroup(item_group):
 	try:
 		itemgroup=frappe.new_doc('Item Group')
 		itemgroup.parent_item_group='All Item Groups'
-		itemgroup.item_group_name=content[i].get('media')
+		itemgroup.item_group_name=item_group
 		itemgroup.is_group='No'
 		itemgroup.save()
 	except Exception, e:
-		create_scheduler_exception(e , 'method name create_new_itemgroup: ' , content[i])
+		create_scheduler_exception(e , 'method name create_new_itemgroup: ' , item_group)
 	return itemgroup.name or 'Products'
 
 def get_own_warehouse():
@@ -596,7 +638,7 @@ def GetCustomer():
 	max_customer_date = (datetime.datetime.strptime(max_customer_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
 
 	#delete
-	max_customer_date = '2015-03-01 05:43:13'
+	#max_customer_date = '2015-03-01 05:43:13'
 
 	status=get_customers_from_magento(1, max_customer_date, h, oauth)	
 
@@ -606,24 +648,31 @@ def get_missed_customers(count, max_date, header, oauth_data):
 			get_customers_from_magento(index, max_date,header, oauth_data, 'missed')
 
 def get_customers_from_magento(page, max_date, header, oauth_data,type_of_data=None):
-	if page:
-		r = requests.get(url='http://digitales.com.au/api/rest/customers?filter[1][attribute]=updated_at&filter[1][gt]=%s&page=%s&limit=100&order=updated_at&dir=asc'%(max_date, page), headers=header, auth=oauth_data)
-		customer_data = json.loads(r.content)
-		count = 0
-		if len(customer_data) > 0:
-			for index in customer_data:
-				name = frappe.db.get_value('Customer', customer_data[index].get('organisation').replace("'",""), 'name')
-				if name:
-					update_customer(name, index, customer_data)
-					GetAddress(customer_data[index].get('entity_id'))
-				else:
-					count = count + 1
-					create_customer(index, customer_data)
-					GetAddress(customer_data[index].get('entity_id'))
-			if count == 0 and type_of_data != 'missed':
-				tot_count = get_Data_count(max_date, 'customer_pages_per_100_mcount')
-				if cint(tot_count)>0 :
-					get_missed_customers(tot_count, max_date, header, oauth_data)
+	try:
+		if page:
+			print max_date, page 
+			r = requests.get(url='http://digitales.com.au/api/rest/customers?filter[1][attribute]=updated_at&filter[1][gt]=%s&page=%s&limit=100&order=updated_at&dir=asc'%(max_date, page), headers=header, auth=oauth_data)
+			print r
+			customer_data = json.loads(r.content)
+			count = 0
+			if len(customer_data) > 0:
+				for index in customer_data:
+					print customer_data[index]
+					print "sdddddddddddddddddddddddd"
+					name = frappe.db.get_value('Customer', customer_data[index].get('organisation').replace("'",""), 'name')
+					if name:
+						update_customer(name, index, customer_data)
+						GetAddress(customer_data[index].get('entity_id'))
+					else:
+						count = count + 1
+						create_customer(index, customer_data)
+						GetAddress(customer_data[index].get('entity_id'))
+				if count == 0 and type_of_data != 'missed':
+					tot_count = get_Data_count(max_date, 'customer_pages_per_100_mcount')
+					if cint(tot_count)>0 :
+						get_missed_customers(tot_count, max_date, header, oauth_data)
+	except Exception, e:
+		create_scheduler_exception(e , 'Method name get_customers_from_magento' , customer_data[index].get('organisation'))
 
 def create_customer(i,content):
 	temp_customer = ''
