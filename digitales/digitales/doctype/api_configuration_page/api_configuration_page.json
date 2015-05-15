@@ -65,6 +65,7 @@
    "default": "0", 
    "fieldname": "offset_limit", 
    "fieldtype": "Int", 
+   "hidden": 1, 
    "label": "offset_limit", 
    "permlevel": 0, 
    "precision": ""
@@ -72,7 +73,49 @@
   {
    "fieldname": "execute_duration", 
    "fieldtype": "Data", 
+   "hidden": 1, 
    "label": "API Execute Duration", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "api_credentials", 
+   "fieldtype": "Section Break", 
+   "label": "API Credentials", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "client_key", 
+   "fieldtype": "Data", 
+   "label": "Client Key", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "client_secret", 
+   "fieldtype": "Data", 
+   "label": "Client Secret", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "column_break_10", 
+   "fieldtype": "Column Break", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "owner_key", 
+   "fieldtype": "Data", 
+   "label": "Owner Key", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "owner_secret", 
+   "fieldtype": "Data", 
+   "label": "Owner Secret", 
    "permlevel": 0, 
    "precision": ""
   }
@@ -85,7 +128,7 @@
  "is_submittable": 0, 
  "issingle": 1, 
  "istable": 0, 
- "modified": "2015-04-29 00:19:28.969601", 
+ "modified": "2015-05-15 17:10:17.151926", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "API Configuration Page", 

@@ -18,7 +18,15 @@ import itertools
 
 # On submission of sales order---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def create_purchase_order(doc,method):
+	check_duplicate_item_code(doc)
 	check_ispurchase_item(doc,method)
+
+def check_duplicate_item_code(doc):
+	duplicate_item = []
+	s = [duplicate_item.append(d.item_code) for d in doc.get('sales_order_details')]
+	for item_code in duplicate_item:
+		if duplicate_item.count(item_code) > 1:
+			frappe.throw(_("Item code {0} is added twise, merge the qty against same Item Code").format(item_code))
 
 def check_ispurchase_item(doc,method):
 	for d in doc.get('sales_order_details'):
@@ -122,7 +130,6 @@ def create_stock_assignment_document(args, sales_order, assigned_qty):
 	# 	bin_qty = flt(bin_details.actual_qty) - flt(bin_details.reserved_qty)
 	# 	if flt(bin_qty) > 0.0 and flt(bin_details.actual_qty) >= flt(child_args.qty):
 	# 		# make_history_of_assignment
-	# 		print "stock in hand"+sales_order
 	# 		sal_child = sa.append('document_stock_assignment', {})
 	# 		sal_child.created_date = frappe.get_value("Sales Order",sales_order,"transcation_date")
 	# 		sal_child.document_type = "Stock In Hand"
@@ -182,7 +189,7 @@ def stock_assignment(doc,method):
 			sales_order=frappe.db.sql('''select s.parent as parent,ifnull(s.qty,0)-ifnull(s.assigned_qty,0) AS qty, 
 				s.assigned_qty as assigned_qty from `tabSales Order Item` s inner join `tabSales Order` so 
 				on s.parent=so.name where s.item_code="%s" and so.docstatus=1 and 
-				ifnull(s.qty,0)<>ifnull(s.assigned_qty,0) order by so.priority,so.creation'''%pr_details.item_code,as_dict=1)
+				ifnull(s.qty,0)<>ifnull(s.assigned_qty,0) order by so.priority,so.creation'''%pr_details.item_code,as_dict=1, debug=1)
 			if sales_order:
 				check_stock_assignment(qty, sales_order, pr_details)
 
@@ -328,7 +335,8 @@ def update_stock_assignment_log_on_submit(doc,method):
 										%(d.qty,doc.name,sales_order_name[0][0],d.item_code))
 				frappe.db.commit()
 			else:
-				delivery_note = delivery_note_name[0][0] + ', ' + doc.name
+				# delivery_note = delivery_note_name[0][0] + ', ' + doc.name
+				delivery_note = doc.name
 				delivery_note_details=frappe.db.sql("""select delivered_qty from `tabStock Assignment Log`
 												where sales_order='%s' and item_code='%s'"""%(sales_order_name[0][0],d.item_code))
 				if delivery_note_details:
@@ -381,10 +389,8 @@ def check_APItime():
 		elif datetime.datetime.now() > api_date and dates[0]=='Order':
 			GetOrders()
 
-def get_Data_count(max_date, document_key):
-	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
-	oauth = GetOauthDetails()
-	r = requests.get(url='http://digitales.com.au/api/rest/mcount?start_date='+cstr(max_date)+'', headers=h, auth=oauth)
+def get_Data_count(max_date, document_key, headers, oauth_data):
+	r = requests.get(url='http://digitales.com.au/api/rest/mcount?start_date='+cstr(max_date)+'', headers=headers, auth=oauth_data)
 	total_page_count = json.loads(r.content)
 	if total_page_count.get(document_key) > 0:
 		return total_page_count.get(document_key)
@@ -401,18 +407,19 @@ def GetItem():
 		max_item_date = max_date[0][0]
 	max_item_date = max_item_date.split('.')[0] if '.' in max_item_date else max_item_date
 	max_item_date = (datetime.datetime.strptime(max_item_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
-	status = get_products_from_magento(1, max_item_date, h, oauth)		
+	status = get_SyncItemsCount(max_item_date, h, oauth)		
 	
-def get_missed_items(count, max_date, header, oauth_data):
+def get_SyncItemsCount(max_date, header, oauth_data):
+	count = get_Data_count(max_date, 'product_pages_per_100_mcount', header, oauth_data)
+	count = 25 if count > 30 else count 
 	if count > 0:
 		for index in range(1, count+1):
-			get_products_from_magento(index, max_date,header, oauth_data, 'missed')
+			get_products_from_magento(index, max_date,header, oauth_data)
 
-def get_products_from_magento(page, max_date, header, oauth_data, type_of_data=None):
+def get_products_from_magento(page, max_date, header, oauth_data):
 	if page:
 		r = requests.get(url='http://digitales.com.au/api/rest/products?filter[1][attribute]=updated_at&filter[1][gt]=%s&page=%s&limit=100&order=updated_at&dir=asc'%(max_date, page), headers=header, auth=oauth_data)
 		product_data = json.loads(r.content)
-		count = 0
 		if len(product_data) > 0:
 			for index in product_data:
 				name = frappe.db.get_value('Item', product_data[index].get('sku'), 'name')
@@ -420,12 +427,7 @@ def get_products_from_magento(page, max_date, header, oauth_data, type_of_data=N
 					update_item(name, index, product_data)
 					check_item_price(name,index,product_data)
 				else:
-					count = count + 1
 					create_item(index, product_data)
-			if count == 0 and type_of_data != 'missed':
-				tot_count = get_Data_count(max_date, 'product_pages_per_100_mcount')
-				if cint(tot_count)>0 :
-					get_missed_items(tot_count, max_date, header, oauth_data)
 	return True
 
 def create_item(i,content):
@@ -487,50 +489,42 @@ def create_new_item_price(item_price,i,content,price_list):
 	return True
 
 def create_new_product(item,i,content):
-	item.item_name=content[i].get('name') or content[i].get('sku')
-	item.item_group = 'Products'
-	if content[i].get('media'):
-		# check if media contains comma, if Yes, then spit and set media from fist item
-		media = content[i].get('media')
-		media = media.split(',')[0]
-		print item.item_name, content[i].get('media'), media
-		# if frappe.db.get_value('Item Group', content[i].get('media'), 'name'):
-		# 	item.item_group=content[i].get('media') or 'Products'
-		# elif frappe.db.get_value('Item', content[i].get('media'), 'name'):
-		# 	item.item_group = 'Products'
-		# else:
-		# 	item_group=create_new_itemgroup(i,content)
-		# 	item.item_group=item_group
-
-		if frappe.db.get_value('Item Group', media, 'name'):
-			item.item_group=media or 'Products'
-		else:
-			item.item_group=create_new_itemgroup(media)
-
-		# Check item group and assign the default expence and income account
-		if media in ['DVD', 'CD', 'BLURAY', 'Graphic Novel', 'CDROM', 'Audio Book', 'Manga',
-					'Online Resource', 'Blu-Ray', 'PC Games', 'Hardcover', 'Playstation 3',
-					'Xbox 360', 'Xbox One', 'Playstation 4', 'Nintendo Wii U', '2CD and DVD',
-					'Graphics', '3D', 'UV', 'BLURAY, 3D', 'Nintendo 3DS', 'Nintendo Wii', 'DVD, UV',
-					'BLURAY, DVD', 'BLURAY, DVD, UV', 'Playstation Vita', 'Paperback']:
-			# print "setting default income and expense account for item", item.item_name
-			item.expense_account = "5-1100 Cost of Goods Sold : COGS Stock"
-			item.income_account = "4-1100 Product Sales"
-	else:
-		item.item_group = 'Products'
-
-	item.description = 'Desc: ' + content[i].get('short_description') if content[i].get('short_description') else content[i].get('sku')
 	item.event_id=i
-	#item.item_status='Existing'
+	item.item_name=content[i].get('name') or content[i].get('sku')
+	item.item_group = media_type(content[i].get('media'))
+	item.description = 'Desc: ' + content[i].get('short_description') if content[i].get('short_description') else content[i].get('sku')
 	warehouse=get_own_warehouse()
 	item.default_warehouse=warehouse
 	if content[i].get('barcode') and not frappe.db.get_value('Item', {'barcode':content[i].get('barcode')}, 'name'):	
-		item.barcode=content[i].get('barcode')
-	item.modified_date=content[i].get('updated_at')
-	item.distributor=content[i].get('distributor')
-	item.product_release_date=content[i].get('release_date')
+		item.barcode = content[i].get('barcode')
+	item.modified_date = content[i].get('updated_at')
+	item.distributor = content[i].get('distributor')
+	item.product_release_date = content[i].get('release_date')
 	item.default_supplier = get_supplier(content[i].get('distributor'))
+	item.expense_account, item.income_account = default_ExpenxeIncomeAccount(item.item_group)
 	return True
+
+def media_type(itemgroup):
+	media = 'Products'
+	if itemgroup:
+		media = itemgroup
+		media = media.split(',')[0]
+		if not frappe.db.get_value('Item Group', media, 'name'):
+			create_new_itemgroup(media)
+	return media
+
+def default_ExpenxeIncomeAccount(media):
+	# Check item group and assign the default expence and income account
+	expense_account, income_account = '', ''
+	if media in ['DVD', 'CD', 'BLURAY', 'Graphic Novel', 'CDROM', 'Audio Book', 'Manga',
+				'Online Resource', 'Blu-Ray', 'PC Games', 'Hardcover', 'Playstation 3',
+				'Xbox 360', 'Xbox One', 'Playstation 4', 'Nintendo Wii U', '2CD and DVD',
+				'Graphics', '3D', 'UV', 'BLURAY, 3D', 'Nintendo 3DS', 'Nintendo Wii', 'DVD, UV',
+				'BLURAY, DVD', 'BLURAY, DVD, UV', 'Playstation Vita', 'Paperback']:
+		expense_account = "5-1100 Cost of Goods Sold : COGS Stock"
+		income_account = "4-1100 Product Sales"
+
+	return expense_account, income_account
 
 def get_supplier(supplier):
 	temp = ''
@@ -616,8 +610,12 @@ def get_own_warehouse():
 		frappe.msgprint("Please specify default own warehouse in Configuration Page",raise_exception=1)
 
 def GetOauthDetails():
-	oauth=OAuth(client_key='5a3bc10d3ba1615f5466de92e7cae501', client_secret='3a03ffff8d9a5b203eb4cad26ffa5b16', resource_owner_key='3d695c38d659411c8ca0d90ff0ac0c0c', resource_owner_secret='ef332ab23c09df818426909db9639351')	
-	return oauth
+	try:
+		oauth_details = frappe.db.get_value('API Configuration Page', None, '*', as_dict=1)
+		oauth=OAuth(client_key=oauth_details.client_key, client_secret=oauth_details.client_secret, resource_owner_key= oauth_details.owner_key, resource_owner_secret=oauth_details.owner_secret)	
+		return oauth
+	except Exception, e:
+		create_scheduler_exception(e , 'method name GetOauthDetails: ' , 'oauth_details')	
 
 #update configuration
 def update_execution_date(document):
@@ -650,15 +648,11 @@ def get_missed_customers(count, max_date, header, oauth_data):
 def get_customers_from_magento(page, max_date, header, oauth_data,type_of_data=None):
 	try:
 		if page:
-			print max_date, page 
 			r = requests.get(url='http://digitales.com.au/api/rest/customers?filter[1][attribute]=updated_at&filter[1][gt]=%s&page=%s&limit=100&order=updated_at&dir=asc'%(max_date, page), headers=header, auth=oauth_data)
-			print r
 			customer_data = json.loads(r.content)
 			count = 0
 			if len(customer_data) > 0:
 				for index in customer_data:
-					print customer_data[index]
-					print "sdddddddddddddddddddddddd"
 					name = frappe.db.get_value('Customer', customer_data[index].get('organisation').replace("'",""), 'name')
 					if name:
 						update_customer(name, index, customer_data)

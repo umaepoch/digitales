@@ -14,7 +14,9 @@ def execute(filters=None):
 	return columns, data
 
 def get_columns():
-	return [_("Sales Order") + ":Link/Sales Order:100",
+	return [
+			_("ID") + ":Link/Stock Assignment Log:100",
+			_("Sales Order") + ":Link/Sales Order:100",
 			_("Order Type") + "::100",
 			_("Priority") + "::100",
 			_("Customer Name") + "::200",
@@ -32,7 +34,8 @@ def get_columns():
 			]
 
 def get_stock_assignment_log_data(filters):
-	return frappe.db.sql("""SELECT sal.sales_order AS sales_order,
+	return frappe.db.sql("""SELECT 	sal.name AS id,
+									sal.sales_order AS sales_order,
 									so.order_type AS order_type,
 									so.priority AS priority,
 									sal.customer_name AS customer_name,
@@ -74,8 +77,8 @@ def get_stock_assignment_log_data(filters):
 								dn.name = sal.delivery_note
 							WHERE dsa.created_date between '{0}' and '{1}' {conditions}
 							ORDER BY 
-								sal.sales_order ASC, sal.item_code ASC,dsa.created_date
-						""".format(filters['from_date'],filters['to_date'],conditions=get_conditions(filters)),debug=True)
+								sal.sales_order DESC, sal.item_code ASC,dsa.created_date
+						""".format(filters['from_date'],filters['to_date'],conditions=get_conditions(filters)))
 
 def get_conditions(filters):
 	conditions = []
