@@ -634,13 +634,11 @@ def GetCustomer():
 		max_customer_date = max_date[0][0]
 	max_customer_date = max_customer_date.split('.')[0] if '.' in max_customer_date else max_customer_date
 	max_customer_date = (datetime.datetime.strptime(max_customer_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
+	status=get_SyncCustomerCount(max_customer_date, h, oauth)	
 
-	#delete
-	#max_customer_date = '2015-03-01 05:43:13'
-
-	status=get_customers_from_magento(1, max_customer_date, h, oauth)	
-
-def get_missed_customers(count, max_date, header, oauth_data):
+def get_SyncCustomerCount(max_date, header, oauth_data):
+	count = get_Data_count(max_date, 'customer_pages_per_100_mcount', header, oauth_data)
+	count = 25 if count > 30 else count 
 	if count > 0:
 		for index in range(1, count+1):
 			get_customers_from_magento(index, max_date,header, oauth_data, 'missed')
@@ -650,7 +648,6 @@ def get_customers_from_magento(page, max_date, header, oauth_data,type_of_data=N
 		if page:
 			r = requests.get(url='http://digitales.com.au/api/rest/customers?filter[1][attribute]=updated_at&filter[1][gt]=%s&page=%s&limit=100&order=updated_at&dir=asc'%(max_date, page), headers=header, auth=oauth_data)
 			customer_data = json.loads(r.content)
-			count = 0
 			if len(customer_data) > 0:
 				for index in customer_data:
 					name = frappe.db.get_value('Customer', customer_data[index].get('organisation').replace("'",""), 'name')
@@ -658,13 +655,8 @@ def get_customers_from_magento(page, max_date, header, oauth_data,type_of_data=N
 						update_customer(name, index, customer_data)
 						GetAddress(customer_data[index].get('entity_id'))
 					else:
-						count = count + 1
 						create_customer(index, customer_data)
 						GetAddress(customer_data[index].get('entity_id'))
-				if count == 0 and type_of_data != 'missed':
-					tot_count = get_Data_count(max_date, 'customer_pages_per_100_mcount')
-					if cint(tot_count)>0 :
-						get_missed_customers(tot_count, max_date, header, oauth_data)
 	except Exception, e:
 		create_scheduler_exception(e , 'Method name get_customers_from_magento' , customer_data[index].get('organisation'))
 
@@ -855,9 +847,11 @@ def GetOrders():
 		max_order_date = max_date[0][0]
 	max_order_date = max_order_date.split('.')[0] if '.' in max_order_date else max_order_date
 	max_order_date = (datetime.datetime.strptime(max_order_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
-	status=get_orders_from_magento(1, max_order_date, h, oauth)
+	status=get_SyncOrdersCount(max_order_date, h, oauth)
 
-def get_missed_orders(count, max_date, header, oauth_data):
+def get_SyncOrdersCount(max_date, header, oauth_data):
+	count = get_Data_count(max_date, 'orders_pages_per_100_mcount', header, oauth_data)
+	count = 25 if count > 30 else count
 	if count > 0:
 		for index in range(1, count+1):
 			get_orders_from_magento(index, max_date,header, oauth_data, 'missed')	
@@ -869,8 +863,6 @@ def get_orders_from_magento(page, max_date, header, oauth_data,type_of_data=None
 	if page:
 		r = requests.get(url='http://digitales.com.au/api/rest/orders?filter[1][attribute]=updated_at&filter[1][gt]=%s&page=%s&limit=100&order=updated_at&dir=asc'%(max_date, page), headers=header, auth=oauth_data)
 		order_data = json.loads(r.content)
-		count = 0
-		k=0
 		if len(order_data) > 0:
 			for index in order_data:
 				customer = frappe.db.get_value('Contact', {'entity_id': order_data[index].get('customer_id')}, 'customer')
@@ -878,15 +870,7 @@ def get_orders_from_magento(page, max_date, header, oauth_data,type_of_data=None
 					# create_or_update_customer_address(order_data[index].get('addresses'), customer)
 					order = frappe.db.get_value('Sales Order', {'entity_id': order_data[index].get('entity_id')}, 'name')
 					if not order:
-						# addr_details = order_data[index].get('addresses')
-						count = count + 1
 						create_order(index,order_data,customer)
-				else:
-					k=k+1
-			if count == 0 and type_of_data != 'missed':
-				tot_count = get_Data_count(max_date, 'orders_pages_per_100_mcount')
-				if cint(tot_count)>0 :
-					get_missed_orders(tot_count, max_date, header, oauth_data)
 	return True
 
 def create_or_update_customer_address(address_details, customer):
