@@ -35,9 +35,9 @@ def check_ispurchase_item(doc,method):
 			if frappe.db.get_value("Item",{'is_stock_item':'Yes','name':d.item_code},'name'):
 				Stock_Availability(doc,d)
 			else:
-				bin_details = frappe.db.get_value('Bin', {'item_code': child_args.item_code, 'warehouse': child_args.warehouse}, '*', as_dict=1)
+				bin_details = frappe.db.get_value('Bin', {'item_code': d.item_code, 'warehouse': d.warehouse}, '*', as_dict=1)
 				so_qty = flt(bin_details.reserved_qty) if bin_details else 0.0
-				po_qty = get_po_qty(child_args.item_code, child_args.warehouse) - so_qty # if negative then make po
+				po_qty = get_po_qty(d.item_code, d.warehouse) - so_qty # if negative then make po
 				if po_qty < 0:
 					create_purchase_order_record(doc,d, flt(po_qty*-1))
 
