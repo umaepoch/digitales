@@ -30,7 +30,7 @@ def get_columns():
 			_("Assigned Qty") + "::100",
 			_("Total Assigned Qty") + "::100",
 			_("Delivered Qty") + "::100",
-			_("Delivery Date") + "::100"
+			_("Last Delivery Date") + "::100"
 			]
 
 def get_stock_assignment_log_data(filters):
