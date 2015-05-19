@@ -18,6 +18,7 @@
 "Type:","Data (text)","Select","Link","Data","Text","Data","Data","Data"
 "Info:","","One of: DocField, DocType","Valid DocType","","","","",""
 "Start entering data below this line"
+"","""Delivery Note-total_qty-previous_field""","DocField","Delivery Note","previous_field","column_break_33","total_qty","Data",""
 "","""Sales Order Item-po_qty-previous_field""","DocField","Sales Order Item","previous_field","po_data","po_qty","Data",""
 "","""Item-modified_date-previous_field""","DocField","Item","previous_field","item_status","modified_date","Data",""
 "","""Sales Order Item-po_data-previous_field""","DocField","Sales Order Item","previous_field","gst_value","po_data","Data",""
