@@ -367,12 +367,12 @@ def update_stock_assignment_log_on_cancel(doc,method):
 
 
 def validate_qty_on_submit(doc,method):
+	qty_count = 0
 	for d in doc.get('delivery_note_details'):
+		qty_count += d.qty
 		if not d.assigned_qty>=d.qty:
 			frappe.throw("Delivered Quantity must be less than or equal to assigned_qty for item_code='"+d.item_code+"'")
-
-
-
+	doc.total_qty = qty_count
 
 
 #For calling API through Poster---------------------------------------------------------------------------------------
