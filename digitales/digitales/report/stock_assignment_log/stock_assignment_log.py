@@ -15,9 +15,10 @@ def execute(filters=None):
 
 def get_columns():
 	return [
+			_("Picked") + ":Check:100",
 			_("ID") + ":Link/Stock Assignment Log:100",
 			_("Sales Order") + ":Link/Sales Order:100",
-			_("Order Type") + "::100",
+			_("New Order Type") + "::100",
 			_("Priority") + "::100",
 			_("Customer Name") + "::200",
 			_("Item Code") + ":Link/Item:100",
@@ -27,14 +28,13 @@ def get_columns():
 			_("Budget") + ":Link/Budget:100",
 			_("Stock Assign/Receive Date") + "::100",
 			_("Ordered Qty") + "::100",
-			_("Assigned Qty") + "::100",
-			_("Total Assigned Qty") + "::100",
-			_("Delivered Qty") + "::100",
-			_("Last Delivery Date") + "::100"
+			_("Pick Qty") + "::100",
+			_("Total Assigned Qty") + "::100"
 			]
 
 def get_stock_assignment_log_data(filters):
-	return frappe.db.sql("""SELECT 	sal.name AS id,
+	return frappe.db.sql("""SELECT 	sal.picked as picked,
+									sal.name AS id,
 									sal.sales_order AS sales_order,
 									so.order_type AS order_type,
 									so.priority AS priority,
@@ -54,9 +54,7 @@ def get_stock_assignment_log_data(filters):
 										    `tabDocument Stock Assignment` d
 										WHERE
 											d.parent=dsa.parent AND (d.idx=1 or d.idx<=dsa.idx)
-									) AS Total_Qty,
-									sal.delivered_qty AS delivered_qty,
-									dn.posting_date AS delivery_date 
+									) AS Total_Qty
 							FROM 
 								`tabDocument Stock Assignment` AS dsa
 							JOIN
