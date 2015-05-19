@@ -20,6 +20,7 @@ import itertools
 def create_purchase_order(doc,method):
 	check_duplicate_item_code(doc)
 	check_ispurchase_item(doc,method)
+	return "Done"
 
 def check_duplicate_item_code(doc):
 	duplicate_item = []
@@ -67,7 +68,7 @@ def Stock_Availability(so_doc, child_args):
 
 def get_po_qty(item_code, warehouse=None):
 	cond = 'warehouse ="%s"'%(warehouse) if warehouse else '1=1'
-	qty = frappe.db.sql(''' select sum(qty) from `tabPurchase Order Item` 
+	qty = frappe.db.sql(''' select sum(ifnull(qty,0)-ifnull(received_qty,0)) from `tabPurchase Order Item` 
 		where docstatus <> 2 and item_code = "%s" and %s'''%(item_code, cond), as_list=1)
 	qty = flt(qty[0][0]) if qty else 0.0
 	return qty
@@ -187,12 +188,16 @@ def stock_assignment(doc,method):
 	for pr_details in doc.get('purchase_receipt_details'):
 		if frappe.db.get_value("Item",{'is_stock_item':'Yes','name':pr_details.item_code},'name'):
 			qty = flt(pr_details.qty)
-			sales_order=frappe.db.sql('''select s.parent as parent,ifnull(s.qty,0)-ifnull(s.assigned_qty,0) AS qty, 
-				s.assigned_qty as assigned_qty from `tabSales Order Item` s inner join `tabSales Order` so 
-				on s.parent=so.name where s.item_code="%s" and so.docstatus=1 and 
-				ifnull(s.qty,0)<>ifnull(s.assigned_qty,0) order by so.priority,so.creation'''%pr_details.item_code,as_dict=1, debug=1)
+			sales_order = get_SODetails(pr_details.item_code)
 			if sales_order:
 				check_stock_assignment(qty, sales_order, pr_details)
+
+# So list which has stock not assign or partially assign
+def get_SODetails(item_code):
+	return frappe.db.sql('''select s.parent as parent,ifnull(s.qty,0)-ifnull(s.assigned_qty,0) AS qty, 
+				s.assigned_qty as assigned_qty from `tabSales Order Item` s inner join `tabSales Order` so 
+				on s.parent=so.name where s.item_code="%s" and so.docstatus=1 and so.status <> 'Stopped' and
+				ifnull(s.qty,0)<>ifnull(s.assigned_qty,0) order by so.priority,so.creation'''%(item_code),as_dict=1)
 
 def check_stock_assignment(qty, sales_order, pr_details):
 	for so_details in sales_order:
@@ -1075,3 +1080,47 @@ def upload():
 	else:
 		frappe.db.commit()
 	return {"messages": ret, "error": error}
+
+@frappe.whitelist()
+def assign_stopQty_toOther(doc):
+	import json
+	self = frappe.get_doc('Sales Order', doc)
+	for data in self.get('sales_order_details'):
+		qty = flt(data.assigned_qty) - flt(data.delivered_qty)
+		if flt(data.assigned_qty) > 0.0 and flt(qty) > 0.0:
+			frappe.db.sql(''' update `tabSales Order Item` set assigned_qty =%s where name ="%s"'''%(data.delivered_qty, data.name), auto_commit=1)
+			update_sal(data.item_code, data.parent, data.delivered_qty)
+			sales_order = get_SODetails(data.item_code)
+			if sales_order:
+				create_StockAssignment_AgainstSTopSO(data, sales_order, qty)
+	return "Done"
+
+def create_StockAssignment_AgainstSTopSO(data, sales_order, qty):
+	for so_data in sales_order:
+		if flt(so_data.qty) > 0.0 and qty > 0.0:
+			stock_assigned_qty = so_data.qty if flt(qty) >= flt(so_data.qty) else flt(qty)
+			qty = (flt(qty) - flt(so_data.qty)) if flt(qty) >= flt(so_data.qty) else 0.0
+			if flt(stock_assigned_qty) > 0.0:
+				sal = frappe.db.get_value('Stock Assignment Log', {'sales_order': so_data.parent, 'item_code':data.item_code}, 'name')
+				if not sal:
+					sal = create_stock_assignment_document(data, so_data.parent, stock_assigned_qty)
+				make_history_of_assignment(sal, nowdate(), "Stock In Hand", "", stock_assigned_qty)
+				update_assigned_qty(stock_assigned_qty , so_data.parent, data.item_code)
+
+def update_sal(item_code, sales_order, assigned_qty):
+	sal = frappe.db.get_value('Stock Assignment Log', {'item_code': item_code, 'sales_order': sales_order}, '*')
+	if sal:
+		if flt(assigned_qty) > 0.0:
+			child_sal = frappe.db.sql(''' select * from `tabDocument Stock Assignment` where 
+				parent = "%s" order by idx'''%(sal.name), as_dict=1)
+			if len(child_sal)>0:
+				for data in child_sal:
+					if flt(assigned_qty) > 0.0:
+						assigned_qty = flt(assigned_qty) - flt(data.qty)
+						if flt(assigned_qty) <= 0.0:
+							frappe.db.sql(''' update `tabDocument Stock Assignment` set qty = "%s" where 
+								name = "%s"	'''%(assigned_qty, data.name))
+					else:
+						frappe.db.sql(''' delete from `tabDocument Stock Assignment` where name = "%s"'''%(data.name))
+		else:
+			frappe.db.sql(''' delete from `tabStock Assignment Log` where name = "%s"'''%(sal.name))
