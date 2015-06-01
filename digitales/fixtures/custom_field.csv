@@ -18,10 +18,17 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
-"","""Delivery Note-total_qty""","Delivery Note","Int","Total Qty","column_break_33","","","","total_qty",0,0,1,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-gst_value""","Sales Order Item","Data","GST Value","budget","","","","gst_value",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-budget""","Sales Order Item","Link","Budget","order_number","","Budget","","budget",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-column_break_1""","Sales Order Item","Column Break","column break 1","order_number","","","","column_break_1",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-gst""","Sales Order Item","Data","GST","order_number","","","In %","gst",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-order_number""","Sales Order Item","Data","Order Number","rrp","","","","order_number",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-rrp""","Sales Order Item","Link","RRP","item_details","","Price List","","rrp",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Sales Order Item-item_details""","Sales Order Item","Section Break","Item Details","transaction_date","","","","item_details",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order Item-po_qty""","Sales Order Item","Float","PO Qty","po_data","1","","","po_qty",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Item-modified_date""","Item","Data","Modified Date","item_status","","","","modified_date",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-po_data""","Sales Order Item","Data","PO Data","gst_value","","","","po_data",0,0,0,0,"","",0,"",1,1,0,0,0,0
+"","""Delivery Note-total_qty""","Delivery Note","Int","Total Qty","column_break_33","","","","total_qty",0,0,1,0,"","",0,"",0,0,0,0,0,0
+"","""Item-modified_date""","Item","Data","Modified Date","item_status","","","","modified_date",0,0,1,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order-process_status""","Sales Order","Data","Process Status","currency","","Uncompleted
 Completed","","process_status",0,0,0,0,"","Uncompleted",1,"",0,0,0,0,0,0
 "","""Sales Order-bill_to_address""","Sales Order","Small Text","Billing Address","customer_address","","","","bill_to_address",0,0,1,0,"","",0,"",0,0,0,0,0,0
@@ -72,13 +79,6 @@ Shopping Cart","","order_type",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Invoice-entity_id""","Sales Invoice","Data","Order Number","po_no","","","","entity_id",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-po_no""","Sales Invoice","Data","PO No","mode_of_payment","","","","po_no",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-contract_number""","Sales Invoice","Data","Contract Number","customer","","","","contract_number",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order Item-gst_value""","Sales Order Item","Data","GST Value","budget","","","","gst_value",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order Item-budget""","Sales Order Item","Link","Budget","order_number","","Budget","","budget",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order Item-column_break_1""","Sales Order Item","Column Break","column break 1","order_number","","","","column_break_1",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order Item-gst""","Sales Order Item","Data","GST","order_number","","","In %","gst",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order Item-order_number""","Sales Order Item","Data","Order Number","rrp","","","","order_number",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order Item-rrp""","Sales Order Item","Link","RRP","item_details","","Price List","","rrp",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Sales Order Item-item_details""","Sales Order Item","Section Break","Item Details","transaction_date","","","","item_details",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order Item-advance_paid""","Sales Order Item","Currency","Advance Paid","assigned_qty","","","","advance_paid",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order Item-assigned_qty""","Sales Order Item","Float","Assigned Qty","description","","","","assigned_qty",0,0,1,0,"","0.0",0,"",0,0,0,0,0,0
 "","""Sales Order Item-po_child_name""","Sales Order Item","Data","PO Child name","po_name","","","","po_child_name",0,0,0,0,"","",1,"",0,0,0,0,0,0

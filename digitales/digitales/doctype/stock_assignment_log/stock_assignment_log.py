@@ -4,14 +4,19 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import cint
+from frappe.utils import cint, flt
 from frappe.model.document import Document
 
 class StockAssignmentLog(Document):
 	def validate(self):
+		self.assigned_qty_validation()
+		self.update_qty_in_sales_order()
 		if not self.get("__islocal"):
 			self.check_qty_equal()
-			self.update_qty_in_sales_order()
+
+	def assigned_qty_validation(self):
+		if flt(self.ordered_qty) < flt(self.assign_qty):
+			frappe.throw(_('Assigned qty must be less than ordered qty'))
 
 	def check_qty_equal(self):
 		sum_qty = 0

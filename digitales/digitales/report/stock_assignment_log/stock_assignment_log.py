@@ -15,7 +15,7 @@ def execute(filters=None):
 
 def get_columns():
 	return [
-			_("Picked") + ":Check:100",
+			# _("Picked") + ":Check:100",
 			_("ID") + ":Link/Stock Assignment Log:100",
 			_("Sales Order") + ":Link/Sales Order:100",
 			_("New Order Type") + "::100",
@@ -28,12 +28,13 @@ def get_columns():
 			_("Budget") + ":Link/Budget:100",
 			_("Stock Assign/Receive Date") + "::100",
 			_("Ordered Qty") + "::100",
-			_("Pick Qty") + "::100",
-			_("Total Assigned Qty") + "::100"
+			_("Assigned Qty") + "::100",
+			_("Total Assigned Qty") + "::100",
+			_("Delivered Qty") + "::100"
 			]
 
 def get_stock_assignment_log_data(filters):
-	return frappe.db.sql("""SELECT 	sal.picked as picked,
+	return frappe.db.sql("""SELECT 	#sal.picked as picked,
 									sal.name AS id,
 									sal.sales_order AS sales_order,
 									so.order_type AS order_type,
@@ -54,7 +55,8 @@ def get_stock_assignment_log_data(filters):
 										    `tabDocument Stock Assignment` d
 										WHERE
 											d.parent=dsa.parent AND (d.idx=1 or d.idx<=dsa.idx)
-									) AS Total_Qty
+									) AS Total_Qty,
+									sal.delivered_qty as delivered_qty
 							FROM 
 								`tabDocument Stock Assignment` AS dsa
 							JOIN
@@ -84,5 +86,8 @@ def get_conditions(filters):
 		conditions.append("sal.sales_order='%(sales_order)s'"%filters)
 	if filters.get("item_name"):
 		conditions.append("sal.item_name='%(item_name)s'"%filters)
+	if filters.get("customer"):
+		conditions.append("so.customer='%(customer)s'"%filters)
+
 
 	return " and {}".format(" and ".join(conditions)) if conditions else ""
