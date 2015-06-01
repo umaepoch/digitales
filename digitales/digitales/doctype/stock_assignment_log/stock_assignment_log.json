@@ -201,6 +201,7 @@
   {
    "fieldname": "picked", 
    "fieldtype": "Check", 
+   "hidden": 1, 
    "label": "Picked", 
    "permlevel": 0, 
    "precision": ""
@@ -230,7 +231,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2015-05-21 17:52:49.089400", 
+ "modified": "2015-05-29 18:23:50.256391", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Stock Assignment Log", 

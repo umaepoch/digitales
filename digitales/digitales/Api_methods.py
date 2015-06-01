@@ -112,6 +112,7 @@ def create_purchase_order_record(doc,d,qty):
 			purchase_order = create_new_po(doc,d,supplier[0][0],qty)
 
 		if purchase_order:
+			qty = qty if flt(qty) < flt(d.qty) else flt(d.qty)
 			frappe.db.sql(''' update `tabSales Order Item` set po_data = "%s", po_qty="%s" where name = "%s"	'''%(purchase_order, qty, d.name), auto_commit=1)
 	else:
 		frappe.throw("Supplier must be specify for items in Item Master Form.")

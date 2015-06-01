@@ -9,12 +9,6 @@ frappe.query_reports["Stock Assignment Log"] = {
 			"fieldtype": "Link",
 			"options": "Sales Order"
 		},
-		/*{
-			"fieldname":"customer",
-			"label": __("Customer"),
-			"fieldtype": "Link",
-			"options": "Customer"
-		},*/
 		{
 			"fieldname":"item_name",
 			"label": __("Item Name"),
@@ -36,6 +30,12 @@ frappe.query_reports["Stock Assignment Log"] = {
 			"default": frappe.datetime.get_today(),
 			"reqd": 1,
 			"width": "60px"
-		}
+		},
+		{
+			"fieldname":"customer",
+			"label": __("Customer"),
+			"fieldtype": "Link",
+			"options": "Customer"
+		},
 	]
 }

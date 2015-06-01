@@ -21,7 +21,6 @@ class StockAssignmentLog(Document):
 	def check_qty_equal(self):
 		sum_qty = 0
 		sum_qty = sum(d.qty for d in self.get('document_stock_assignment'))
-		frappe.errprint([sum_qty, ' tttt ', self.assign_qty])
 		if cint(self.assign_qty) != cint(sum_qty):
 			frappe.throw(_('Assigned qty must be equl to the sum of qty in Document Wise History table'))
 
