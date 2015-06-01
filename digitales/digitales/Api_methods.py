@@ -79,7 +79,7 @@ def supplier_validate(item_code):
 
 def update_assigned_qty(assigned_qty,sales_order,item_code):
 	frappe.db.sql(''' update `tabSales Order Item`
-						set assigned_qty= assigned_qty + %s where parent="%s"
+						set assigned_qty= %s where parent="%s"
 							and item_code="%s" '''%
 								(assigned_qty,sales_order,item_code))
 	frappe.db.commit()
@@ -217,7 +217,7 @@ def create_stock_assignment(stock_assigned_qty, sales_order_data, pr_details):
 	make_history_of_assignment(sal_name,date,"Purchase Receipt", pr_details.parent, stock_assigned_qty)
 
 def update_assign_qty(assigned_qty, sales_order, item_code):
-	frappe.db.sql(''' update `tabSales Order Item` set assigned_qty = assigned_qty + %s where parent = "%s" and 
+	frappe.db.sql(''' update `tabSales Order Item` set assigned_qty = %s where parent = "%s" and 
 		item_code ="%s" '''%(flt(assigned_qty), sales_order, item_code ), auto_commit=1)
 
 def update_stock_assigned_qty(stock_assignment_details, assigned_qty):
