@@ -56,7 +56,7 @@ def get_stock_assignment_log_data(filters):
 										WHERE
 											d.parent=dsa.parent AND (d.idx=1 or d.idx<=dsa.idx)
 									) AS Total_Qty,
-									sal.delivered_qty as delivered_qty
+									ifnull(sal.delivered_qty,0.0) as delivered_qty
 							FROM 
 								`tabDocument Stock Assignment` AS dsa
 							JOIN
