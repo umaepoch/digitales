@@ -1118,10 +1118,3 @@ def update_sal(item_code, sales_order, delivered_qty, assigned_qty):
 			obj.save(ignore_permissions=True)
 		else:
 			obj.delete()
-		
-
-def on_update_after_submit_so_methods(doc, method):
-	save_SalesOrder(doc)
-
-def save_SalesOrder(self):
-	self.save()
