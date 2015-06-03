@@ -9,6 +9,7 @@ from frappe.model.document import Document
 
 class StockAssignmentLog(Document):
 	def validate(self):
+		self.delivered_qty = cint(self.delivered_qty)
 		self.assigned_qty_validation()
 		self.update_qty_in_sales_order()
 		if not self.get("__islocal"):

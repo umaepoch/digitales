@@ -56,7 +56,7 @@ def get_stock_assignment_log_data(filters):
 										WHERE
 											d.parent=dsa.parent AND (d.idx=1 or d.idx<=dsa.idx)
 									) AS Total_Qty,
-									sal.delivered_qty as delivered_qty
+									format(ifnull(sal.delivered_qty,0),0) as delivered_qty
 							FROM 
 								`tabDocument Stock Assignment` AS dsa
 							JOIN
@@ -71,10 +71,6 @@ def get_stock_assignment_log_data(filters):
 								`tabItem` AS i
 							ON
 								i.item_code = sal.item_code
-							LEFT JOIN
-								`tabDelivery Note` AS dn
-							ON
-								dn.name = sal.delivery_note
 							WHERE dsa.created_date between '{0}' and '{1}' {conditions}
 							ORDER BY 
 								sal.sales_order DESC, sal.item_code ASC,dsa.created_date
