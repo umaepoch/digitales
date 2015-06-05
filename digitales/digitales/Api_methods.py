@@ -1118,3 +1118,19 @@ def update_sal(item_code, sales_order, delivered_qty, assigned_qty):
 			obj.save(ignore_permissions=True)
 		else:
 			obj.delete()
+
+def execute():
+	missed_so_list = ['276','277','278','279']
+	for entity_id in missed_so_list:
+		header = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+		oauth_data = GetOauthDetails()
+		r = requests.get(url='http://digitales.com.au/api/rest/orders?filter[1][attribute]=entity_id&filter[1][in]=%s&page=1&limit=1&order=updated_at&dir=asc'%(entity_id), headers=header, auth=oauth_data)
+		order_data = json.loads(r.content)
+		if len(order_data) > 0:
+			for index in order_data:
+				customer = frappe.db.get_value('Contact', {'entity_id': order_data[index].get('customer_id')}, 'customer')
+				if customer:
+					# create_or_update_customer_address(order_data[index].get('addresses'), customer)
+					order = frappe.db.get_value('Sales Order', {'entity_id': order_data[index].get('entity_id')}, 'name')
+					if not order:
+						create_order(index,order_data,customer)
