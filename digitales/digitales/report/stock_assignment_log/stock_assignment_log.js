@@ -32,7 +32,7 @@ frappe.query_reports["Stock Assignment Log"] = {
 			"width": "60px"
 		},
 		{
-			"fieldname":"customer",
+			"fieldname":"customer_name",
 			"label": __("Customer"),
 			"fieldtype": "Link",
 			"options": "Customer"

@@ -78,12 +78,8 @@ def get_stock_assignment_log_data(filters):
 
 def get_conditions(filters):
 	conditions = []
-	if filters.get("sales_order"):
-		conditions.append("sal.sales_order='%(sales_order)s'"%filters)
-	if filters.get("item_name"):
-		conditions.append("sal.item_name='%(item_name)s'"%filters)
-	if filters.get("customer"):
-		conditions.append("so.customer='%(customer)s'"%filters)
-
+	for key in filters:
+		if filters.get(key) and key not in ['from_date', 'to_date']:
+			conditions.append("sal.%s = '%s'"%(key, filters.get(key)))
 
 	return " and {}".format(" and ".join(conditions)) if conditions else ""
