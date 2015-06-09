@@ -986,9 +986,8 @@ def create_new_order(order,index,content,customer):
 	order.modified_date=content[index].get('updated_at')
 	order.delivery_date=delivery_date
 	order.grand_total_export=content[index].get('grand_total')
-	#order.discount_amount=content[i].get('discount_amount')
-	if content[index].get('po_number'):
-		order.po_no=content[index].get('po_number')
+	order.order_number_details = content[index].get('increment_id')
+	order.po_no=content[index].get('po_number')
 	
 	# If Order type is general then set SO order type as Standard Order
 	if content[index].get('order_type') == "General" or content[index].get('order_type') == None:
