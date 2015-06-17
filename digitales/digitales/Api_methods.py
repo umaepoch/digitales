@@ -1181,7 +1181,7 @@ def assign_stopQty_toOther(doc,item_list):
 		if(data.item_code in(stopping_items) and data.stop_status!="Yes"):			# check item code in selected stopping item
 			update_bin_qty(data.item_code,data.qty,data.delivered_qty,data.warehouse)
 			update_so_item_status(data.item_code,data.parent)
-			reduce_po_item(data,data.item_code)
+			# reduce_po_item(data,data.item_code)
 			qty = flt(data.assigned_qty) - flt(data.delivered_qty)
 			if flt(data.assigned_qty) > 0.0:
 				update_sal(data.item_code, data.parent, flt(data.delivered_qty), qty)
@@ -1204,6 +1204,40 @@ def create_StockAssignment_AgainstSTopSOItem(data, sales_order, qty):
 					sal.assign_qty = cint(sal.assign_qty) + cint(stock_assigned_qty)
 				make_history_of_assignment_item(sal, nowdate(), "Stock In Hand", "", stock_assigned_qty)
 				sal.save(ignore_permissions=True)
+				update_or_reducePoQty(so_data.parent, data.item_code)
+
+def update_or_reducePoQty(sales_order, item_code):
+	obj = frappe.get_doc('Sales Order', sales_order)
+	for data in obj.get('sales_order_details'):
+		if data.item_code == item_code:
+			assign_qty = flt(data.qty) - flt(data.assigned_qty)
+			if flt(data.po_qty) > flt(assign_qty):
+				po_qty = flt(assign_qty)
+			else:
+				po_qty = 0.0
+			frappe.db.sql(""" update `tabSales Order Item` set 
+				po_qty = '%s' where name ='%s'"""%(po_qty, data.name), auto_commit=1)
+			reduce_po_item(data.po_data, data.item_code, data.assigned_qty)
+
+def reduce_po_item(purchase_order,item, assign_qty):
+	po_details = frappe.db.get_value('Purchase Order Item', {'parent': purchase_order, 'item_code': item, 'docstatus': 0}, '*', as_dict=1)
+	if po_details:
+		update_child_table_item(po_details, assign_qty)
+		update_parent_table_item(po_details)
+
+def update_child_table_item(po_details, po_qty):
+	qty = flt(po_details.qty) - po_qty
+	if flt(qty) >= 1.0:
+		frappe.db.sql(""" update `tabPurchase Order Item` set qty = '%s' where name ='%s'"""%(qty, po_details.name), auto_commit=1)
+	elif flt(qty)==0.0:
+		delete_document('Purchase Order Item', po_details.name)
+
+def update_parent_table_item(po_details):
+	count = frappe.db.sql(''' select ifnull(count(*),0) from `tabPurchase Order Item` where parent = "%s"	'''%(po_details.parent), as_list=1)
+	if count:
+		if count[0][0] == 0:
+			obj = frappe.get_doc('Purchase Order', po_details.parent)
+			obj.delete()
 
 def create_stock_assignment_document_item(args, sales_order, qty, assigned_qty):
 	sa = frappe.new_doc('Stock Assignment Log')
@@ -1239,29 +1273,6 @@ def get_item_SODetails(item_c):
 				s.assigned_qty as assigned_qty from `tabSales Order Item` s inner join `tabSales Order` so 
 				on s.parent=so.name where s.item_code="%s" and so.docstatus=1 and ifnull(s.stop_status, 'No') <> 'Yes' and
 				ifnull(s.qty,0)<>ifnull(s.assigned_qty,0) order by so.priority,so.creation'''%(item_c),as_dict=1)
-
-def reduce_po_item(data,item):
-	po_details = frappe.db.get_value('Purchase Order Item', {'parent': data.po_data, 'item_code': item, 'docstatus': 0}, '*', as_dict=1)
-	update_child_table_item(po_details, data)
-	update_parent_table_item(po_details)
-
-def update_child_table_item(po_details, data):
-	if po_details:
-		po_qty = flt(data.po_qty) or flt(data.qty)
-		qty = flt(po_details.qty) - po_qty
-		if flt(qty) >= 1.0:
-			frappe.db.sql(""" update `tabPurchase Order Item` set qty = '%s' where name ='%s'"""%(qty, po_details.name), auto_commit=1)
-		elif flt(qty)==0.0:
-			delete_document('Purchase Order Item', po_details.name)
-
-def update_parent_table_item(po_details):
-	if po_details:
-		count = frappe.db.sql(''' select ifnull(count(*),0) from `tabPurchase Order Item` where parent = "%s"	'''%(po_details.parent), as_list=1)
-		if count:
-			if count[0][0] == 0:
-				obj = frappe.get_doc('Purchase Order', po_details.parent)
-				obj.delete()
-
 
 def update_bin_qty(item_code,qty,delivered_qty,warehouse):
 	obj=frappe.get_doc("Bin",{"item_code":item_code,"warehouse":warehouse})
