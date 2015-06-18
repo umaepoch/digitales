@@ -422,12 +422,12 @@ def update_stock_assignment_log_on_submit(doc,method):
 def update_delivery_note(doc,method):
 	for d in doc.get('delivery_note_details'):
 		if(d.stop_status=="Yes"):
-			frappe.throw(_("Item code {0} is stooped please delete it.").format(d.item_code))
+			frappe.throw(_("Item code {0} is stopped please delete it.").format(d.item_code))
 
 def update_sales_invoice(doc,method):
 	for d in doc.get('entries'):
 		if(d.stop_status=="Yes"):
-			frappe.throw(_("Item code {0} is stooped please delete it.").format(d.item_code))
+			frappe.throw(_("Item code {0} is stopped please delete it.").format(d.item_code))
 
 
 def update_stock_assignment_log_on_cancel(doc,method):
