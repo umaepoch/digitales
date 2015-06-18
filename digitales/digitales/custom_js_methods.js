@@ -70,7 +70,8 @@ function create_dialog(doc){
 	                     </table></div>").appendTo($(this.fd.styles_name.wrapper))
 
 	for(i=0;i < doc.sales_order_details.length;i++){
-		if(doc.sales_order_details[i].stop_status!="Yes")
+		console.log([doc.per_delivered, doc.per_billed])
+		if(doc.sales_order_details[i].stop_status!="Yes" && (flt(doc.per_delivered, 2) < 100 || flt(doc.per_billed) < 100))
 		{
 			$("<tr>\
 				<td><input type='checkbox' class='select'></td>\

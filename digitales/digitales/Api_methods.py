@@ -431,6 +431,7 @@ def update_sales_invoice(doc,method):
 
 
 def update_stock_assignment_log_on_cancel(doc,method):
+	update_delivery_note(doc, method)
 	for d in doc.get('delivery_note_details'):
 		name=frappe.db.sql(""" select name,delivered_qty from `tabStock Assignment Log` where
 							sales_order='%s' and item_code='%s'"""%(d.against_sales_order,d.item_code))
