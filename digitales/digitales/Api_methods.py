@@ -1178,16 +1178,16 @@ def assign_stopQty_toOther(doc,item_list):
 	self = frappe.get_doc('Sales Order', doc)
 	for data in self.get('sales_order_details'):
 
-		if(data.item_code in(stopping_items) and data.stop_status!="Yes"):			# check item code in selected stopping item
-			update_bin_qty(data.item_code,data.qty,data.delivered_qty,data.warehouse)
+		if data.item_code in(stopping_items) and data.stop_status!="Yes":			# check item code in selected stopping item
 			update_so_item_status(data.item_code,data.parent)
-			# reduce_po_item(data,data.item_code)
-			qty = flt(data.assigned_qty) - flt(data.delivered_qty)
-			if flt(data.assigned_qty) > 0.0:
-				update_sal(data.item_code, data.parent, flt(data.delivered_qty), qty)
-				sales_order = get_item_SODetails(data.item_code)
-				if sales_order:
-					create_StockAssignment_AgainstSTopSOItem(data, sales_order, qty)
+			if flt(data.qty) > flt(data.delivered_qty):
+				update_bin_qty(data.item_code,data.qty,data.delivered_qty,data.warehouse)
+				qty = flt(data.assigned_qty) - flt(data.delivered_qty)
+				if flt(data.assigned_qty) > 0.0:
+					update_sal(data.item_code, data.parent, flt(data.delivered_qty), qty)
+					sales_order = get_item_SODetails(data.item_code)
+					if sales_order:
+						create_StockAssignment_AgainstSTopSOItem(data, sales_order, qty)
 	return "Done"
 
 def create_StockAssignment_AgainstSTopSOItem(data, sales_order, qty):
