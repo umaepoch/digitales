@@ -1282,12 +1282,8 @@ def update_bin_qty(item_code,qty,delivered_qty,warehouse):
 
 def update_so_item_status(item_code,parent):
 	frappe.db.sql(''' update `tabSales Order Item` set stop_status = "Yes" where item_code = "%s" and parent="%s"'''%(item_code,parent), auto_commit=1)
-	deliv_note=frappe.db.sql(''' select name from `tabDelivery Note Item` where item_code="%s" and against_sales_order="%s" and docstatus=0'''%(item_code,parent))
-	if(deliv_note):
-		frappe.db.sql(''' update `tabDelivery Note Item` set stop_status = "Yes" where item_code = "%s" and against_sales_order="%s" and docstatus=0'''%(item_code,parent), auto_commit=1)
-	sales_inv=frappe.db.sql(''' select name from `tabSales Invoice Item` where item_code="%s" and sales_order="%s" and docstatus=0'''%(item_code,parent))
-	if(sales_inv):
-		frappe.db.sql(''' update `tabSales Invoice Item` set stop_status = "Yes" where item_code = "%s" and sales_order="%s" and docstatus=0'''%(item_code,parent), auto_commit=1)
+	frappe.db.sql(''' update `tabDelivery Note Item` set stop_status = "Yes" where item_code = "%s" and against_sales_order="%s" and docstatus<>2'''%(item_code,parent), auto_commit=1)
+	frappe.db.sql(''' update `tabSales Invoice Item` set stop_status = "Yes" where item_code = "%s" and sales_order="%s" and docstatus<>2'''%(item_code,parent), auto_commit=1)
 
 
 def create_StockAssignment_AgainstSTopSO(data, sales_order, qty):
