@@ -17,7 +17,7 @@ class StockAssignmentLog(Document):
 
 	def assigned_qty_validation(self):
 		if flt(self.ordered_qty) < flt(self.assign_qty):
-			frappe.throw(_('Assigned qty must be less than ordered qty'))
+			frappe.throw(_('Assigned qty must be less than ordered qty for item code {0} in sales order {1}').format(self.item_code, self.sales_order))
 
 	def check_qty_equal(self):
 		sum_qty = 0
