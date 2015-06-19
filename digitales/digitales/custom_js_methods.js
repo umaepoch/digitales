@@ -58,7 +58,7 @@ function create_dialog(doc){
 	})
 	this.fd = dialog.fields_dict;
 	
-	this.table = $("<div id='container'><table class='table', id='tb1'>\
+	this.table = $("<div id='container'><table class='table table-bordered table-hover', id='tb1'>\
 	                      <thead><tr>\
 	                      	<th width='50px'><b><input type='checkbox' id='all'></b></th>\
  			 				<th><b>Item Code</b></th>\

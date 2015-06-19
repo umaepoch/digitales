@@ -17,13 +17,13 @@ class StockAssignmentLog(Document):
 
 	def assigned_qty_validation(self):
 		if flt(self.ordered_qty) < flt(self.assign_qty):
-			frappe.throw(_('Assigned qty must be less than ordered qty for item code {0} in sales order {1}').format(self.item_code, self.sales_order))
+			frappe.throw(_('Assigned qty must be less than ordered qty for item code {0}, sales order {1} in SAL #{2}').format(self.item_code, self.sales_order, self.name))
 
 	def check_qty_equal(self):
 		sum_qty = 0
 		sum_qty = sum(d.qty for d in self.get('document_stock_assignment'))
 		if cint(self.assign_qty) != cint(sum_qty):
-			frappe.throw(_('Assigned qty must be equl to the sum of qty in Document Wise History table for item code {0}').format(self.item_code))
+			frappe.throw(_('Assigned qty must be equl to the sum of qty in Document Wise History table for item code {0} in SAL #{1}').format(self.item_code, self.name))
 
 	def update_qty_in_sales_order(self):
 		self.assign_qty = self.assign_qty if self.assign_qty else 0
