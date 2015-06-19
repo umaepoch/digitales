@@ -121,7 +121,7 @@ def create_stock_assignment_document(args, sales_order, assigned_qty):
 	sa = frappe.new_doc('Stock Assignment Log')
 	sa.item_name = args.item_name
 	sa.sales_order = sales_order
-	sa.ordered_qty = frappe.db.get_value('Sales Order Item', {'item_code': args.item_code, 'parent': sales_order}, 'qty') if args.doctype == 'Purchase Receipt Item' else args.qty
+	sa.ordered_qty = frappe.db.get_value('Sales Order Item', {'item_code': args.item_code, 'parent': sales_order}, 'qty')
 	sa.assign_qty = assigned_qty
 	sa.purchase_receipt_no = args.parent if args.doctype == 'Purchase Receipt Item' else ''
 	sa.item_code = args.item_code
@@ -218,7 +218,7 @@ def create_stock_assignment(stock_assigned_qty, sales_order_data, pr_details):
 
 def update_stock_assigned_qty(stock_assignment_details, assigned_qty):
 	frappe.db.sql(""" update `tabStock Assignment Log` set assign_qty = assign_qty + %s 
-		where name = '%s' """%(flt(assigned_qty), stock_assignment_details.name), auto_commit=1)
+		where name = '%s' """%(flt(assigned_qty), stock_assignment_details.name))
 	return stock_assignment_details.name
 
 # def make_history_of_assignment(sal, pr_name, qty):
