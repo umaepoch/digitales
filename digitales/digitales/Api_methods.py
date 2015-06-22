@@ -1353,3 +1353,28 @@ def make_csv():
 	writer = csv.writer(file2)
 	writer.writerows(new_row_list)
 	file2.close()
+
+def validate_sales_invoice(doc, method):
+	set_terms_and_condition(doc)
+	set_sales_order_details(doc)
+	set_contract_details(doc)
+
+def set_terms_and_condition(si_obj):
+	si_obj.tc_name = 'Net 30'
+	if si_obj.tc_name:
+		si_obj.terms = frappe.db.get_value('Terms and Conditions', si_obj.tc_name, 'terms')
+
+def set_sales_order_details(doc):
+	if doc.entries and doc.entries[0].sales_order:
+		so = frappe.get_doc("Sales Order", doc.entries[0].sales_order)
+		
+		doc.po_no = so.po_no;
+		doc.new_order_type = so.new_order_type;
+		budget = so.budget;
+
+def set_contract_details(doc):
+	from erpnext.selling.doctype.customer.customer import get_contract_details
+	
+	contract_details = get_contract_details(doc.customer)	
+	doc.contract_number = contract_details.get("contract_no")
+	doc.tender_group = contract_details.get("tender_group");

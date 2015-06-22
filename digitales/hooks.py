@@ -90,6 +90,7 @@ doc_events = {
 	},
 
 	"Sales Invoice": {
+		"validate": "digitales.digitales.Api_methods.validate_sales_invoice",
 		"on_submit": "digitales.digitales.Api_methods.update_sales_invoice"
 	}
 	
