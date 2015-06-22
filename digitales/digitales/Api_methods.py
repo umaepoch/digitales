@@ -84,9 +84,9 @@ def assign_extra_qty_to_other(data):
 			create_StockAssignment_AgainstSTopSOItem(data, sales_order, qty)
 
 def get_po_qty(item_code, warehouse=None):
-	cond = 'warehouse ="%s"'%(warehouse) if warehouse else '1=1'
-	qty = frappe.db.sql(''' select sum(ifnull(qty,0)-ifnull(received_qty,0)) from `tabPurchase Order Item` 
-		where docstatus <> 2 and item_code = "%s" and %s'''%(item_code, cond), as_list=1)
+	cond = 'poi.warehouse ="%s"'%(warehouse) if warehouse else '1=1'
+	qty = frappe.db.sql(''' select sum(ifnull(poi.qty,0)-ifnull(poi.received_qty,0)) from `tabPurchase Order Item` poi, `tabPurchase Order` po
+		where poi.parent = po.name and po.status <> 'Submitted' and poi.docstatus <> 2 and poi.item_code = "%s" and %s'''%(item_code, cond), as_list=1)
 	qty = flt(qty[0][0]) if qty else 0.0
 	return qty
 
