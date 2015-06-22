@@ -256,8 +256,9 @@ def update_stock_assigned_qty(stock_assignment_details, assigned_qty):
 		assigned_qty = cint(stock_assignment_details.assign_qty) + cint(assigned_qty)
 	else:
 		assigned_qty = cint(doc_qty) + cint(assigned_qty)
-	frappe.db.sql(""" update `tabStock Assignment Log` set assign_qty = %s
-		where name = '%s' """%(flt(assigned_qty), stock_assignment_details.name))
+	obj = frappe.get_doc('Stock Assignment Log', stock_assignment_details.name)
+	obj.assign_qty = assigned_qty
+	obj.save(ignore_permissions=True)
 	return stock_assignment_details.name
 
 def get_document_STOCK_qty(name):
