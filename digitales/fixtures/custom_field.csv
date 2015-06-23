@@ -18,6 +18,10 @@
 "Type:","Data (text)","Link","Select","Data","Select","Select","Text","Text","Data","Int","Check","Check","Check","Data","Text","Check","Data","Check","Check","Check","Check","Check","Check"
 "Info:","","Valid DocType","One of: Button, Check, Code, Column Break, Currency, Data, Date, Datetime, Dynamic Link, Float, HTML, Image, Int, Link, Long Text, Password, Percent, Read Only, Section Break, Select, Small Text, Table, Text, Text Editor, Time","","","One of: 1, 2, 3, 4, 5, 6, 7, 8, 9","","","","Integer","0 or 1","0 or 1","0 or 1","","","0 or 1","","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1","0 or 1"
 "Start entering data below this line"
+"","""Customer-contract_details""","Customer","Table","Contract Details","budget_details","","Contract Details","","contract_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Customer-budget_details""","Customer","Table","Budget Details","shelf_ready_services_details","","Budget Details","","budget_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Customer-shelf_ready_services_details""","Customer","Table","Shelf Ready Services Details","communications","","Shelf Ready Services","","shelf_ready_services_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
+"","""Customer-services""","Customer","Section Break","Services","sales_team","","","","services",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Order Item-stop_status""","Sales Order Item","Select","Stopped","item_name","","No
 Yes","","stop_status",0,0,1,0,"","No",0,"",0,0,0,0,0,0
 "","""Bank Reconciliation-total_debit""","Bank Reconciliation","Currency","Total Debit","get_relevant_entries","","","","total_debit",0,0,1,0,"","",0,"",0,0,0,0,0,0
@@ -58,9 +62,6 @@ Non Existing","","sales_order_status",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Sales Order-entity_id""","Sales Order","Data","Order Number Data","order_number_details","","","","entity_id",0,0,0,0,"","",1,"",0,1,0,0,0,0
 "","""Sales Order-order_number_details""","Sales Order","Data","Order Number","organisation","","","","order_number_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Sales Invoice-entity_id""","Sales Invoice","Data","Order Number Data","entity_id","","","","entity_id",0,0,0,0,"","",1,"",1,0,0,0,0,0
-"","""Customer-contract_details""","Customer","Table","Contract Details","budget_details","","Contract Details","","contract_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Customer-budget_details""","Customer","Table","Budget Details","shelf_ready_services_details","","Budget Details","","budget_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
-"","""Customer-shelf_ready_services_details""","Customer","Table","Shelf Ready Services Details","communications","","Shelf Ready Services","","shelf_ready_services_details",0,0,0,0,"","",0,"",0,0,0,0,0,0
 "","""Customer-modified_date""","Customer","Data","Modified Date","tender_group","","","","modified_date",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Customer-tender_group""","Customer","Link","Tender Group","contract_form_no","","Tender Group","","tender_group",0,0,0,0,"","",1,"",0,0,0,0,0,0
 "","""Customer-contract_form_no""","Customer","Link","Contract Form No","territory","","Customer Contract Form","","contract_form_no",0,0,0,0,"","",1,"",0,0,0,0,0,0
