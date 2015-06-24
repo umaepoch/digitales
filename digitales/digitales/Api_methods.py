@@ -1335,24 +1335,62 @@ def update_sal(item_code, sales_order, delivered_qty, assigned_qty):
 				and parent ="%s"'''%(item_code, sales_order))
 			obj.delete()
 
-def make_csv():
-	import csv
-	print "hiii"
-	new_row_list =[]
-	with open('/home/indictrance/Desktop/Check Sal.csv', 'rb') as f:
-		reader = csv.reader(f)
-		for row in reader:
-			if row:
-				data = frappe.db.sql(''' select name from `tabStock Assignment Log` where sales_order="%s" 
-				and Item_code="%s"'''%(row[2], row[4]), as_list=1)
-				if not data:
-					new_row = ['', row[3], row[2], '', row[4], row[5], row[6], '', row[7], '', '', '', '2015-06-19', 'Purchase Receipt', row[9], row[8]]
-					new_row_list.append(new_row)
+# def make_csv():
+# 	print "hi----"
+# 	import csv
+# 	print "hello"
+# 	new_row_list =[]
 
-	file2 = open('/home/indictrance/Desktop/file123.csv', 'wb')
+# 	with open('/home/indictrance/Desktop/Check Sal.csv', 'rb') as f:
+# 		reader = csv.reader(f)
+# 		for row in reader:
+# 			if row:
+# 				data = frappe.db.sql(''' select name from `tabStock Assignment Log` where sales_order="%s" 
+# 				and Item_code="%s"'''%(row[2], row[4]), as_list=1)
+# 				if not data:
+# 					new_row = ['', row[3], row[2], '', row[4], row[5], row[6], '', row[7], '', '', '', '2015-06-19', 'Purchase Receipt', row[9], row[8]]
+# 					new_row_list.append(new_row)
+
+# 	file2 = open('/home/indictrance/Desktop/file123.csv', 'wb')
+# 	writer = csv.writer(file2)
+# 	writer.writerows(new_row_list)
+# 	file2.close()
+
+
+
+def make_csv():
+	print "hi----"
+	import csv
+	new_row_list =[]
+	with open('/home/indictrance/Desktop/finaltryitem2.csv', 'rb') as f:
+		reader = csv.reader(f)
+		for itm1 in reader:
+			if itm1:
+				itm=str(itm1[0])
+				check=frappe.db.sql("""select case when exists(select true from `tabSales Order Item` where item_code='%s') or 
+					exists(select true from `tabPurchase Order Item` where item_code='%s') or 
+					exists(select true from `tabSales Invoice Item` where  item_code='%s') or 
+					exists(select true from `tabDelivery Note Item` where  item_code='%s') or
+					exists(select true from  `tabStock Entry Detail` where  item_code='%s') or
+					exists(select true from `tabStock Ledger Entry` where item_code='%s') 		 
+					then true else false end"""%(itm,itm,itm,itm,itm,itm),as_list=1)
+				if check[0][0]==0:
+					new_row_list.append([itm])
+					price_list=frappe.db.sql("""select name from `tabItem Price` where item_code='%s'"""%(itm),as_list=1)
+					if price_list:
+						for price in price_list:
+							obj = frappe.get_doc("Item Price", price[0])
+							obj.delete()
+					item_list = frappe.db.get_value("Item", {'name': itm}, '*', as_dict=1)	
+					if item_list:
+						item_obj = frappe.get_doc("Item", itm)
+						item_obj.delete()
+	file2 = open('/home/erpnext/final_item2.csv', 'wb')
 	writer = csv.writer(file2)
 	writer.writerows(new_row_list)
 	file2.close()
+	print "done"
+
 
 def validate_sales_invoice(doc, method):
 	set_terms_and_condition(doc)
