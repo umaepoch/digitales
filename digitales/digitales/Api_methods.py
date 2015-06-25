@@ -1136,7 +1136,7 @@ def create_child_item(i,order):
 			oi.release_date_of_item=item_release_date[0][0]
 	oi.qty=i['qty_ordered']
 	oi.rate=i['price']
-	oi.amount=i['row_total_incl_tax']
+	# oi.amount=i['row_total_incl_tax']
 	return True
 
 
