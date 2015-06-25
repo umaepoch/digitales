@@ -1362,7 +1362,7 @@ def make_csv():
 	print "hi----"
 	import csv
 	new_row_list =[]
-	with open('/home/indictrance/Desktop/finaltryitem2.csv', 'rb') as f:
+	with open('/home/erpnext/finaltryitem2.csv', 'rb') as f:
 		reader = csv.reader(f)
 		for itm1 in reader:
 			if itm1:
