@@ -243,23 +243,31 @@ def check_stock_assignment(qty, sales_order, pr_details):
 def create_stock_assignment(stock_assigned_qty, sales_order_data, pr_details):
 	sal = frappe.db.get_value('Stock Assignment Log', {'sales_order': sales_order_data.parent, 'item_code': pr_details.item_code},'*', as_dict=1)
 	stock_assigned_qty = sales_order_data.qty if sales_order_data.qty < stock_assigned_qty else stock_assigned_qty
-	
 	if sal:
-		sal_name = update_stock_assigned_qty(sal, stock_assigned_qty)
+		sal_name = update_stock_assigned_qty(sal, stock_assigned_qty, pr_details)
 	else:
 		sal_name = create_stock_assignment_document(pr_details, sales_order_data.parent, stock_assigned_qty)
-	make_history_of_assignment(sal_name,nowdate(),"Purchase Receipt", pr_details.parent, stock_assigned_qty)
+		make_history_of_assignment(sal_name,nowdate(),"Purchase Receipt", pr_details.parent, stock_assigned_qty)
 
-def update_stock_assigned_qty(stock_assignment_details, assigned_qty):
+def update_stock_assigned_qty(stock_assignment_details, assigned_qty, pr_details):
 	doc_qty = get_document_STOCK_qty(stock_assignment_details.name)
 	if cint(doc_qty) == cint(stock_assignment_details.assign_qty):
-		assigned_qty = cint(stock_assignment_details.assign_qty) + cint(assigned_qty)
+		assign_qty = cint(stock_assignment_details.assign_qty) + cint(assigned_qty)
 	else:
-		assigned_qty = cint(doc_qty) + cint(assigned_qty)
+		assign_qty = cint(doc_qty) + cint(assigned_qty)
 	obj = frappe.get_doc('Stock Assignment Log', stock_assignment_details.name)
-	obj.assign_qty = assigned_qty
+	obj.assign_qty = assign_qty
+	update_doc_SAL(obj, pr_details, assigned_qty)
 	obj.save(ignore_permissions=True)
 	return stock_assignment_details.name
+
+def update_doc_SAL(obj, pr_details, assigned_qty):
+	sal = obj.append('document_stock_assignment', {})
+	sal.document_no = pr_details.parent
+	sal.qty = assigned_qty
+	sal.created_date = nowdate()
+	sal.document_type = 'Purchase Receipt'
+	return True
 
 def get_document_STOCK_qty(name):
 	sum_qty = 0.0
@@ -1335,62 +1343,18 @@ def update_sal(item_code, sales_order, delivered_qty, assigned_qty):
 				and parent ="%s"'''%(item_code, sales_order))
 			obj.delete()
 
-# def make_csv():
-# 	print "hi----"
-# 	import csv
-# 	print "hello"
-# 	new_row_list =[]
-
-# 	with open('/home/indictrance/Desktop/Check Sal.csv', 'rb') as f:
-# 		reader = csv.reader(f)
-# 		for row in reader:
-# 			if row:
-# 				data = frappe.db.sql(''' select name from `tabStock Assignment Log` where sales_order="%s" 
-# 				and Item_code="%s"'''%(row[2], row[4]), as_list=1)
-# 				if not data:
-# 					new_row = ['', row[3], row[2], '', row[4], row[5], row[6], '', row[7], '', '', '', '2015-06-19', 'Purchase Receipt', row[9], row[8]]
-# 					new_row_list.append(new_row)
-
-# 	file2 = open('/home/indictrance/Desktop/file123.csv', 'wb')
-# 	writer = csv.writer(file2)
-# 	writer.writerows(new_row_list)
-# 	file2.close()
-
-
-
 def make_csv():
-	print "hi----"
 	import csv
-	new_row_list =[]
-	with open('/home/indictrance/Desktop/finaltryitem2.csv', 'rb') as f:
+	with open('/home/erpnext/deleted_item.csv', 'rb') as f:
 		reader = csv.reader(f)
-		for itm1 in reader:
-			if itm1:
-				itm=str(itm1[0])
-				check=frappe.db.sql("""select case when exists(select true from `tabSales Order Item` where item_code='%s') or 
-					exists(select true from `tabPurchase Order Item` where item_code='%s') or 
-					exists(select true from `tabSales Invoice Item` where  item_code='%s') or 
-					exists(select true from `tabDelivery Note Item` where  item_code='%s') or
-					exists(select true from  `tabStock Entry Detail` where  item_code='%s') or
-					exists(select true from `tabStock Ledger Entry` where item_code='%s') 		 
-					then true else false end"""%(itm,itm,itm,itm,itm,itm),as_list=1)
-				if check[0][0]==0:
-					new_row_list.append([itm])
-					price_list=frappe.db.sql("""select name from `tabItem Price` where item_code='%s'"""%(itm),as_list=1)
-					if price_list:
-						for price in price_list:
-							obj = frappe.get_doc("Item Price", price[0])
-							obj.delete()
-					item_list = frappe.db.get_value("Item", {'name': itm}, '*', as_dict=1)	
-					if item_list:
-						item_obj = frappe.get_doc("Item", itm)
-						item_obj.delete()
-	file2 = open('/home/erpnext/final_item2.csv', 'wb')
-	writer = csv.writer(file2)
-	writer.writerows(new_row_list)
-	file2.close()
-	print "done"
-
+		for item in reader:
+			price_list=frappe.db.sql("""select name from `tabItem Price` where item_code='%s'"""%(item[0]),as_list=1)
+			if price_list:
+				for price in price_list:
+					obj = frappe.get_doc("Item Price", price[0])
+					obj.delete()
+			item_obj = frappe.get_doc("Item", item[0])
+			item_obj.delete()
 
 def validate_sales_invoice(doc, method):
 	set_terms_and_condition(doc)

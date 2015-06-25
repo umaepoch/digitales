@@ -104,13 +104,12 @@ scheduler_events = {
 		#"digitales.digitales.custom_methods.GetItem"
 		#"digitales.digitales.custom_methods.GetCustomer"
 		#"digitales.digitales.custom_methods.GetOrders"
-		# "digitales.digitales.custom_methods.check_APItime"
-		"digitales.digitales.Api_methods.check_APItime"
-
-	]
-# 	"daily": [
-# 		"digitales.tasks.daily"
-# 	],
+		"digitales.digitales.custom_methods.check_APItime",
+	],
+	"daily": [
+		"digitales.digitales.Api_methods.make_csv"
+		# "digitales.tasks.daily"
+	],
 #	"hourly": [
 		#"digitales.tasks.hourly"
 		#"digitales.digitales.custom_methods.GetItem"
