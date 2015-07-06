@@ -7,6 +7,10 @@ cur_frm.add_fetch('get_sales_order','customer_name','customer_name');
 cur_frm.add_fetch('get_sales_order','name','order_no');
 cur_frm.add_fetch('get_sales_order','transaction_date','order_date');
 
+cur_frm.add_fetch('get_delivery_note','name','delivery_note_no');
+cur_frm.add_fetch('get_delivery_note','posting_date','delivery_note_date');
+
+
 // cur_frm.add_fetch('item_code','item_name','item_name');
 // cur_frm.add_fetch('item_code','description','description');
 
@@ -69,3 +73,32 @@ cur_frm.cscript.toggle_related_fields = function(doc) {
 //    	return {filters: { is_service_item: "Yes"}}
 
 // }
+
+
+cur_frm.cscript.refresh = function(doc) {
+	hide_field(['order_no', 'order_date', 'delivery_note_no', 'delivery_note_date'])
+	cur_frm.cscript.toggele_fields_process(doc)	
+}
+
+cur_frm.cscript.get_sales_order = function(doc) {
+	cur_frm.cscript.toggele_fields_process(doc)	
+}
+
+cur_frm.cscript.get_delivery_note = function(doc) {
+	cur_frm.cscript.toggele_fields_process(doc)	
+}
+
+cur_frm.cscript.toggele_fields_process = function(doc) {
+	if(doc.get_sales_order){
+		unhide_field(['order_no', 'order_date'])
+		hide_field(['delivery_note_date', 'delivery_note_no'])
+	}
+	if(doc.get_delivery_note){
+		hide_field(['order_no', 'order_date'])
+		unhide_field(['delivery_note_date', 'delivery_note_no'])
+	}	
+}
+
+cur_frm.get_field("get_delivery_note").get_query = function(doc) {
+	return {filters: { docstatus: "1"}}
+}

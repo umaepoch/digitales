@@ -3,10 +3,18 @@
 
 from __future__ import unicode_literals
 import frappe
+from frappe import _
 from frappe.model.document import Document
 
 class Process(Document):
-	pass
+	def validate(self):
+		self.validate_SO_DN()
+
+	def validate_SO_DN(self):
+		if self.get_sales_order and self.get_delivery_note:
+			frappe.throw(_("Select 'Get Sales Order' OR 'Get Delivery Note'"))
+		if not self.get_sales_order and not self.get_delivery_note:
+			frappe.throw(_("Select either 'Get Sales Order' OR 'Get Delivery Note'"))
 
 	# To fetch Shelf Ready Service Details against the specified barcode--------------------------------------------------
 	def get_service_details(self,barcode):
@@ -35,9 +43,8 @@ class Process(Document):
 
 	def on_update(self):
 		#frappe.errprint("in on update")
-		self.check_occurence_of_service()
+		# self.check_occurence_of_service()
 		self.check_itemis_service_item()
-
 
 	def check_occurence_of_service(self):
 		list1=[]
