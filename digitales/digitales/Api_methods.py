@@ -37,10 +37,9 @@ def check_ispurchase_item(doc,method):
 				Stock_Availability(doc,d)
 				assign_extra_qty_to_other(d)
 			else:
-				bin_details = frappe.db.sql(''' select ifnull(sum(soi.qty), 0) - ifnull(sum(soi.delivered_qty), 0)  from 
-						`tabSales Order Item` soi, `tabSales Order` so where soi.parent = so.name 
-						and ifnull(soi.stop_status, "No") <> "Yes" and so.status <> "Stopped" and soi.docstatus = 1 
-						and soi.item_code ="%s" and soi.warehouse = "%s" '''%(d.item_code, d.warehouse), as_list=1)
+				bin_details = frappe.db.sql('''select ifnull(sum(soi.qty), 0) from `tabSales Order Item` soi, `tabSales Order` so
+				 where soi.parent = so.name and ifnull(soi.stop_status, "No") <> "Yes" and so.status <> "Stopped" and
+ 				 soi.docstatus = 1 and soi.item_code ="%s" and soi.warehouse = "%s"'''%(d.item_code, d.warehouse), as_list=1)
 				so_qty = flt(bin_details[0][0]) if bin_details else 0.0
 				po_qty = get_po_qty(d.item_code, d.warehouse) - so_qty # if negative then make po
 				if po_qty < 0:
@@ -973,12 +972,17 @@ def get_orders_from_magento(page, max_date, header, oauth_data,type_of_data=None
 		order_data = json.loads(r.content)
 		if len(order_data) > 0:
 			for index in order_data:
-				customer = frappe.db.get_value('Contact', {'entity_id': order_data[index].get('customer_id')}, 'customer')
-				if customer:
-					# create_or_update_customer_address(order_data[index].get('addresses'), customer)
-					order = frappe.db.get_value('Sales Order', {'entity_id': order_data[index].get('entity_id')}, 'name')
-					if not order:
-						create_order(index,order_data,customer)
+				try:
+					customer = frappe.db.get_value('Contact', {'entity_id': order_data[index].get('customer_id')}, 'customer')
+					if customer:
+						# create_or_update_customer_address(order_data[index].get('addresses'), customer)
+						order = frappe.db.get_value('Sales Order', {'entity_id': order_data[index].get('entity_id')}, 'name')
+						if not order:
+							create_order(index,order_data,customer)
+					else:
+						frappe.throw(_('Customer with id {0} not found in erpnext').format(order_data[index].get('customer_id')))
+				except Exception, e:
+					create_scheduler_exception(e, 'get_orders_from_magento', index)
 	return True
 
 def create_or_update_customer_address(address_details, customer):
@@ -1124,8 +1128,7 @@ def set_sales_order_address(address_details, order):
 def check_item_presence(i,content):
 	for i in content[i].get('order_items'):
 		if not frappe.db.get_value('Item',i.get('sku'),'name'):
-			return False
-
+			frappe.throw(_('Item {0} not present').format(i.get('sku')))
 	return True	
 	
 def create_child_item(i,order):
@@ -1347,22 +1350,14 @@ def update_sal(item_code, sales_order, delivered_qty, assigned_qty):
 
 def make_csv():
 	import csv
-	print "hiiii"
-	try:
-		with open('/home/erpnext/deleted_item.csv', 'rb') as f:
-			reader = csv.reader(f)
-			for item in reader:
-			  if item != 'Item Codes':
-				print(item[0])
-				price_list=frappe.db.sql("""select name from `tabItem Price` where item_code='%s'"""%(item[0]),as_list=1)
-				if price_list:
-					for price in price_list:
-						obj = frappe.get_doc("Item Price", price[0])
-						obj.delete()
-					item_obj = frappe.get_doc("Item", item[0])
-					item_obj.delete()
-	except Exception, e:
-		print e
+	present_list = []
+	with open('/home/indictrance/Desktop/finaltryitem2.csv', 'rb') as f:
+		reader = csv.reader(f)
+		for item in reader:
+			item_name=frappe.db.get_value('Item', item[0], 'name')
+			if item_name:
+				present_list.append([item_name])
+	print present_list
 
 def validate_sales_invoice(doc, method):
 	set_terms_and_condition(doc)
