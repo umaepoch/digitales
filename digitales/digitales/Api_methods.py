@@ -37,8 +37,10 @@ def check_ispurchase_item(doc,method):
 				Stock_Availability(doc,d)
 				assign_extra_qty_to_other(d)
 			else:
-				bin_details = frappe.db.sql('''select sum(qty) from `tabSales Order Item` where docstatus = 1 and item_code ="%s"
-					and warehouse = "%s"'''%(d.item_code, d.warehouse), as_list=1)
+				bin_details = frappe.db.sql(''' select ifnull(sum(soi.qty), 0) - ifnull(sum(soi.delivered_qty), 0)  from 
+						`tabSales Order Item` soi, `tabSales Order` so where soi.parent = so.name 
+						and ifnull(soi.stop_status, "No") <> "Yes" and so.status <> "Stopped" and soi.docstatus = 1 
+						and soi.item_code ="%s" and soi.warehouse = "%s" '''%(d.item_code, d.warehouse), as_list=1)
 				so_qty = flt(bin_details[0][0]) if bin_details else 0.0
 				po_qty = get_po_qty(d.item_code, d.warehouse) - so_qty # if negative then make po
 				if po_qty < 0:
@@ -86,7 +88,7 @@ def assign_extra_qty_to_other(data):
 def get_po_qty(item_code, warehouse=None):
 	cond = 'poi.warehouse ="%s"'%(warehouse) if warehouse else '1=1'
 	qty = frappe.db.sql(''' select sum(ifnull(poi.qty,0)-ifnull(poi.received_qty,0)) from `tabPurchase Order Item` poi, `tabPurchase Order` po
-		where poi.parent = po.name and po.status <> 'Submitted' and poi.docstatus <> 2 and poi.item_code = "%s" and %s'''%(item_code, cond), as_list=1)
+		where poi.parent = po.name and po.status <> 'Stopped' and poi.docstatus <> 2 and poi.item_code = "%s" and %s'''%(item_code, cond), as_list=1)
 	qty = flt(qty[0][0]) if qty else 0.0
 	return qty
 
@@ -1345,16 +1347,22 @@ def update_sal(item_code, sales_order, delivered_qty, assigned_qty):
 
 def make_csv():
 	import csv
-	with open('/home/erpnext/deleted_item.csv', 'rb') as f:
-		reader = csv.reader(f)
-		for item in reader:
-			price_list=frappe.db.sql("""select name from `tabItem Price` where item_code='%s'"""%(item[0]),as_list=1)
-			if price_list:
-				for price in price_list:
-					obj = frappe.get_doc("Item Price", price[0])
-					obj.delete()
-			item_obj = frappe.get_doc("Item", item[0])
-			item_obj.delete()
+	print "hiiii"
+	try:
+		with open('/home/erpnext/deleted_item.csv', 'rb') as f:
+			reader = csv.reader(f)
+			for item in reader:
+			  if item != 'Item Codes':
+				print(item[0])
+				price_list=frappe.db.sql("""select name from `tabItem Price` where item_code='%s'"""%(item[0]),as_list=1)
+				if price_list:
+					for price in price_list:
+						obj = frappe.get_doc("Item Price", price[0])
+						obj.delete()
+					item_obj = frappe.get_doc("Item", item[0])
+					item_obj.delete()
+	except Exception, e:
+		print e
 
 def validate_sales_invoice(doc, method):
 	set_terms_and_condition(doc)
