@@ -92,6 +92,10 @@ doc_events = {
 	"Sales Invoice": {
 		"validate": "digitales.digitales.Api_methods.validate_sales_invoice",
 		"on_submit": "digitales.digitales.Api_methods.update_sales_invoice"
+	},
+
+	"Scheduler Log":{
+		"validate" : "digitales.digitales.custom_methods.send_mail_SchedulerLog" 
 	}
 	
 }
@@ -105,17 +109,18 @@ scheduler_events = {
 		#"digitales.digitales.custom_methods.GetCustomer"
 		#"digitales.digitales.custom_methods.GetOrders"
 		"digitales.digitales.Api_methods.check_APItime",
-	],
-	"daily": [
-		"digitales.digitales.Api_methods.make_csv"
+	]
+	# "daily": [
+	# 	"digitales.digitales.Api_methods.make_csv"
 		# "digitales.tasks.daily"
-	],
-#	"hourly": [
+	# ],
+	# "hourly": [
+	# 	"digitales.digitales.Api_methods.make_csv",
 		#"digitales.tasks.hourly"
 		#"digitales.digitales.custom_methods.GetItem"
 		#"digitales.digitales.custom_methods.GetCustomer"
-#		"digitales.digitales.custom_methods.GetOrders"
-#	]
+		# "digitales.digitales.custom_methods.GetOrders"
+	# ]
 # 	"weekly": [
 # 		"digitales.tasks.weekly"
 # 	]
