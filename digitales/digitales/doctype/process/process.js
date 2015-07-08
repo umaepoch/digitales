@@ -89,13 +89,20 @@ cur_frm.cscript.get_delivery_note = function(doc) {
 }
 
 cur_frm.cscript.toggele_fields_process = function(doc) {
+	if(doc.get_sales_order=="" && doc.get_delivery_note==""){
+		cur_frm.set_df_property("get_delivery_note", "read_only", 0);
+		cur_frm.set_df_property("get_sales_order", "read_only", 0);
+	}
+
 	if(doc.get_sales_order){
 		unhide_field(['order_no', 'order_date'])
 		hide_field(['delivery_note_date', 'delivery_note_no'])
+		cur_frm.set_df_property("get_delivery_note", "read_only", 1);
 	}
 	if(doc.get_delivery_note){
 		hide_field(['order_no', 'order_date'])
 		unhide_field(['delivery_note_date', 'delivery_note_no'])
+		cur_frm.set_df_property("get_sales_order", "read_only", 1);
 	}	
 }
 
