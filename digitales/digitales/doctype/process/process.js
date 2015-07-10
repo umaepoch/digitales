@@ -104,6 +104,6 @@ cur_frm.cscript.toggele_fields_process = function(doc) {
 	}	
 }
 
-cur_frm.get_field("get_delivery_note").get_query = function(doc) {
-	return filters = [["Delivery Note" , "docstatus" ,"<>", "2" ]]
+cur_frm.fields_dict['get_delivery_note'].get_query = function(doc, dt, dn) {
+	return {query: "digitales.digitales.custom_methods.delivery_note" }
 }

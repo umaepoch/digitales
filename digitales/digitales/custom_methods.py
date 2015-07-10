@@ -9,3 +9,7 @@ from frappe import _
 
 def send_mail_SchedulerLog(doc, method):
 	pass
+
+def delivery_note(doctype, txt, searchfield, start, page_len, filters):
+	return frappe.db.sql(''' select name from `tabDelivery Note`
+		where docstatus <> 2 and name like "%%%s%%" limit %s, %s'''%(txt, start, page_len), as_list = 1)
