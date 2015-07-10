@@ -56,8 +56,6 @@ cur_frm.fields_dict.shelf_ready_service_details.grid.get_field("process").get_qu
     if(doc.customer_id){
 		return "select name1 from `tabShelf Ready Services` where parent='"+doc.customer_id+"'"
     }
-    else
-       	msgprint("First select the sales order")
 }
 
 cur_frm.cscript.toggle_related_fields = function(doc) {
@@ -107,5 +105,5 @@ cur_frm.cscript.toggele_fields_process = function(doc) {
 }
 
 cur_frm.get_field("get_delivery_note").get_query = function(doc) {
-	return {filters: { docstatus: "1"}}
+	return filters = [["Delivery Note" , "docstatus" ,"<>", "2" ]]
 }
