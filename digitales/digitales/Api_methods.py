@@ -774,7 +774,7 @@ def create_customer(i,content):
 	if frappe.db.get_value('Supplier',content[i].get('organisation').replace("'",""),'name') or frappe.db.get_value('Customer Group',content[i].get('organisation').replace("'",""),'name'):
 		temp_customer= customer.customer_name = cstr(content[i].get('organisation')).replace("'","") + '(C)'
 	else:
-		customer.customer_name=cstr(content[i].get('organisation')).replace("'","") 
+		customer.customer_name=cstr(content[i].get('organisation')).replace("'","")
 	if not frappe.db.get_value('Customer', customer.customer_name, 'name'):
 		create_new_customer(customer,i,content)
 	create_contact(customer,i,content)
@@ -834,8 +834,8 @@ def create_customer_contact(customer,i,content,contact):
 		if content[i].get('firstname'):
 			contact.first_name=content[i].get('firstname')
 			contact.last_name=content[i].get('lastname')
-			contact.customer= customer.name
-			contact.customer_name=customer.customer_name
+			contact.customer= customer.customer_name
+			contact.customer_name= frappe.db.get_value('Customer', contact.customer, 'customer_name')
 			contact.entity_id = content[i].get('entity_id')
 			contact.email_id=content[i].get('email')
 			contact.save(ignore_permissions=True)
@@ -931,6 +931,7 @@ def customer_address(data, obj, customer):
 	obj.phone = cstr(data.get('telephone')) or '00000'
 	obj.fax = cstr(data.get('fax'))
 	obj.customer = customer
+	obj.customer_name = cstr(data.get('firstname'))+' '+cstr(data.get('lastname'))
 	obj.is_primary_address = get_address_type(data).get('is_primary_address')
 	obj.is_shipping_address = get_address_type(data).get('is_shipping_address')
 
@@ -1358,7 +1359,6 @@ def make_csv():
 			item_name=frappe.db.get_value('Item', item[0], 'name')
 			if item_name:
 				present_list.append([item_name])
-	print present_list
 
 def validate_sales_invoice(doc, method):
 	set_terms_and_condition(doc)
