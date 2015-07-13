@@ -1210,7 +1210,8 @@ def assign_stopQty_toOther(doc,item_list):
 	for data in self.get('sales_order_details'):
 		if data.item_code in(stopping_items) and data.stop_status!="Yes":			# check item code in selected stopping item
 			if cint(frappe.db.get_value('Purchase Order', data.po_data, 'docstatus')) == 0 and data.po_data:
-				reduce_po_item(data.po_data, data.item_code, data.po_qty)
+				po_qty = data.po_qty if data.po_qty else 0.0
+				reduce_po_item(data.po_data, data.item_code, po_qty)
 			update_so_item_status(data.item_code,data.parent)
 			if flt(data.qty) > flt(data.delivered_qty):
 				update_bin_qty(data.item_code,data.qty,data.delivered_qty,data.warehouse)
