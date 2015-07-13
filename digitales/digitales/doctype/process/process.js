@@ -7,6 +7,9 @@ cur_frm.add_fetch('get_sales_order','customer_name','customer_name');
 cur_frm.add_fetch('get_sales_order','name','order_no');
 cur_frm.add_fetch('get_sales_order','transaction_date','order_date');
 
+cur_frm.add_fetch('get_delivery_note','customer','customer_id');
+cur_frm.add_fetch('get_delivery_note','customer_name','customer_name');
+
 cur_frm.add_fetch('get_delivery_note','name','delivery_note_no');
 cur_frm.add_fetch('get_delivery_note','posting_date','delivery_note_date');
 
