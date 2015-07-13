@@ -4,7 +4,7 @@ erpnext.selling.CustomSalesOrder = erpnext.selling.SalesOrderController.extend({
   }
 
 
- 
+
 });
 
 // cur_frm.cscript['Stop Sales Order'] = function(doc) {
@@ -23,11 +23,11 @@ erpnext.selling.CustomSalesOrder = erpnext.selling.SalesOrderController.extend({
 // 					callback: function(r) {
 // 						refresh_field('sales_order_details')
 // 						cur_frm.reload_doc();
-// 					}	
+// 					}
 // 				})
 // 				cur_frm.refresh();
 // 		});
-// 	}	
+// 	}
 // }
 
 
@@ -38,7 +38,7 @@ erpnext.selling.CustomSalesOrder = erpnext.selling.SalesOrderController.extend({
 frappe.require("assets/css/tab_scroll.css");
 cur_frm.cscript['Stop Sales Order'] = function(doc) {
 	var doc = cur_frm.doc;
-	var count=items_to_stop(doc);	
+	var count=items_to_stop(doc);
 	if(count=="true"){
 		create_dialog(doc);
 	}
@@ -57,7 +57,7 @@ function create_dialog(doc){
 	]
 	})
 	this.fd = dialog.fields_dict;
-	
+
 	this.table = $("<div id='container'><table class='table table-bordered table-hover', id='tb1'>\
 	                      <thead><tr>\
 	                      	<th width='50px'><b><input type='checkbox' id='all'></b></th>\
@@ -70,7 +70,6 @@ function create_dialog(doc){
 	                     </table></div>").appendTo($(this.fd.styles_name.wrapper))
 
 	for(i=0;i < doc.sales_order_details.length;i++){
-		console.log([doc.per_delivered, doc.per_billed])
 		if(doc.sales_order_details[i].stop_status!="Yes" && (flt(doc.per_delivered, 2) < 100 || flt(doc.per_billed) < 100))
 		{
 			$("<tr>\
@@ -106,9 +105,9 @@ function create_dialog(doc){
 					callback: function(r) {
 						refresh_field('sales_order_details')
 						cur_frm.reload_doc();
-					}	
+					}
 			})
-		}		
+		}
 	})
 }
 
@@ -120,7 +119,7 @@ function items_to_stop(doc){
 			count="true";
 			break;
 		}
-	}	
+	}
 	return count;
 }
 
