@@ -34,15 +34,14 @@ def get_columns():
 			]
 
 def get_stock_assignment_log_data(filters):
-	return frappe.db.sql("""SELECT 	#sal.picked as picked,
-									sal.name AS id,
+	return frappe.db.sql("""SELECT 	sal.name AS id,
 									sal.sales_order AS sales_order,
 									so.order_type AS order_type,
 									so.priority AS priority,
 									sal.customer_name AS customer_name,
 									sal.item_code AS item_code,
 									sal.item_name AS item_name,
-									i.item_group AS media,
+									sal.media,
 									dsa.document_type AS type,
 									so.budget AS budget,
 									dsa.created_date AS dsa_date,
@@ -57,7 +56,7 @@ def get_stock_assignment_log_data(filters):
 											d.parent=dsa.parent AND (d.idx=1 or d.idx<=dsa.idx)
 									) AS Total_Qty,
 									format(ifnull(sal.delivered_qty,0),0) as delivered_qty
-							FROM 
+							FROM
 								`tabDocument Stock Assignment` AS dsa
 							JOIN
 								`tabStock Assignment Log` AS sal
@@ -67,12 +66,8 @@ def get_stock_assignment_log_data(filters):
 								`tabSales Order` AS so
 							ON
 								so.name = sal.sales_order
-							JOIN
-								`tabItem` AS i
-							ON
-								i.item_code = sal.item_code
 							WHERE dsa.created_date between '{0}' and '{1}' {conditions}
-							ORDER BY 
+							ORDER BY
 								sal.sales_order DESC, sal.item_code ASC,dsa.created_date
 						""".format(filters['from_date'],filters['to_date'],conditions=get_conditions(filters)))
 
