@@ -37,9 +37,9 @@ def check_ispurchase_item(doc,method):
 				Stock_Availability(doc,d)
 				assign_extra_qty_to_other(d)
 			else:
-				bin_details = frappe.db.sql(''' select ifnull(sum(soi.qty), 0) - ifnull(sum(soi.delivered_qty), 0)  from 
-                                               `tabSales Order Item` soi, `tabSales Order` so where soi.parent = so.name 
-                                               and ifnull(soi.stop_status, "No") <> "Yes" and so.status <> "Stopped" and soi.docstatus = 1 
+				bin_details = frappe.db.sql(''' select ifnull(sum(soi.qty), 0) - ifnull(sum(soi.delivered_qty), 0)  from
+                                               `tabSales Order Item` soi, `tabSales Order` so where soi.parent = so.name
+                                               and ifnull(soi.stop_status, "No") <> "Yes" and so.status <> "Stopped" and soi.docstatus = 1
                                                and soi.item_code ="%s" and soi.warehouse = "%s" '''%(d.item_code, d.warehouse), as_list=1)
 				so_qty = flt(bin_details[0][0]) if bin_details else 0.0
 				po_qty = get_po_qty(d.item_code, d.warehouse) - so_qty # if negative then make po
@@ -70,7 +70,7 @@ def Stock_Availability(so_doc, child_args):
 					create_purchase_order_record(so_doc, child_args, flt(new_po_qty * -1))
 
 def get_assigned_qty(item_code, warehouse):
-	assign_qty = frappe.db.sql(''' select sum(ifnull(assigned_qty,0)) - sum(ifnull(delivered_qty,0)) from `tabSales Order Item` where item_code = "%s" 
+	assign_qty = frappe.db.sql(''' select sum(ifnull(assigned_qty,0)) - sum(ifnull(delivered_qty,0)) from `tabSales Order Item` where item_code = "%s"
 		and warehouse ="%s" and docstatus=1 and ifnull(qty,0) >= ifnull(assigned_qty,0)'''%(item_code, warehouse), as_list = 1)
 	if assign_qty:
 		return assign_qty[0][0] or 0.0
@@ -137,6 +137,7 @@ def create_stock_assignment_document(args, sales_order, assigned_qty):
 	sa.assign_qty = assigned_qty
 	sa.purchase_receipt_no = args.parent if args.doctype == 'Purchase Receipt Item' else ''
 	sa.item_code = args.item_code
+	sa.media  = frappe.db.get_value("Item",args.item_code,'item_group')
 	sa.customer_name = frappe.db.get_value('Sales Order',sa.sales_order,'customer_name')
 
 	# # creating Document Stock Assignment entry
@@ -155,7 +156,7 @@ def create_stock_assignment_document(args, sales_order, assigned_qty):
 	return sa.name
 
 # def delete_stock_assignment(doc, method):
-# 	stl = frappe.db.sql(""" select name from `tabStock Assignment Log` where sales_order = '%s'"""%(doc.name), as_dict=1) 
+# 	stl = frappe.db.sql(""" select name from `tabStock Assignment Log` where sales_order = '%s'"""%(doc.name), as_dict=1)
 # 	if stl:
 # 		for data in stl:
 # 			delete_stl(data.name)
@@ -169,7 +170,7 @@ def delete_stock_assignment(doc, method):
 	if(st_error=='true'):
 		frappe.throw(_("You can not cancel this sales order"))
 	else:
-		stl = frappe.db.sql(""" select * from `tabStock Assignment Log` where sales_order = '%s'"""%(doc.name), as_dict=1) 
+		stl = frappe.db.sql(""" select * from `tabStock Assignment Log` where sales_order = '%s'"""%(doc.name), as_dict=1)
 		if stl:
 			for data in stl:
 				delete_stl(data)
@@ -230,8 +231,8 @@ def stock_assignment(doc,method):
 
 # So list which has stock not assign or partially assign
 def get_SODetails(item_code):
-	return frappe.db.sql('''select s.parent as parent,ifnull(s.qty,0)-ifnull(s.assigned_qty,0) AS qty, 
-				s.assigned_qty as assigned_qty from `tabSales Order Item` s inner join `tabSales Order` so 
+	return frappe.db.sql('''select s.parent as parent,ifnull(s.qty,0)-ifnull(s.assigned_qty,0) AS qty,
+				s.assigned_qty as assigned_qty from `tabSales Order Item` s inner join `tabSales Order` so
 				on s.parent=so.name where s.item_code="%s" and so.docstatus=1 and ifnull(s.stop_status, 'No') <> 'Yes' and
 				ifnull(s.qty,0)>ifnull(s.assigned_qty,0) and so.status!='Stopped' order by so.priority,so.creation'''%(item_code),as_dict=1)
 
@@ -311,7 +312,7 @@ def check_assigned_qty(doc):
 				frappe.throw(_("Not allowed to cancel, the available stock of item {0} is assigned to the sales order").format(data.item_code))
 
 def cancel_all_child_table(doc):
-	sal_details = frappe.db.sql(''' select * from `tabDocument Stock Assignment` 
+	sal_details = frappe.db.sql(''' select * from `tabDocument Stock Assignment`
 		where document_no = "%s"'''%(doc.name), as_dict=1)
 	if sal_details:
 		for sal in sal_details:
@@ -332,7 +333,7 @@ def cancel_parent_table(doc):
 			obj.delete()
 
 # def stock_cancellation(doc,method):
-# 	sal_details = frappe.db.sql(''' select * from `tabDocument Stock Assignment` 
+# 	sal_details = frappe.db.sql(''' select * from `tabDocument Stock Assignment`
 # 		where document_no = "%s"'''%(doc.name), as_dict=1)
 # 	if sal_details:
 # 		for sal in sal_details:
@@ -351,9 +352,9 @@ def delete_document(table, name):
 def update_so_assign_qty(args):
 	so_details = frappe.db.get_value('Sales Order Item', {'parent': args.sales_order, 'item_code': args.item_code}, 'assigned_qty') or 0.0
 	qty = (flt(so_details) - flt(args.qty)) if flt(so_details) >= flt(args.qty) else 0.0
-	frappe.db.sql(''' update `tabSales Order Item` set assigned_qty = "%s" where parent = "%s" and 
+	frappe.db.sql(''' update `tabSales Order Item` set assigned_qty = "%s" where parent = "%s" and
 		item_code = "%s" '''%(qty, args.sales_order, args.item_code))
-			
+
 def create_new_po(doc,d,supplier,qty):
 	po = frappe.new_doc('Purchase Order')
 	po.supplier= supplier
@@ -393,7 +394,7 @@ def update_child_entry(doc,d,purchase_order,qty):
 	poi.schedule_date=nowdate()
 	doc1.save(ignore_permissions=True)
 	#update_so_details(doc,d,d.item_code,doc1.name)
-	
+
 def update_qty(doc,d,item,purchase_order,qty,rate):
 	amount=rate*qty
 	frappe.db.sql("""update `tabPurchase Order Item` set qty='%s', amount='%s'
@@ -410,23 +411,23 @@ def update_so_details(doc,d,item,purchase_order):
 	so.qty=d.qty
 	so.sales_order_name=doc.name
 	doc2.save(ignore_permissions=True)
-	
+
 
 # On sibmission of delivery Note---------------------------------------------------------------------------------------------------------------------------------
 def update_stock_assignment_log_on_submit(doc,method):
 	for d in doc.get('delivery_note_details'):
-		sales_order_name=frappe.db.sql("""select s.against_sales_order from 
-										`tabDelivery Note Item` s inner join `tabDelivery Note` so 
-											on s.parent=so.name where s.item_code='%s' 
-												and so.docstatus=1 and s.parent='%s' 
+		sales_order_name=frappe.db.sql("""select s.against_sales_order from
+										`tabDelivery Note Item` s inner join `tabDelivery Note` so
+											on s.parent=so.name where s.item_code='%s'
+												and so.docstatus=1 and s.parent='%s'
 													order by so.creation"""
 														%(d.item_code,doc.name),as_list=1)
 		if sales_order_name:
 			delivery_note_name=frappe.db.sql(""" select delivery_note  from `tabStock Assignment Log` where
 							sales_order='%s' and item_code='%s' and delivery_note is not null"""%(sales_order_name[0][0],d.item_code))
-			
+
 			if not delivery_note_name:
-				frappe.db.sql("""update `tabStock Assignment Log` 
+				frappe.db.sql("""update `tabStock Assignment Log`
 								set delivered_qty='%s', delivery_note='%s'
 									where sales_order='%s' and item_code='%s'"""
 										%(d.qty,doc.name,sales_order_name[0][0],d.item_code))
@@ -438,7 +439,7 @@ def update_stock_assignment_log_on_submit(doc,method):
 												where sales_order='%s' and item_code='%s'"""%(sales_order_name[0][0],d.item_code))
 				if delivery_note_details:
 					qty=cint(delivery_note_details[0][0])+d.qty
-					frappe.db.sql("""update `tabStock Assignment Log` 
+					frappe.db.sql("""update `tabStock Assignment Log`
 								set delivered_qty='%s', delivery_note='%s'
 									where sales_order='%s' and item_code='%s'"""
 										%(qty,delivery_note,sales_order_name[0][0],d.item_code))
@@ -461,14 +462,14 @@ def update_stock_assignment_log_on_cancel(doc,method):
 		name=frappe.db.sql(""" select name,delivered_qty from `tabStock Assignment Log` where
 							sales_order='%s' and item_code='%s'"""%(d.against_sales_order,d.item_code))
 		if name:
-			delivery_note=frappe.db.sql("""select delivery_note from `tabStock Assignment Log` where 
+			delivery_note=frappe.db.sql("""select delivery_note from `tabStock Assignment Log` where
 									name='%s'"""%name[0][0])
 			delivery_note_name=cstr(delivery_note[0][0]).split(", ")
 			if d.parent in delivery_note_name:
 				delivery_note_name.remove(d.parent)
 				qty=cint(name[0][1])-d.qty
 				if name:
-					frappe.db.sql("""update `tabStock Assignment Log` 
+					frappe.db.sql("""update `tabStock Assignment Log`
 								set delivered_qty='%s',delivery_note='%s' where item_code='%s'"""%(qty,','.join(delivery_note_name),d.item_code))
 					frappe.db.commit()
 
@@ -515,11 +516,11 @@ def GetItem():
 		max_item_date = max_date[0][0]
 	max_item_date = max_item_date.split('.')[0] if '.' in max_item_date else max_item_date
 	max_item_date = (datetime.datetime.strptime(max_item_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
-	status = get_SyncItemsCount(max_item_date, h, oauth)		
-	
+	status = get_SyncItemsCount(max_item_date, h, oauth)
+
 def get_SyncItemsCount(max_date, header, oauth_data):
 	count = get_Data_count(max_date, 'product_pages_per_100_mcount', header, oauth_data)
-	count = 25 if count > 30 else count 
+	count = 25 if count > 30 else count
 	if count > 0:
 		for index in range(1, count+1):
 			get_products_from_magento(index, max_date,header, oauth_data)
@@ -543,7 +544,7 @@ def create_item(i,content):
 		item = frappe.new_doc('Item')
 		item.item_code = content[i].get('sku')
 		create_new_product(item,i,content)
-		item.save(ignore_permissions=True)	
+		item.save(ignore_permissions=True)
 		check_item_price(item.name,i,content)
 	except Exception, e:
 		create_scheduler_exception(e , 'create_item ', content[i])
@@ -554,7 +555,7 @@ def update_item(name,i,content):
 		create_new_product(item,i,content)
 		item.save(ignore_permissions=True)
 	except Exception, e:
-		create_scheduler_exception(e , 'method name update_item: ' ,content[i])		
+		create_scheduler_exception(e , 'method name update_item: ' ,content[i])
 
 def check_item_price(name,i,content):
 	if content[i].get('price'):
@@ -603,7 +604,7 @@ def create_new_product(item,i,content):
 	item.description = 'Desc: ' + content[i].get('short_description') if content[i].get('short_description') else content[i].get('sku')
 	warehouse=get_own_warehouse()
 	item.default_warehouse=warehouse
-	if content[i].get('barcode') and not frappe.db.get_value('Item', {'barcode':content[i].get('barcode')}, 'name'):	
+	if content[i].get('barcode') and not frappe.db.get_value('Item', {'barcode':content[i].get('barcode')}, 'name'):
 		item.barcode = content[i].get('barcode')
 	item.modified_date = content[i].get('updated_at')
 	item.distributor = content[i].get('distributor')
@@ -662,7 +663,7 @@ def create_supplier(supplier):
 		sl.supplier_type = 'Stock supplier' if frappe.db.get_value('Supplier Type', 'Stock supplier', 'name') else create_supplier_type()
 		sl.save(ignore_permissions=True)
 	except Exception, e:
-		create_scheduler_exception(e , 'method name create_supplier: ' , supplier)	
+		create_scheduler_exception(e , 'method name create_supplier: ' , supplier)
 	return sl.name
 
 def create_supplier_type():
@@ -672,7 +673,7 @@ def create_supplier_type():
 		st.save(ignore_permissions=True)
 	except Exception, e:
 		create_scheduler_exception(e, 'method name create_supplier_type: ' , 'supplier type')
-	return st.name	
+	return st.name
 
 def check_uom_conversion(item):
 	stock_uom=frappe.db.sql(""" select stock_uom from `tabItem` where name='%s'"""%item,as_list=1)
@@ -720,10 +721,10 @@ def get_own_warehouse():
 def GetOauthDetails():
 	try:
 		oauth_details = frappe.db.get_value('API Configuration Page', None, '*', as_dict=1)
-		oauth=OAuth(client_key=oauth_details.client_key, client_secret=oauth_details.client_secret, resource_owner_key= oauth_details.owner_key, resource_owner_secret=oauth_details.owner_secret)	
+		oauth=OAuth(client_key=oauth_details.client_key, client_secret=oauth_details.client_secret, resource_owner_key= oauth_details.owner_key, resource_owner_secret=oauth_details.owner_secret)
 		return oauth
 	except Exception, e:
-		create_scheduler_exception(e , 'method name GetOauthDetails: ' , 'oauth_details')	
+		create_scheduler_exception(e , 'method name GetOauthDetails: ' , 'oauth_details')
 
 #update configuration
 def update_execution_date(document):
@@ -742,11 +743,11 @@ def GetCustomer():
 		max_customer_date = max_date[0][0]
 	max_customer_date = max_customer_date.split('.')[0] if '.' in max_customer_date else max_customer_date
 	max_customer_date = (datetime.datetime.strptime(max_customer_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
-	status=get_SyncCustomerCount(max_customer_date, h, oauth)	
+	status=get_SyncCustomerCount(max_customer_date, h, oauth)
 
 def get_SyncCustomerCount(max_date, header, oauth_data):
 	count = get_Data_count(max_date, 'customer_pages_per_100_mcount', header, oauth_data)
-	count = 25 if count > 30 else count 
+	count = 25 if count > 30 else count
 	if count > 0:
 		for index in range(1, count+1):
 			get_customers_from_magento(index, max_date,header, oauth_data, 'missed')
@@ -810,7 +811,7 @@ def create_contact(customer,i,content):
 def create_new_customer(customer,i,content):
 	import itertools
 	try:
-		customer.entity_id = content[i].get('entity_id') 
+		customer.entity_id = content[i].get('entity_id')
 		customer.customer_type = 'Company'
 		if content[i].get('group'):
 			if content[i].get('group').strip() == 'General':
@@ -828,7 +829,7 @@ def create_new_customer(customer,i,content):
 		customer.save(ignore_permissions=True)
 	except Exception, e:
 		create_scheduler_exception(e , 'Method name create_new_customer: ', content[i])
-	
+
 def create_customer_contact(customer,i,content,contact):
 	try:
 		if content[i].get('firstname'):
@@ -963,7 +964,7 @@ def get_SyncOrdersCount(max_date, header, oauth_data):
 	count = 25 if count > 30 else count
 	if count > 0:
 		for index in range(1, count+1):
-			get_orders_from_magento(index, max_date,header, oauth_data, 'missed')	
+			get_orders_from_magento(index, max_date,header, oauth_data, 'missed')
 
 
 addr_details = {}
@@ -1101,7 +1102,7 @@ def create_new_order(order,index,content,customer):
 	order.grand_total_export=content[index].get('grand_total')
 	order.order_number_details = content[index].get('increment_id')
 	order.po_no=content[index].get('po_number')
-	
+
 	# If Order type is general then set SO order type as Standard Order
 	if content[index].get('order_type') == "General" or content[index].get('order_type') == None:
 		order.new_order_type="Standard Order"
@@ -1131,8 +1132,8 @@ def check_item_presence(i,content):
 	for i in content[i].get('order_items'):
 		if not frappe.db.get_value('Item',i.get('sku'),'name'):
 			frappe.throw(_('Item {0} not present').format(i.get('sku')))
-	return True	
-	
+	return True
+
 def create_child_item(i,order):
 	oi = order.append('sales_order_details', {})
 	oi.item_code=i['sku']
@@ -1248,7 +1249,7 @@ def update_or_reducePoQty(sales_order, item_code):
 				po_qty = flt(assign_qty)
 			else:
 				po_qty = 0.0
-			frappe.db.sql(""" update `tabSales Order Item` set 
+			frappe.db.sql(""" update `tabSales Order Item` set
 				po_qty = '%s' where name ='%s'"""%(po_qty, data.name))
 			reduce_po_item(data.po_data, data.item_code, data.assigned_qty)
 
@@ -1280,6 +1281,7 @@ def create_stock_assignment_document_item(args, sales_order, qty, assigned_qty):
 	sa.assign_qty = assigned_qty
 	sa.purchase_receipt_no = args.parent if args.doctype == 'Purchase Receipt Item' else ''
 	sa.item_code = args.item_code
+	sa.media  = frappe.db.get_value("Item",args.item_code,'item_group')
 	sa.customer_name = frappe.db.get_value('Sales Order',sa.sales_order,'customer_name')
 	return sa
 
@@ -1302,8 +1304,8 @@ def make_history_of_assignment_item(sal, date, doc_type, pr_name, qty):
 
 
 def get_item_SODetails(item_c):
-	return frappe.db.sql('''select s.parent as parent,ifnull(s.qty,0)-ifnull(s.assigned_qty,0) AS qty, 
-				s.assigned_qty as assigned_qty from `tabSales Order Item` s inner join `tabSales Order` so 
+	return frappe.db.sql('''select s.parent as parent,ifnull(s.qty,0)-ifnull(s.assigned_qty,0) AS qty,
+				s.assigned_qty as assigned_qty from `tabSales Order Item` s inner join `tabSales Order` so
 				on s.parent=so.name where s.item_code="%s" and so.docstatus=1 and ifnull(s.stop_status, 'No') <> 'Yes' and
 				ifnull(s.qty,0)>ifnull(s.assigned_qty,0) and so.status!='Stopped' order by so.priority,so.creation'''%(item_c),as_dict=1)
 
@@ -1311,7 +1313,7 @@ def update_bin_qty(item_code,qty,delivered_qty,warehouse):
 	obj=frappe.get_doc("Bin",{"item_code":item_code,"warehouse":warehouse})
 	obj.reserved_qty=flt(obj.reserved_qty)-(flt(qty) - flt(delivered_qty))
 	obj.save(ignore_permissions=True)
-	
+
 
 def update_so_item_status(item_code,parent):
 	frappe.db.sql(''' update `tabSales Order Item` set stop_status = "Yes" where item_code = "%s" and parent="%s"'''%(item_code,parent))
@@ -1341,7 +1343,7 @@ def update_sal(item_code, sales_order, delivered_qty, assigned_qty):
 				if flt(assigned_qty) > 0:
 					assigned_qty = flt(assigned_qty) - flt(d.qty)
 					if flt(assigned_qty) <= 0.0:
-						d.qty = assigned_qty * -1 
+						d.qty = assigned_qty * -1
 					else:
 						to_remove_obj.append(d)
 			[obj.remove(d) for d in to_remove_obj]
@@ -1374,14 +1376,14 @@ def set_terms_and_condition(si_obj):
 def set_sales_order_details(doc):
 	if doc.entries and doc.entries[0].sales_order:
 		so = frappe.get_doc("Sales Order", doc.entries[0].sales_order)
-		
+
 		doc.po_no = so.po_no if not doc.po_no else doc.po_no
 		doc.new_order_type = so.new_order_type if not doc.new_order_type else doc.new_order_type
 		budget = so.budget if not doc.budget else doc.budget
 
 def set_contract_details(doc):
 	from erpnext.selling.doctype.customer.customer import get_contract_details
-	
-	contract_details = get_contract_details(doc.customer)	
+
+	contract_details = get_contract_details(doc.customer)
 	doc.contract_number = contract_details.get("contract_no") if not doc.contract_number else doc.contract_number
 	doc.tender_group = contract_details.get("tender_group") if not doc.tender_group else doc.tender_group
