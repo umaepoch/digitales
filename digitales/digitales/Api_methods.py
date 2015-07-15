@@ -401,7 +401,6 @@ def update_qty(doc,d,item,purchase_order,qty,rate):
 						where parent='%s' and item_code='%s'"""
 							%(qty,amount,purchase_order,item))
 
-	frappe.db.commit()
 	#update_so_details(doc,d,item,purchase_order)
 
 def update_so_details(doc,d,item,purchase_order):
@@ -431,7 +430,6 @@ def update_stock_assignment_log_on_submit(doc,method):
 								set delivered_qty='%s', delivery_note='%s'
 									where sales_order='%s' and item_code='%s'"""
 										%(d.qty,doc.name,sales_order_name[0][0],d.item_code))
-				frappe.db.commit()
 			else:
 				# delivery_note = delivery_note_name[0][0] + ', ' + doc.name
 				delivery_note = doc.name
@@ -443,7 +441,6 @@ def update_stock_assignment_log_on_submit(doc,method):
 								set delivered_qty='%s', delivery_note='%s'
 									where sales_order='%s' and item_code='%s'"""
 										%(qty,delivery_note,sales_order_name[0][0],d.item_code))
-					frappe.db.commit()
 
 def update_delivery_note(doc,method):
 	for d in doc.get('delivery_note_details'):
@@ -471,8 +468,6 @@ def update_stock_assignment_log_on_cancel(doc,method):
 				if name:
 					frappe.db.sql("""update `tabStock Assignment Log`
 								set delivered_qty='%s',delivery_note='%s' where item_code='%s'"""%(qty,','.join(delivery_note_name),d.item_code))
-					frappe.db.commit()
-
 
 def validate_qty_on_submit(doc,method):
 	qty_count = 0
@@ -731,7 +726,6 @@ def update_execution_date(document):
 	now_plus_10 = datetime.datetime.now() + datetime.timedelta(minutes = 30)
 	frappe.db.sql("""update `tabSingles` set value='%s' where doctype='API Configuration Page' and field='date'"""%(now_plus_10.strftime('%Y-%m-%d %H:%M:%S')))
 	frappe.db.sql("""update `tabSingles` set value='%s' where doctype='API Configuration Page' and field='api_type'"""%(document))
-	frappe.db.commit()
 
 def GetCustomer():
 	update_execution_date('Order')
@@ -1184,8 +1178,6 @@ def upload():
 			pass
 	if error:
 		frappe.db.rollback()
-	else:
-		frappe.db.commit()
 	return {"messages": ret, "error": error}
 
 # @frappe.whitelist()
