@@ -32,6 +32,7 @@ class DigitalesBankReconciliation(Document):
 		self.total_amount = 0.0
 		self.total_debit = 0.0
 		self.total_credit = 0.0
+		self.is_assets_account = 1 if frappe.db.get_value("Account",self.bank_account,'root_type') == "Asset" else 0
 
 		for d in dl:
 			nl = self.append('entries', {})

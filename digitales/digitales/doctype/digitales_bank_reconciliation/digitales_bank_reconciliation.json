@@ -146,6 +146,14 @@
    "precision": ""
   }, 
   {
+   "fieldname": "bank_statement_balance", 
+   "fieldtype": "Float", 
+   "label": "Bank Statement Balance", 
+   "permlevel": 0, 
+   "precision": "2", 
+   "read_only": 0
+  }, 
+  {
    "fieldname": "opening_balance", 
    "fieldtype": "Float", 
    "label": "Opening Balance", 
@@ -157,7 +165,8 @@
    "fieldtype": "Float", 
    "label": "Out Of Balance", 
    "permlevel": 0, 
-   "precision": "2"
+   "precision": "2", 
+   "read_only": 1
   }, 
   {
    "fieldname": "column_break_10", 
@@ -170,14 +179,16 @@
    "fieldtype": "Float", 
    "label": "Total Debit", 
    "permlevel": 0, 
-   "precision": "2"
+   "precision": "2", 
+   "read_only": 1
   }, 
   {
    "fieldname": "total_credit", 
    "fieldtype": "Float", 
    "label": "Total Credit", 
    "permlevel": 0, 
-   "precision": "2"
+   "precision": "2", 
+   "read_only": 1
   }, 
   {
    "fieldname": "section_break_13", 
@@ -257,6 +268,15 @@
    "reqd": 0, 
    "search_index": 0, 
    "set_only_once": 0
+  }, 
+  {
+   "fieldname": "is_assets_account", 
+   "fieldtype": "Check", 
+   "hidden": 1, 
+   "label": "Is Assets Account", 
+   "permlevel": 0, 
+   "precision": "", 
+   "read_only": 1
   }
  ], 
  "hide_heading": 1, 
@@ -267,7 +287,7 @@
  "is_submittable": 0, 
  "issingle": 1, 
  "istable": 0, 
- "modified": "2015-07-17 22:02:52.873626", 
+ "modified": "2015-07-20 20:34:40.998360", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Digitales Bank Reconciliation", 
