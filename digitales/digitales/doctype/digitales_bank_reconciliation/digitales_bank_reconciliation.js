@@ -57,23 +57,25 @@ frappe.ReconcileJournalVouchers = Class.extend({
 				_me = this;
 				if(!jvs_to_reconcile.length)
 					msgprint("Please first select the journal entries to reconcile");
+				else if(parseFloat($("[name='out_of_balance']").val()) != 0){
+					me.pop_up.hide();
+					frappe.throw("Invalid Out Of Balance Amount");
+				}
 				else{
-					return frappe.call({
-						method:"digitales.digitales.doctype.digitales_bank_reconciliation.digitales_bank_reconciliation.update_details",
-						args:{
-							"doc":doc,
+					return cur_frm.call({
+						doc: cur_frm.doc,
+						args: {
 							"jvs":jvs_to_reconcile
 						},
-						callback: function(r){
-							if(r.message){
+						method: "update_details",
+						callback: function(r) {
+							if(!r.exc) {
 								me.pop_up.hide();
-								get_server_fields('get_details', '' ,'', cur_frm.doc, cur_frm.doctype, cur_frm.docname, 1);
+								frappe.model.set_default_values(cur_frm.doc);
+								// get_server_fields('get_details', '' ,'', cur_frm.doc, cur_frm.doctype, cur_frm.docname, 1);
 								msgprint("Clearance Date updated in: "+r.message.join());
-								// cur_frm.refresh();
 								cur_frm.refresh_field("entries");
 							}
-							else
-								msgprint("Clearance Date not mentioned");
 						}
 					});
 				}
