@@ -161,18 +161,18 @@
    "precision": "2"
   }, 
   {
+   "fieldname": "column_break_10", 
+   "fieldtype": "Column Break", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
    "fieldname": "out_of_balance", 
    "fieldtype": "Float", 
    "label": "Out Of Balance", 
    "permlevel": 0, 
    "precision": "2", 
    "read_only": 1
-  }, 
-  {
-   "fieldname": "column_break_10", 
-   "fieldtype": "Column Break", 
-   "permlevel": 0, 
-   "precision": ""
   }, 
   {
    "fieldname": "total_debit", 
@@ -287,7 +287,7 @@
  "is_submittable": 0, 
  "issingle": 1, 
  "istable": 0, 
- "modified": "2015-07-20 20:34:40.998360", 
+ "modified": "2015-07-21 00:05:45.840396", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Digitales Bank Reconciliation", 
