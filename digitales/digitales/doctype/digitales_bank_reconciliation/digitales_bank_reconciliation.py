@@ -59,7 +59,7 @@ class DigitalesBankReconciliation(Document):
 
 				frappe.db.set_value("Journal Voucher", d.voucher_id, "clearance_date", d.clearance_date)
 				frappe.db.sql("""update `tabJournal Voucher` set clearance_date = %s, modified = %s
-					where name=%s""", (d.clearance_date, nowdate(), d.voucher_id))
+					where name=%s""", (d.to_date, nowdate(), d.voucher_id))
 				vouchers.append(d.voucher_id)
 
 		self.get_details()
