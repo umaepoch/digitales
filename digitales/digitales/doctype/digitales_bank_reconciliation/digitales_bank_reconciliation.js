@@ -69,7 +69,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 		this.append_journal_entries(cur_frm.doc);
 
 		me.pop_up.show()
-		$(".modal-content").css("min-width","700px");
+		$(".modal-dialog").css("width","900px");
 		$(".modal-content").css("max-height","600px");
 		$(".modal-footer").css("text-align","center");
 	},
