@@ -44,7 +44,7 @@ class DigitalesBankReconciliation(Document):
 			nl.credit = d.credit
 			nl.against_account = d.against_account
 			nl.clearance_date = d.clearance_date
-			self.total_amount += flt(d.debit) - flt(d.credit)
+			# self.total_amount += flt(d.debit) - flt(d.credit)
 			# self.total_debit+=flt(d.debit)
 			# self.total_credit+=flt(d.credit)
 		self.total_debit = 0.0
