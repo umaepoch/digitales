@@ -140,23 +140,25 @@ frappe.ReconcileJournalVouchers = Class.extend({
 		var out_of_balance = parseFloat($("[name='out_of_balance']").val());
 
 		for (var i = je.length - 1; i >= 0; i--) {
-			is_selected = locals["Digitales Bank Reconciliation Detail"][je[i].name].is_reconcile;
-			checked = is_selected == 1? "checked": "";
-			if(is_selected){
-				total_debit += je[i].debit?je[i].debit:0;
-				total_credit += je[i].credit?je[i].credit:0;
+			if(je[i].voucher_id){
+				is_selected = locals["Digitales Bank Reconciliation Detail"][je[i].name].is_reconcile;
+				checked = is_selected == 1? "checked": "";
+				if(is_selected){
+					total_debit += je[i].debit?je[i].debit:0;
+					total_credit += je[i].credit?je[i].credit:0;
 
-				$("[name='total_debit']").val(total_debit);
-				$("[name='total_credit']").val(total_credit);
+					$("[name='total_debit']").val(total_debit);
+					$("[name='total_credit']").val(total_credit);
+				}
+
+				$("<tr><td><input type='checkbox' class='select' id='_select' "+checked+"><input type='hidden' id='cdn' value='"+ je[i].name +"'></td>\
+					<td align='center'>"+ je[i].posting_date +"</td>\
+					<td align='center' id='voucher_id'>"+ je[i].voucher_id +"</td>\
+					<td align='center'>"+ (typeof(je[i].clearance_date) == "undefined"? "Not Set": je[i].clearance_date) +"</td>\
+					<td align='center'>"+ je[i].against_account +"</td>\
+					<td align='center' id='credit'>"+ (typeof(je[i].credit) == "undefined"? 0.0: je[i].credit) +"</td>\
+					<td align='center' id='debit'>"+ (typeof(je[i].debit) == "undefined"? 0.0: je[i].debit) +"</td></tr>").appendTo($("#entries tbody"));
 			}
-
-			$("<tr><td><input type='checkbox' class='select' id='_select' "+checked+"><input type='hidden' id='cdn' value='"+ je[i].name +"'></td>\
-				<td align='center'>"+ je[i].posting_date +"</td>\
-				<td align='center' id='voucher_id'>"+ je[i].voucher_id +"</td>\
-				<td align='center'>"+ (typeof(je[i].clearance_date) == "undefined"? "Not Set": je[i].clearance_date) +"</td>\
-				<td align='center'>"+ je[i].against_account +"</td>\
-				<td align='center' id='credit'>"+ (typeof(je[i].credit) == "undefined"? 0.0: je[i].credit) +"</td>\
-				<td align='center' id='debit'>"+ (typeof(je[i].debit) == "undefined"? 0.0: je[i].debit) +"</td></tr>").appendTo($("#entries tbody"));
 		};
 
 		if(doc.is_assets_account)
