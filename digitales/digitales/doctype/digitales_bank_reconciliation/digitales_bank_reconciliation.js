@@ -69,6 +69,9 @@ frappe.ReconcileJournalVouchers = Class.extend({
 		this.append_journal_entries(cur_frm.doc);
 
 		me.pop_up.show()
+		$(".modal-content").css("min-width","700px");
+		$(".modal-content").css("align","center");
+		$(".modal-footer").css("text-align","center");
 	},
 	render_pop_up_dialog: function(doc, me){
 		return new frappe.ui.Dialog({
@@ -115,7 +118,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 		<div class='col-xs-3'>To <input class='input-with-feedback form-control' type='text' name='to' readonly></div>\
 		<div class='col-xs-3'>Account <input class='input-with-feedback form-control' type='text' name='account' readonly></div>\
 		<div class='col-xs-3'>BS Balance <input class='input-with-feedback form-control' type='text' name='bs_balance' readonly></div>\
-		</div><br><div class='row'><div class='col-xs-3'>Opening Balance <input class='input-with-feedback form-control' type='text' name='opening_balance' readonly></div>\
+		</div><div class='row'><div class='col-xs-3'>Opening Balance <input class='input-with-feedback form-control' type='text' name='opening_balance' readonly></div>\
 		<div class='col-xs-3'>Out Of Balance <input class='input-with-feedback form-control' type='text' name='out_of_balance' value='0.0' readonly></div>\
 		<div class='col-xs-3'>Total Debit <input class='input-with-feedback form-control' type='text' name='total_debit' value='0.0' readonly></div>\
 		<div class='col-xs-3'>Total Credit <input class='input-with-feedback form-control' type='text' name='total_credit' value='0.0' readonly></div>\
@@ -154,7 +157,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 				$("<tr><td><input type='checkbox' class='select' id='_select' "+checked+"><input type='hidden' id='cdn' value='"+ je[i].name +"'></td>\
 					<td align='center'>"+ je[i].posting_date +"</td>\
 					<td align='center' id='voucher_id'>"+ je[i].voucher_id +"</td>\
-					<td align='center'>"+ (typeof(je[i].clearance_date) == "undefined"? "Not Set": je[i].clearance_date) +"</td>\
+					<td align='center'>"+ (typeof(je[i].clearance_date) == "undefined"? "-": je[i].clearance_date) +"</td>\
 					<td align='center'>"+ je[i].against_account +"</td>\
 					<td align='center' id='credit'>"+ (typeof(je[i].credit) == "undefined"? 0.0: je[i].credit) +"</td>\
 					<td align='center' id='debit'>"+ (typeof(je[i].debit) == "undefined"? 0.0: je[i].debit) +"</td></tr>").appendTo($("#entries tbody"));
