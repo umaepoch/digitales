@@ -70,6 +70,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 
 		me.pop_up.show()
 		$(".modal-content").css("min-width","700px");
+		$(".modal-content").css("max-height","600px");
 		$(".modal-footer").css("text-align","center");
 	},
 	render_pop_up_dialog: function(doc, me){
@@ -121,9 +122,9 @@ frappe.ReconcileJournalVouchers = Class.extend({
 		<div class='col-xs-3'>Out Of Balance <input class='input-with-feedback form-control' type='text' name='out_of_balance' value='0.0' readonly></div>\
 		<div class='col-xs-3'>Total Debit <input class='input-with-feedback form-control' type='text' name='total_debit' value='0.0' readonly></div>\
 		<div class='col-xs-3'>Total Credit <input class='input-with-feedback form-control' type='text' name='total_credit' value='0.0' readonly></div>\
-		</div><br><div class='row'><div class='col-xs-12'><table class='table table-bordered table-hover' id='entries'><thead>\
+		</div><br><div id='container' style='overflow: auto;max-height: 300px;'><table class='table table-bordered table-hover' id='entries'><thead>\
 		<th><inputtype='checkbox' id='all' /></th><th><b>Posting Date</b></th><th><b>Voucher ID</b></th><th><b>Clearance Date</b></th>\
-		<th><b>Against Account</b></th><th><b>Credit</b></th><th><b>Debit</b></th></thead><tbody></tbody></table></div></div>").appendTo($(this.fd.reconcile.wrapper));
+		<th><b>Against Account</b></th><th><b>Credit</b></th><th><b>Debit</b></th></thead><tbody></tbody></table></div>").appendTo($(this.fd.reconcile.wrapper));
 	},
 	append_journal_entries: function(doc){
 		// appending from, to, account information, BS balance, opening_balance
