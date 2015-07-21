@@ -135,8 +135,22 @@ frappe.ReconcileJournalVouchers = Class.extend({
 		$("[name='total_credit']").val(0.0);
 		// appending journal voucher entries
 		var je = doc.entries;
+		var total_credit = parseFloat($("[name='total_credit']").val());
+		var total_debit = parseFloat($("[name='total_debit']").val());
+		var out_of_balance = parseFloat($("[name='out_of_balance']").val());
+
 		for (var i = je.length - 1; i >= 0; i--) {
-			$("<tr><td><input type='checkbox' class='select' id='_select'></td>\
+			is_selected = locals["Digitales Bank Reconciliation Detail"][je[i].name].is_reconcile;
+			checked = is_selected == 1? "checked": "";
+			if(is_selected){
+				total_debit += je[i].debit?je[i].debit:0;
+				total_credit += je[i].credit?je[i].credit:0;
+
+				$("[name='total_debit']").val(total_debit);
+				$("[name='total_credit']").val(total_credit);
+			}
+
+			$("<tr><td><input type='checkbox' class='select' id='_select' "+checked+"><input type='hidden' id='cdn' value='"+ je[i].name +"'></td>\
 				<td align='center'>"+ je[i].posting_date +"</td>\
 				<td align='center' id='voucher_id'>"+ je[i].voucher_id +"</td>\
 				<td align='center'>"+ (typeof(je[i].clearance_date) == "undefined"? "Not Set": je[i].clearance_date) +"</td>\
@@ -144,6 +158,11 @@ frappe.ReconcileJournalVouchers = Class.extend({
 				<td align='center' id='credit'>"+ (typeof(je[i].credit) == "undefined"? 0.0: je[i].credit) +"</td>\
 				<td align='center' id='debit'>"+ (typeof(je[i].debit) == "undefined"? 0.0: je[i].debit) +"</td></tr>").appendTo($("#entries tbody"));
 		};
+		
+		if(doc.is_assets_account)
+			$("[name='out_of_balance']").val(flt(doc.bank_statement_balance-(doc.opening_balance + total_debit - total_credit)));
+		else
+			$("[name='out_of_balance']").val(flt(doc.bank_statement_balance-(doc.opening_balance - total_debit + total_credit)));
 
 		$(this.pop_up_body).find(".select").click(function(){
 			row = $(this).parent().parent();
@@ -155,6 +174,9 @@ frappe.ReconcileJournalVouchers = Class.extend({
 			var opening_balance = parseFloat($("[name='opening_balance']").val());
 			var credit = parseFloat(row.find("td#credit").html());
 			var debit = parseFloat(row.find("td#debit").html());
+
+			var cdn = row.find("input#cdn").val();
+			cdoc = locals["Digitales Bank Reconciliation Detail"][cdn]
 			// check if check box is checked or Not
 			if(row.find('input#_select').is(':checked')){
 				total_credit += credit
@@ -162,6 +184,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 
 				// append voucher_id to reconcile
 				jvs_to_reconcile.push(row.find("td#voucher_id").html())
+				cdoc.is_reconcile = 1;
 			}
 			else{
 				total_credit -= credit
@@ -169,6 +192,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 
 				// remove the voucher_id from list
 				jvs_to_reconcile.pop(row.find("td#voucher_id").html())
+				cdoc.is_reconcile = 0;
 			}
 
 			if(doc.is_assets_account)
@@ -185,7 +209,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 			doc.total_credit = parseFloat(total_credit).toFixed(2);
 			doc.total_amount = flt(total_debit) - flt(total_credit);
 
-			cur_frm.refresh_fields(["total_debit","total_credit","out_of_balance","total_amount"]);
+			cur_frm.refresh_fields(["total_debit","total_credit","out_of_balance","total_amount","entries"]);
 		});
 	}
 })
