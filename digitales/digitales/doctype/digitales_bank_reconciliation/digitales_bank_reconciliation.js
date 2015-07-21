@@ -28,6 +28,33 @@ cur_frm.cscript.update_clearance_date = function(doc, cdt,cdn){
 	}
 }
 
+cur_frm.cscript.bank_account  = function(doc){
+	doc.bank_statement_balance = 0;
+	doc.opening_balance = 0;
+	doc.out_of_balance = 0
+	doc.total_debit = 0;
+	doc.total_credit = 0
+
+	cur_frm.refresh_fields();
+}
+
+cur_frm.cscript.opening_balance  = function(doc){
+	calculate_out_of_balance(doc);
+}
+
+cur_frm.cscript.bank_statement_balance = function(doc){
+	calculate_out_of_balance(doc);
+}
+
+calculate_out_of_balance = function(doc){
+	if(doc.is_assets_account)
+		doc.out_of_balance = doc.bank_statement_balance - (doc.opening_balance + doc.total_debit - doc.total_credit)
+	else
+		doc.out_of_balance = doc.bank_statement_balance - (doc.opening_balance - doc.total_debit + doc.total_credit)
+
+	cur_frm.refresh_field("out_of_balance")
+}
+
 var jvs_to_reconcile = []
 
 frappe.ReconcileJournalVouchers = Class.extend({
@@ -104,6 +131,8 @@ frappe.ReconcileJournalVouchers = Class.extend({
 		$("[name='bs_balance']").val(parseFloat(doc.bank_statement_balance).toFixed(2));
 		$("[name='opening_balance']").val(parseFloat(doc.opening_balance).toFixed(2));
 		$("[name='out_of_balance']").val(parseFloat(doc.bank_statement_balance-doc.opening_balance).toFixed(2));
+		$("[name='total_debit']").val(0.0);
+		$("[name='total_credit']").val(0.0);
 		// appending journal voucher entries
 		var je = doc.entries;
 		for (var i = je.length - 1; i >= 0; i--) {
@@ -146,9 +175,17 @@ frappe.ReconcileJournalVouchers = Class.extend({
 				out_of_balance = bs_balance - (opening_balance + total_debit - total_credit);	//for assets
 			else
 				out_of_balance += (bs_balance - (opening_balance - total_debit + total_credit));	//for liability
+			// Set values to pop-up box
 			$("[name='total_credit']").val((parseFloat(total_credit).toFixed(2)));
 			$("[name='total_debit']").val((parseFloat(total_debit).toFixed(2)));
 			$("[name='out_of_balance']").val((parseFloat(out_of_balance).toFixed(2)))
+			// set values to form
+			doc.out_of_balance = parseFloat(out_of_balance).toFixed(2);
+			doc.total_debit = parseFloat(total_debit).toFixed(2);
+			doc.total_credit = parseFloat(total_credit).toFixed(2);
+			doc.total_amount = flt(total_debit) - flt(total_credit);
+
+			cur_frm.refresh_fields(["total_debit","total_credit","out_of_balance","total_amount"]);
 		});
 	}
 })

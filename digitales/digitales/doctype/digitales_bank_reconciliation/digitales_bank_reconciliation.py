@@ -45,8 +45,13 @@ class DigitalesBankReconciliation(Document):
 			nl.against_account = d.against_account
 			nl.clearance_date = d.clearance_date
 			self.total_amount += flt(d.debit) - flt(d.credit)
-			self.total_debit+=flt(d.debit)
-			self.total_credit+=flt(d.credit)
+			# self.total_debit+=flt(d.debit)
+			# self.total_credit+=flt(d.credit)
+		self.total_debit = 0.0
+		self.total_credit = 0.0
+		self.out_of_balance = 0.0
+		self.bank_statement_balance = 0.0
+		self.opening_balance = 0.0
 
 	def update_details(self,jvs):
 		import json
