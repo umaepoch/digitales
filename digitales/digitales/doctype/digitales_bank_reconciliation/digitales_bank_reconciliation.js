@@ -62,6 +62,8 @@ frappe.ReconcileJournalVouchers = Class.extend({
 		this.make();
 	},
 	make: function() {
+		jvs_to_reconcile = []
+
 		var me = this;
 		me.pop_up = this.render_pop_up_dialog(cur_frm.doc,me);
 
@@ -69,7 +71,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 		this.append_journal_entries(cur_frm.doc);
 
 		me.pop_up.show()
-		$(".modal-dialog").css("width","900px");
+		$(".modal-dialog").css("width","800px");
 		$(".modal-content").css("max-height","600px");
 		$(".modal-footer").css("text-align","center");
 	},
@@ -100,6 +102,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 						method: "update_details",
 						callback: function(r) {
 							if(!r.exc) {
+								$(".modal-dialog").css("width","600px");
 								me.pop_up.hide();
 								frappe.model.set_default_values(cur_frm.doc);
 								// get_server_fields('get_details', '' ,'', cur_frm.doc, cur_frm.doctype, cur_frm.docname, 1);
@@ -144,6 +147,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 
 		for (var i = je.length - 1; i >= 0; i--) {
 			if(je[i].voucher_id){
+				// calculating the total credit, total debit and out of balance if entries are previously selected but not reconcile
 				is_selected = locals["Digitales Bank Reconciliation Detail"][je[i].name].is_reconcile;
 				checked = is_selected == 1? "checked": "";
 				if(is_selected){
@@ -152,8 +156,12 @@ frappe.ReconcileJournalVouchers = Class.extend({
 
 					$("[name='total_debit']").val(total_debit);
 					$("[name='total_credit']").val(total_credit);
+
+					// added Journal Voucher name to jvs_to_reconcile
+					jvs_to_reconcile.push(je[i].voucher_id);
 				}
 
+				// setting up the against account and tooltip value
 				var against_account = "";
 				var tip = "";
 				if(je[i].against_account){
