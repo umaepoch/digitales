@@ -10,8 +10,8 @@ cur_frm.cscript.onload = function(doc, cdt, cdn){
 	cur_frm.set_query("bank_account", function() {
 		return {
 			"filters": {
-				"account_type": "Bank",
-				// "report_type": "Balance Sheet",
+				// "account_type": "Bank",
+				"report_type": "Balance Sheet",
 				"group_or_ledger": "Ledger"
 			}
 		};
@@ -86,7 +86,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 					msgprint("Please first select the journal entries to reconcile");
 				else if(parseFloat($("[name='out_of_balance']").val()) != 0){
 					me.pop_up.hide();
-					frappe.throw("Invalid Out Of Balance Amount");
+					frappe.throw("Out Of Balance Amount Should be 0");
 				}
 				else{
 					return cur_frm.call({
@@ -158,7 +158,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 				<td align='center' id='credit'>"+ (typeof(je[i].credit) == "undefined"? 0.0: je[i].credit) +"</td>\
 				<td align='center' id='debit'>"+ (typeof(je[i].debit) == "undefined"? 0.0: je[i].debit) +"</td></tr>").appendTo($("#entries tbody"));
 		};
-		
+
 		if(doc.is_assets_account)
 			$("[name='out_of_balance']").val(flt(doc.bank_statement_balance-(doc.opening_balance + total_debit - total_credit)));
 		else
