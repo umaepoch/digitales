@@ -173,8 +173,9 @@ frappe.ReconcileJournalVouchers = Class.extend({
 				if(je[i].against_account){
 					accounts = je[i].against_account.split(",");
 					against_account = accounts[0];
+					tip = "Against Account(s) : \n"
 					for (var j = 0; j < accounts.length; j++) {
-						tip += accounts[j] + "\n";
+						tip += accounts[j].trim() + "\n";
 					}
 				}
 
@@ -193,8 +194,12 @@ frappe.ReconcileJournalVouchers = Class.extend({
 		else
 			$("[name='out_of_balance']").val(flt(doc.bank_statement_balance-(doc.opening_balance - total_debit + total_credit)));
 
+		var me = this
+
 		$(this.pop_up_body).find(".select").click(function(){
 			$('input#check_all').prop('checked', false);
+			cur_frm.doc.check_all = 0;
+
 			row = $(this).parent().parent();
 
 			var total_credit = parseFloat($("[name='total_credit']").val());
@@ -232,15 +237,13 @@ frappe.ReconcileJournalVouchers = Class.extend({
 			// $("[name='out_of_balance']").val((parseFloat(out_of_balance).toFixed(2)))
 			$("[name='out_of_balance']").val((parseFloat(bal).toFixed(2)))
 			// set values to form
-			doc.out_of_balance = parseFloat(out_of_balance).toFixed(2);
+			doc.out_of_balance = parseFloat(bal).toFixed(2);
 			doc.total_debit = parseFloat(total_debit).toFixed(2);
 			doc.total_credit = parseFloat(total_credit).toFixed(2);
 			doc.total_amount = flt(total_debit) - flt(total_credit);
 
 			cur_frm.refresh_fields(["total_debit","total_credit","out_of_balance","total_amount","entries"]);
 		});
-
-		var me = this
 
 		$("input#check_all").click(function(){
 			me.check_all_jvs();
@@ -250,6 +253,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 		var credit = 0.0;
 		var debit = 0.0;
 		var bal = 0.0;
+		jvs_to_reconcile = [];
 
 		if($(this.pop_up_body).find("input#check_all").is(":checked")){
 			$("input#_select").prop("checked",true)
@@ -261,22 +265,32 @@ frappe.ReconcileJournalVouchers = Class.extend({
 			// setting entries records as is_selected to 1
 			for (var i = 0; i < cur_frm.doc.entries.length; i++){
 				cur_frm.doc.entries[i].is_reconcile = 1;
+				jvs_to_reconcile.push(cur_frm.doc.entries[i].voucher_id);
 			}
 			cur_frm.doc.check_all = 1;
 		}
 		else{
 			// setting entries records as is_selected to 0
+			credit = 0.0;
+			debit = 0.0;
+			bal = 0.0;
+
 			$("input#_select").prop("checked",false)
 			for (var i = 0; i < cur_frm.doc.entries.length; i++){
 				cur_frm.doc.entries[i].is_reconcile = 0;
 			}
 			cur_frm.doc.check_all = 0;
+			jvs_to_reconcile = [];
 		}
 
-		$("[name='total_credit']").val(credit);
-		$("[name='total_debit']").val(debit);
-		$("[name='out_of_balance']").val(bal);
+		$("[name='total_credit']").val(parseFloat(credit).toFixed(2));
+		$("[name='total_debit']").val(parseFloat(debit).toFixed(2));
+		$("[name='out_of_balance']").val(parseFloat(bal).toFixed(2));
+
+		cur_frm.doc.total_debit = debit;
+		cur_frm.doc.total_credit = credit;
 		cur_frm.doc.out_of_balance = bal;
-		cur_frm.refresh_fields(["out_of_balance","entries"]);
+		cur_frm.doc.total_amount = flt(debit) - flt(credit);
+		cur_frm.refresh_fields(["out_of_balance","entries","total_debit","total_credit","total_amount"]);
 	}
 })
