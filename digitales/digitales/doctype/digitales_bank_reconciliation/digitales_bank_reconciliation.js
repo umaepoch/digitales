@@ -39,20 +39,29 @@ cur_frm.cscript.bank_account  = function(doc){
 }
 
 cur_frm.cscript.opening_balance  = function(doc){
-	calculate_out_of_balance(doc);
+	doc.out_of_balance = calculate_out_of_balance(doc.is_assets_account, doc.bank_statement_balance, doc.opening_balance, doc.total_debit, doc.total_credit);
+	cur_frm.refresh_field("out_of_balance")
 }
 
 cur_frm.cscript.bank_statement_balance = function(doc){
-	calculate_out_of_balance(doc);
+	doc.out_of_balance = calculate_out_of_balance(doc.is_assets_account, doc.bank_statement_balance, doc.opening_balance, doc.total_debit, doc.total_credit);
+	cur_frm.refresh_field("out_of_balance")
 }
 
-calculate_out_of_balance = function(doc){
-	if(doc.is_assets_account)
-		doc.out_of_balance = doc.bank_statement_balance - (doc.opening_balance + doc.total_debit - doc.total_credit)
-	else
-		doc.out_of_balance = doc.bank_statement_balance - (doc.opening_balance - doc.total_debit + doc.total_credit)
+// calculate_out_of_balance = function(doc){
+// 	if(doc.is_assets_account)
+// 		doc.out_of_balance = doc.bank_statement_balance - (doc.opening_balance + doc.total_debit - doc.total_credit)
+// 	else
+// 		doc.out_of_balance = doc.bank_statement_balance - (doc.opening_balance - doc.total_debit + doc.total_credit)
+//
+// 	cur_frm.refresh_field("out_of_balance")
+// }
 
-	cur_frm.refresh_field("out_of_balance")
+calculate_out_of_balance = function(is_assets_account, bank_statement_balance, opening_balance, total_debit, total_credit){
+	if(is_assets_account)
+		return flt(bank_statement_balance - (opening_balance + total_debit - total_credit))
+	else
+		return flt(bank_statement_balance - (opening_balance - total_debit + total_credit))
 }
 
 var jvs_to_reconcile = []
@@ -126,7 +135,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 		<div class='col-xs-3'>Total Debit <input class='input-with-feedback form-control' type='text' name='total_debit' value='0.0' readonly></div>\
 		<div class='col-xs-3'>Total Credit <input class='input-with-feedback form-control' type='text' name='total_credit' value='0.0' readonly></div>\
 		</div><br><div id='container' style='overflow: auto;max-height: 300px;'><table class='table table-bordered table-hover' id='entries'><thead>\
-		<th><inputtype='checkbox' id='all' /></th><th><b>Posting Date</b></th><th><b>Voucher ID</b></th><th><b>Clearance Date</b></th>\
+		<th><input type='checkbox' id='check_all' /></th><th><b>Posting Date</b></th><th><b>Voucher ID</b></th><th><b>Clearance Date</b></th>\
 		<th><b>Against Account</b></th><th><b>Credit</b></th><th><b>Debit</b></th></thead><tbody></tbody></table></div>").appendTo($(this.fd.reconcile.wrapper));
 	},
 	append_journal_entries: function(doc){
@@ -149,6 +158,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 			if(je[i].voucher_id){
 				// calculating the total credit, total debit and out of balance if entries are previously selected but not reconcile
 				is_selected = locals["Digitales Bank Reconciliation Detail"][je[i].name].is_reconcile;
+
 				checked = is_selected == 1? "checked": "";
 				if(is_selected){
 					total_debit += je[i].debit?je[i].debit:0;
@@ -188,6 +198,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 			$("[name='out_of_balance']").val(flt(doc.bank_statement_balance-(doc.opening_balance - total_debit + total_credit)));
 
 		$(this.pop_up_body).find(".select").click(function(){
+			$('input#check_all').prop('checked', false);
 			row = $(this).parent().parent();
 
 			var total_credit = parseFloat($("[name='total_credit']").val());
@@ -234,5 +245,26 @@ frappe.ReconcileJournalVouchers = Class.extend({
 
 			cur_frm.refresh_fields(["total_debit","total_credit","out_of_balance","total_amount","entries"]);
 		});
-	}
+
+		$("input#check_all").click(function(){
+			var credit = 0.0;
+			var debit = 0.0;
+			var bal = 0.0;
+			if($("input#check_all").is(":checked")){
+				$("input#_select").prop("checked",true)
+				credit = cur_frm.doc.ttl_credit;
+				debit = cur_frm.doc.ttl_debit;
+				bal = calculate_out_of_balance(cur_frm.doc.is_assets_account, cur_frm.doc.bank_statement_balance, cur_frm.doc.opening_balance,cur_frm.doc.ttl_debit, cur_frm.doc.ttl_credit);
+				bal = parseFloat(bal).toFixed(2);
+			}
+			else
+				$("input#_select").prop("checked",false)
+
+			$("[name='total_credit']").val(credit);
+			$("[name='total_debit']").val(debit);
+			$("[name='out_of_balance']").val(bal);
+			cur_frm.out_of_balance = bal;
+			cur_frm.refresh_field("out_of_balance");
+		});
+	},
 })

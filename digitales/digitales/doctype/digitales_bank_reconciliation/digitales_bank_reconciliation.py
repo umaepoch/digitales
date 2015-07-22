@@ -32,6 +32,8 @@ class DigitalesBankReconciliation(Document):
 		self.total_amount = 0.0
 		self.total_debit = 0.0
 		self.total_credit = 0.0
+		self.ttl_debit = 0.0
+		self.ttl_credit = 0.0
 		self.is_assets_account = 1 if frappe.db.get_value("Account",self.bank_account,'root_type') == "Asset" else 0
 
 		for d in dl:
@@ -44,9 +46,8 @@ class DigitalesBankReconciliation(Document):
 			nl.credit = d.credit
 			nl.against_account = d.against_account
 			nl.clearance_date = d.clearance_date
-			# self.total_amount += flt(d.debit) - flt(d.credit)
-			# self.total_debit+=flt(d.debit)
-			# self.total_credit+=flt(d.credit)
+			self.ttl_debit+=flt(d.debit)
+			self.ttl_credit+=flt(d.credit)
 		self.total_debit = 0.0
 		self.total_credit = 0.0
 		self.out_of_balance = 0.0
