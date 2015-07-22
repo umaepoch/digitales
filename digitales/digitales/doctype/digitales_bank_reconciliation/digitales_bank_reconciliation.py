@@ -60,7 +60,7 @@ class DigitalesBankReconciliation(Document):
 		for d in self.get('entries'):
 			if self.to_date and d.voucher_id in jvs:
 				if d.cheque_date and getdate(self.to_date) < getdate(d.cheque_date):
-					frappe.throw(_("Clearance date cannot be before check date in row {0}").format(d.idx))
+					frappe.throw(_("Clearance date cannot be before Cheque date for {0}").format(d.voucher_id))
 
 				frappe.db.set_value("Journal Voucher", d.voucher_id, "clearance_date", self.to_date)
 				frappe.db.sql("""update `tabJournal Voucher` set clearance_date = %s, modified = %s

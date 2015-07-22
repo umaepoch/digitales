@@ -301,6 +301,15 @@
    "permlevel": 0, 
    "precision": "2", 
    "read_only": 1
+  }, 
+  {
+   "fieldname": "check_all", 
+   "fieldtype": "Check", 
+   "hidden": 1, 
+   "label": "Check All", 
+   "permlevel": 0, 
+   "precision": "", 
+   "read_only": 1
   }
  ], 
  "hide_heading": 1, 
@@ -311,7 +320,7 @@
  "is_submittable": 0, 
  "issingle": 1, 
  "istable": 0, 
- "modified": "2015-07-22 15:41:33.373342", 
+ "modified": "2015-07-22 20:50:37.226503", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Digitales Bank Reconciliation", 
