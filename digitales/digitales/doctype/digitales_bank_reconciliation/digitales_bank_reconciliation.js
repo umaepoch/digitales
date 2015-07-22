@@ -20,7 +20,7 @@ cur_frm.cscript.onload = function(doc, cdt, cdn){
 
 cur_frm.cscript.update_clearance_date = function(doc, cdt,cdn){
 	if(!doc.bank_statement_balance &&  !doc.opening_balance)
-		frappe.throw("Bank Statement Balance and Opening Balance is Mandetory");
+		frappe.throw("Bank Statement Balance and Opening Balance is Mandatory");
 	if(doc.entries.length == 0)
 		msgprint("No journal entries to update")
 	else{
@@ -47,15 +47,6 @@ cur_frm.cscript.bank_statement_balance = function(doc){
 	doc.out_of_balance = calculate_out_of_balance(doc.is_assets_account, doc.bank_statement_balance, doc.opening_balance, doc.total_debit, doc.total_credit);
 	cur_frm.refresh_field("out_of_balance")
 }
-
-// calculate_out_of_balance = function(doc){
-// 	if(doc.is_assets_account)
-// 		doc.out_of_balance = doc.bank_statement_balance - (doc.opening_balance + doc.total_debit - doc.total_credit)
-// 	else
-// 		doc.out_of_balance = doc.bank_statement_balance - (doc.opening_balance - doc.total_debit + doc.total_credit)
-//
-// 	cur_frm.refresh_field("out_of_balance")
-// }
 
 calculate_out_of_balance = function(is_assets_account, bank_statement_balance, opening_balance, total_debit, total_credit){
 	if(is_assets_account)
@@ -86,7 +77,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 	},
 	render_pop_up_dialog: function(doc, me){
 		return new frappe.ui.Dialog({
-			title: "Select Items To Reconcile",
+			title: "Select Voucher's To Reconcile",
 			no_submit_on_enter: true,
 			fields: [
 				{label:__("Digitales Bank Reconciliation"), fieldtype:"HTML", fieldname:"reconcile"},
@@ -127,7 +118,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 	append_pop_up_dialog_body: function(pop_up){
 		this.fd = pop_up.fields_dict;
 		this.pop_up_body = $("<div class='row'><div class='col-xs-3'>From <input class='input-with-feedback form-control' type='text' name='from' readonly></div>\
-		<div class='col-xs-3'>To <input class='input-with-feedback form-control' type='text' name='to' readonly></div>\
+		<div class='col-xs-3'>To BS Date <input class='input-with-feedback form-control' type='text' name='to' readonly></div>\
 		<div class='col-xs-3'>Account <input class='input-with-feedback form-control' type='text' name='account' readonly></div>\
 		<div class='col-xs-3'>BS Balance <input class='input-with-feedback form-control' type='text' name='bs_balance' readonly></div>\
 		</div><br><div class='row'><div class='col-xs-3'>Opening Balance <input class='input-with-feedback form-control' type='text' name='opening_balance' readonly></div>\
@@ -229,14 +220,12 @@ frappe.ReconcileJournalVouchers = Class.extend({
 				cdoc.is_reconcile = 0;
 			}
 
-			if(doc.is_assets_account)
-				out_of_balance = bs_balance - (opening_balance + total_debit - total_credit);	//for assets
-			else
-				out_of_balance += (bs_balance - (opening_balance - total_debit + total_credit));	//for liability
+			bal = calculate_out_of_balance(doc.is_assets_account, bs_balance, opening_balance,total_debit,total_credit);
 			// Set values to pop-up box
 			$("[name='total_credit']").val((parseFloat(total_credit).toFixed(2)));
 			$("[name='total_debit']").val((parseFloat(total_debit).toFixed(2)));
-			$("[name='out_of_balance']").val((parseFloat(out_of_balance).toFixed(2)))
+			// $("[name='out_of_balance']").val((parseFloat(out_of_balance).toFixed(2)))
+			$("[name='out_of_balance']").val((parseFloat(bal).toFixed(2)))
 			// set values to form
 			doc.out_of_balance = parseFloat(out_of_balance).toFixed(2);
 			doc.total_debit = parseFloat(total_debit).toFixed(2);

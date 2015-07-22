@@ -10,7 +10,7 @@ from frappe.model.document import Document
 class DigitalesBankReconciliation(Document):
 	def get_details(self):
 		if not (self.bank_account and self.from_date and self.to_date):
-			msgprint("Bank Account, From Date and To Date are Mandatory")
+			msgprint("Account, From Date and To Bank Statement Date are Mandatory")
 			return
 
 		condition = ""
