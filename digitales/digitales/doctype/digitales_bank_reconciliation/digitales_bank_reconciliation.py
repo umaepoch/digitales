@@ -71,7 +71,11 @@ class DigitalesBankReconciliation(Document):
 
 				# self.ttl_credit -= d.credit
 				# self.ttl_debit -=d.debit
+			d.is_reconcile = 0
 
 		[self.remove(en) for en in self.get("entries")]
+		self.total_debit = 0
+		self.total_credit = 0
+		self.out_of_balance = 0
 
 		return list(set(vouchers))

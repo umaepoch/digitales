@@ -97,7 +97,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 					msgprint("Please first select the journal entries to reconcile");
 				else if(parseFloat($("[name='out_of_balance']").val()) != 0){
 					me.pop_up.hide();
-					frappe.throw("Out Of Balance Amount Should be 0");
+					frappe.throw("Out Of Balance Amount Should be Zero");
 				}
 				else{
 					// doc.include_reconciled_entries = 0;
