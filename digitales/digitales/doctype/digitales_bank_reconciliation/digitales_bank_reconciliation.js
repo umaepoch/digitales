@@ -264,16 +264,16 @@ frappe.ReconcileJournalVouchers = Class.extend({
 
 		if($(this.pop_up_body).find("input#check_all").is(":checked")){
 			$("input#_select").prop("checked",true)
-			credit = cur_frm.doc.ttl_credit;
-			debit = cur_frm.doc.ttl_debit;
-			bal = calculate_out_of_balance(cur_frm.doc.is_assets_account, cur_frm.doc.bank_statement_balance, cur_frm.doc.opening_balance,cur_frm.doc.ttl_debit, cur_frm.doc.ttl_credit);
-			bal = parseFloat(bal).toFixed(2);
-
 			// setting entries records as is_selected to 1
 			for (var i = 0; i < cur_frm.doc.entries.length; i++){
+				credit += flt(cur_frm.doc.entries[i].credit);
+				debit += flt(cur_frm.doc.entries[i].debit);
+
 				cur_frm.doc.entries[i].is_reconcile = 1;
 				jvs_to_reconcile.push(cur_frm.doc.entries[i].voucher_id);
 			}
+			bal = calculate_out_of_balance(cur_frm.doc.is_assets_account, cur_frm.doc.bank_statement_balance, cur_frm.doc.opening_balance, debit, credit);
+			bal = parseFloat(bal).toFixed(2);
 			cur_frm.doc.check_all = 1;
 		}
 		else{

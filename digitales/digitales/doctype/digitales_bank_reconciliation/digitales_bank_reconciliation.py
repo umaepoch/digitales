@@ -26,13 +26,13 @@ class DigitalesBankReconciliation(Document):
 				t2.parent = t1.name and t2.account = %s
 				and t1.posting_date >= %s and t1.posting_date <= %s and t1.docstatus=1
 				and ifnull(t1.is_opening, 'No') = 'No' %s""" %
-				('%s', '%s', '%s', condition), (self.bank_account, self.from_date, self.to_date), as_dict=1,debug=True)
+				('%s', '%s', '%s', condition), (self.bank_account, self.from_date, self.to_date), as_dict=1)
 		self.set('entries', [])
 		self.total_amount = 0.0
 		self.total_debit = 0.0
 		self.total_credit = 0.0
-		self.ttl_debit = 0.0
-		self.ttl_credit = 0.0
+		# self.ttl_debit = 0.0
+		# self.ttl_credit = 0.0
 		self.is_assets_account = 1 if frappe.db.get_value("Account",self.bank_account,'root_type') == "Asset" else 0
 		self.check_all = 0
 
@@ -44,11 +44,10 @@ class DigitalesBankReconciliation(Document):
 			nl.cheque_date = d.cheque_date
 			nl.debit = d.debit
 			nl.credit = d.credit
-			frappe.errprint(d.against_account)
 			nl.against_account = d.against_account
 			nl.clearance_date = d.clearance_date
-			self.ttl_debit+=flt(d.debit)
-			self.ttl_credit+=flt(d.credit)
+			# self.ttl_debit+=flt(d.debit) if d.debit else 0
+			# self.ttl_credit+=flt(d.credit) if d.credit else 0
 		self.total_debit = 0.0
 		self.total_credit = 0.0
 		self.out_of_balance = 0.0
@@ -67,9 +66,12 @@ class DigitalesBankReconciliation(Document):
 				frappe.db.set_value("Journal Voucher", d.voucher_id, "clearance_date", self.to_date)
 				frappe.db.sql("""update `tabJournal Voucher` set clearance_date = %s, modified = %s
 					where name=%s""", (self.to_date, nowdate(), d.voucher_id))
-				vouchers.append(list(set(d.voucher_id)))
+				vouchers.append(d.voucher_id)
 				to_remove.append(d.name)
+
+				# self.ttl_credit -= d.credit
+				# self.ttl_debit -=d.debit
 
 		[self.remove(en) for en in self.get("entries")]
 
-		return vouchers
+		return list(set(vouchers))
