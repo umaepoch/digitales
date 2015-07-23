@@ -100,7 +100,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 					frappe.throw("Out Of Balance Amount Should be 0");
 				}
 				else{
-					doc.include_reconciled_entries = 0;
+					// doc.include_reconciled_entries = 0;
 					return cur_frm.call({
 						doc: cur_frm.doc,
 						args: {
