@@ -49,6 +49,12 @@ cur_frm.cscript.bank_statement_balance = function(doc){
 }
 
 calculate_out_of_balance = function(is_assets_account, bank_statement_balance, opening_balance, total_debit, total_credit){
+	// some values are in stirng so parse it to float
+	bank_statement_balance = flt(bank_statement_balance);
+	opening_balance = flt(opening_balance);
+	total_debit = flt(total_debit);
+	total_credit = flt(total_credit);
+
 	if(is_assets_account)
 		return flt(bank_statement_balance - (opening_balance + total_debit - total_credit))
 	else
@@ -94,6 +100,7 @@ frappe.ReconcileJournalVouchers = Class.extend({
 					frappe.throw("Out Of Balance Amount Should be 0");
 				}
 				else{
+					doc.include_reconciled_entries = 0;
 					return cur_frm.call({
 						doc: cur_frm.doc,
 						args: {
@@ -194,8 +201,6 @@ frappe.ReconcileJournalVouchers = Class.extend({
 		else
 			$("[name='out_of_balance']").val(flt(doc.bank_statement_balance-(doc.opening_balance - total_debit + total_credit)));
 
-		var me = this
-
 		$(this.pop_up_body).find(".select").click(function(){
 			$('input#check_all').prop('checked', false);
 			cur_frm.doc.check_all = 0;
@@ -244,6 +249,8 @@ frappe.ReconcileJournalVouchers = Class.extend({
 
 			cur_frm.refresh_fields(["total_debit","total_credit","out_of_balance","total_amount","entries"]);
 		});
+
+		var me = this
 
 		$("input#check_all").click(function(){
 			me.check_all_jvs();
