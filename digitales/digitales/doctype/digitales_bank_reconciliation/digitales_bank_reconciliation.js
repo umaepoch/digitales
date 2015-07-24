@@ -157,7 +157,8 @@ frappe.ReconcileJournalVouchers = Class.extend({
 		else
 			$("input#check_all").prop("checked",false);
 
-		for (var i = je.length - 1; i >= 0; i--) {
+		// for (var i = je.length - 1; i >= 0; i--) {
+		for (var i = 0; i < je.length; i++) {
 			if(je[i].voucher_id){
 				// calculating the total credit, total debit and out of balance if entries are previously selected but not reconcile
 				is_selected = locals["Digitales Bank Reconciliation Detail"][je[i].name].is_reconcile;
