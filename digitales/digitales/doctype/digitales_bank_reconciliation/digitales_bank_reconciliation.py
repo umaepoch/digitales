@@ -67,13 +67,13 @@ class DigitalesBankReconciliation(Document):
 				frappe.db.sql("""update `tabJournal Voucher` set clearance_date = %s, modified = %s
 					where name=%s""", (self.to_date, nowdate(), d.voucher_id))
 				vouchers.append(d.voucher_id)
-				to_remove.append(d.name)
+				to_remove.append(d)
 
 				# self.ttl_credit -= d.credit
 				# self.ttl_debit -=d.debit
 			d.is_reconcile = 0
+		[self.remove(en) for en in to_remove]
 
-		[self.remove(en) for en in self.get("entries")]
 		self.total_debit = 0
 		self.total_credit = 0
 		self.out_of_balance = 0
