@@ -114,13 +114,13 @@ scheduler_events = {
 	# 	"digitales.digitales.Api_methods.make_csv"
 		# "digitales.tasks.daily"
 	# ],
-	# "hourly": [
-	# 	"digitales.digitales.Api_methods.make_csv",
+	#"hourly": [
+	 	#"digitales.digitales.Api_methods.make_csv",
 		#"digitales.tasks.hourly"
 		#"digitales.digitales.custom_methods.GetItem"
 		#"digitales.digitales.custom_methods.GetCustomer"
 		# "digitales.digitales.custom_methods.GetOrders"
-	# ]
+	#]
 # 	"weekly": [
 # 		"digitales.digitales.Api_methods.make_csv"
 # 	]
