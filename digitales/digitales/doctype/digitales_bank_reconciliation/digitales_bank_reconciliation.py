@@ -10,7 +10,7 @@ from frappe.model.document import Document
 class DigitalesBankReconciliation(Document):
 	def get_details(self):
 		if not (self.bank_account and self.from_date and self.to_date):
-			msgprint("Bank Account, From Date and To Date are Mandatory")
+			msgprint("Account, From Date and To Bank Statement Date are Mandatory")
 			return
 
 		condition = ""
@@ -27,12 +27,14 @@ class DigitalesBankReconciliation(Document):
 				and t1.posting_date >= %s and t1.posting_date <= %s and t1.docstatus=1
 				and ifnull(t1.is_opening, 'No') = 'No' %s""" %
 				('%s', '%s', '%s', condition), (self.bank_account, self.from_date, self.to_date), as_dict=1)
-
 		self.set('entries', [])
 		self.total_amount = 0.0
 		self.total_debit = 0.0
 		self.total_credit = 0.0
+		# self.ttl_debit = 0.0
+		# self.ttl_credit = 0.0
 		self.is_assets_account = 1 if frappe.db.get_value("Account",self.bank_account,'root_type') == "Asset" else 0
+		self.check_all = 0
 
 		for d in dl:
 			nl = self.append('entries', {})
@@ -44,9 +46,8 @@ class DigitalesBankReconciliation(Document):
 			nl.credit = d.credit
 			nl.against_account = d.against_account
 			nl.clearance_date = d.clearance_date
-			self.total_amount += flt(d.debit) - flt(d.credit)
-			# self.total_debit+=flt(d.debit)
-			# self.total_credit+=flt(d.credit)
+			# self.ttl_debit+=flt(d.debit) if d.debit else 0
+			# self.ttl_credit+=flt(d.credit) if d.credit else 0
 		self.total_debit = 0.0
 		self.total_credit = 0.0
 		self.out_of_balance = 0.0
@@ -55,40 +56,26 @@ class DigitalesBankReconciliation(Document):
 
 	def update_details(self,jvs):
 		import json
-
 		vouchers = []
+		to_remove = []
 		for d in self.get('entries'):
-			if d.clearance_date and d.voucher_id in jvs:
-				if d.cheque_date and getdate(d.clearance_date) < getdate(d.cheque_date):
-					frappe.throw(_("Clearance date cannot be before check date in row {0}").format(d.idx))
+			if self.to_date and d.voucher_id in jvs:
+				if d.cheque_date and getdate(self.to_date) < getdate(d.cheque_date):
+					frappe.throw(_("Clearance date cannot be before Cheque date for {0}").format(d.voucher_id))
 
-				frappe.db.set_value("Journal Voucher", d.voucher_id, "clearance_date", d.clearance_date)
+				frappe.db.set_value("Journal Voucher", d.voucher_id, "clearance_date", self.to_date)
 				frappe.db.sql("""update `tabJournal Voucher` set clearance_date = %s, modified = %s
-					where name=%s""", (d.to_date, nowdate(), d.voucher_id))
+					where name=%s""", (self.to_date, nowdate(), d.voucher_id))
 				vouchers.append(d.voucher_id)
+				to_remove.append(d)
 
-		self.get_details()
+				# self.ttl_credit -= d.credit
+				# self.ttl_debit -=d.debit
+			d.is_reconcile = 0
+		[self.remove(en) for en in to_remove]
 
-		return vouchers
+		self.total_debit = 0
+		self.total_credit = 0
+		self.out_of_balance = 0
 
-# @frappe.whitelist()
-# def update_details(doc,jvs):
-# 	import json
-
-# 	vouchers = []
-# 	entries = json.loads(doc)
-# 	for d in entries.get('entries'):
-# 		if d.get('clearance_date') and d.get('voucher_id') in jvs:
-# 			if d.get('cheque_date') and getdate(d.get("clearance_date")) < getdate(d.get('cheque_date')):
-# 				frappe.throw(_("Clearance date cannot be before check date in row {0}").format(d.get('idx')))
-
-# 			frappe.db.set_value("Journal Voucher", d.get('voucher_id'), "clearance_date", d.get('clearance_date'))
-# 			frappe.db.sql("""update `tabJournal Voucher` set clearance_date = %s, modified = %s
-# 				where name=%s""", (d.get('clearance_date'), nowdate(), d.get('voucher_id')))
-# 			vouchers.append(d.get('voucher_id'))
-
-# 	return vouchers
-	# if vouchers:
-	# 	msgprint("Clearance Date updated in: {0}".format(", ".join(vouchers)))
-	# else:
-	# 	msgprint(_("Clearance Date not mentioned"))
+		return list(set(vouchers))
