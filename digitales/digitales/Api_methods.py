@@ -484,8 +484,7 @@ def check_APItime():
 	time = frappe.db.sql("""select value from `tabSingles` where doctype='API Configuration Page' and field in ('date','api_type')""",as_list=1)
 	if time:
 		dates= list(itertools.chain.from_iterable(time))
-		api_configured_date = dates[1].split('.')[0] if '.' in dates[1] else dates[1]
-		api_date=datetime.datetime.strptime(api_configured_date , '%Y-%m-%d %H:%M:%S')
+		api_date = datetime.datetime.strptime(dates[1], '%Y-%m-%d %H:%M:%S')
 		if datetime.datetime.now() > api_date and dates[0] =='Product':
 			GetItem()
 		elif datetime.datetime.now() > api_date and dates[0]=='Customer':
@@ -515,16 +514,22 @@ def GetItem():
 
 def get_SyncItemsCount(max_date, header, oauth_data):
 	count = get_Data_count(max_date, 'product_pages_per_100_mcount', header, oauth_data)
-	count = 25 if count > 30 else count
+	original_count = count
+	count = 15 if count > 15 else count
+	pagewise_count = {}
 	if count > 0:
 		for index in range(1, count+1):
-			get_products_from_magento(index, max_date,header, oauth_data)
+			products_count = get_products_from_magento(index, max_date,header, oauth_data)
+			pagewise_count[index] = products_count
+		make_sync_log(json.dumps(pagewise_count), original_count, count, max_date)
 
 def get_products_from_magento(page, max_date, header, oauth_data):
+	products_count = 0
 	if page:
 		r = requests.get(url='http://digitales.com.au/api/rest/products?filter[1][attribute]=updated_at&filter[1][gt]=%s&page=%s&limit=100&order=updated_at&dir=asc'%(max_date, page), headers=header, auth=oauth_data)
 		product_data = json.loads(r.content)
-		if len(product_data) > 0:
+		products_count = len(product_data)
+		if products_count > 0:
 			for index in product_data:
 				name = frappe.db.get_value('Item', product_data[index].get('sku'), 'name')
 				if name:
@@ -532,7 +537,15 @@ def get_products_from_magento(page, max_date, header, oauth_data):
 					check_item_price(name,index,product_data)
 				else:
 					create_item(index, product_data)
-	return True
+	return products_count
+
+def make_sync_log(pagewise_count, original_count, synced_count, max_date):
+	slog = frappe.new_doc('Sync Log')
+	slog.pagewise_count = pagewise_count
+	slog.total_count = original_count
+	slog.synced_count = synced_count
+	slog.date = max_date
+	slog.save(ignore_permissions=True)
 
 def create_item(i,content):
 	try:
