@@ -94,6 +94,10 @@ doc_events = {
 		"on_submit": "digitales.digitales.Api_methods.update_sales_invoice"
 	},
 
+	"Packing Slip": {
+		"validate": "digitales.digitales.Api_methods.set_artist"
+	},
+
 	"Scheduler Log":{
 		"validate" : "digitales.digitales.custom_methods.send_mail_SchedulerLog" 
 	}
@@ -108,14 +112,15 @@ scheduler_events = {
 		#"digitales.digitales.custom_methods.GetItem"
 		#"digitales.digitales.custom_methods.GetCustomer"
 		#"digitales.digitales.custom_methods.GetOrders"
-		"digitales.digitales.Api_methods.check_APItime",
-	]
-	# "daily": [
+		"digitales.digitales.Api_methods.check_APItime"
+		# "digitales.sync_csv.write_csv"
+	],
+	"daily": [
 	# 	"digitales.digitales.Api_methods.make_csv"
 		# "digitales.tasks.daily"
-	# ],
+		"digitales.sync_csv.write_csv",
+	],
 	# "hourly": [
-	# 	"digitales.digitales.Api_methods.make_csv",
 		#"digitales.tasks.hourly"
 		#"digitales.digitales.custom_methods.GetItem"
 		#"digitales.digitales.custom_methods.GetCustomer"
