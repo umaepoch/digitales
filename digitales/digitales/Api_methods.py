@@ -510,7 +510,7 @@ def GetItem():
 		max_item_date = max_date[0][0]
 	max_item_date = max_item_date.split('.')[0] if '.' in max_item_date else max_item_date
 	max_item_date = (datetime.datetime.strptime(max_item_date, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
-	status = get_SyncItemsCount(max_item_date, h, oauth)
+	status = get_SyncItemsCount(max_item_date, h, oauth)	
 
 def get_SyncItemsCount(max_date, header, oauth_data):
 	count = get_Data_count(max_date, 'product_pages_per_100_mcount', header, oauth_data)
@@ -607,6 +607,7 @@ def create_new_item_price(item_price,i,content,price_list):
 
 def create_new_product(item,i,content):
 	item.event_id=i
+	item.artist = content[i].get('artist')
 	item.item_name=content[i].get('name') or content[i].get('sku')
 	item.item_group = media_type(content[i].get('media'))
 	item.description = 'Desc: ' + content[i].get('short_description') if content[i].get('short_description') else content[i].get('sku')
@@ -1151,6 +1152,9 @@ def create_child_item(i,order):
 			oi.release_date_of_item=item_release_date[0][0]
 	oi.qty=i['qty_ordered']
 	oi.rate=i['price']
+	art = frappe.db.get_value("Item", i['sku'],"artist")
+	if art:
+		oi.artist = art
 	# oi.amount=i['row_total_incl_tax']
 	return True
 
@@ -1392,3 +1396,12 @@ def set_contract_details(doc):
 	contract_details = get_contract_details(doc.customer)
 	doc.contract_number = contract_details.get("contract_no") if not doc.contract_number else doc.contract_number
 	doc.tender_group = contract_details.get("tender_group") if not doc.tender_group else doc.tender_group
+
+@frappe.whitelist()
+def get_artist(item_code):
+	return frappe.db.get_value('Item', {'name':item_code}, 'artist') or ''
+
+def set_artist(doc, method):
+	for i in doc.item_details:
+		art = frappe.db.get_value('Item', {'name':i.item_code}, 'artist') or ''
+		i.artist=art		
