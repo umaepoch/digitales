@@ -50,7 +50,7 @@
    "permlevel": 0, 
    "precision": "", 
    "print_hide": 0, 
-   "read_only": 1, 
+   "read_only": 0, 
    "report_hide": 0, 
    "reqd": 0, 
    "search_index": 0, 
@@ -229,7 +229,7 @@
    "options": "Document Stock Assignment", 
    "permlevel": 0, 
    "precision": "", 
-   "read_only": 1
+   "read_only": 0
   }
  ], 
  "hide_heading": 0, 
@@ -240,7 +240,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2015-07-15 16:55:29.812348", 
+ "modified": "2015-10-18 01:09:33.330409", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Stock Assignment Log", 
