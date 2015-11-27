@@ -70,3 +70,11 @@ def get_process_from_barcode(barcode):
 		return the process name from barcode
 	"""
 	return frappe.db.get_value('Item', {'barcode': barcode}, 'name')
+
+def get_shelfreadyservices_customer(doctype, txt, searchfield, start, page_len, filters):
+	cond = " where 1=1"
+	if filters.get('customer_name'): cond += " and parent = '%s'"%(filters.get('customer_name'))
+
+	return frappe.db.sql(""" select name1 from `tabShelf Ready Services` %(cond)s and parent like "%(txt)s" 
+		limit %(start)s , %(page_len)s """%{'cond': cond , 'txt' : '%%%s%%'%(txt), 'start': start, 'page_len' : page_len})
+
