@@ -56,8 +56,11 @@ cur_frm.cscript.barcode = function(doc, cdt, cdn){
 }
 
 cur_frm.fields_dict.shelf_ready_service_details.grid.get_field("process").get_query = function(doc){
-    if(doc.customer_id){
-		return "select name1 from `tabShelf Ready Services` where parent='"+doc.customer_id+"'"
+    return {
+    	query : "digitales.digitales.doctype.process.process.get_shelfreadyservices_customer",
+    	filters : {
+    		'customer_name' : doc.customer_id
+    	}
     }
 }
 
