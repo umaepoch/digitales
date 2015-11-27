@@ -21,16 +21,17 @@ cur_frm.add_fetch('get_delivery_note','posting_date','delivery_note_date');
 cur_frm.add_fetch('process','barcode','item_barcode');
 cur_frm.cscript.item_barcode = function(doc, cdt, cdn){
 	var d = locals[cdt][cdn];
-	return frappe.call({
-		method: "digitales.digitales.doctype.process.process.get_process_from_barcode",
-		args: {'barcode': d.item_barcode},
-		callback: function(r) {
-			console.log(r.message);
-			d.process = r.message
-			// cur_frm.set_value()
-			refresh_field('shelf_ready_service_details');
-		}
-	});
+	if(d.item_barcode){
+		return frappe.call({
+			method: "digitales.digitales.doctype.process.process.get_process_from_barcode",
+			args: {'barcode': d.item_barcode},
+			callback: function(r) {
+				d.process = r.message
+				// cur_frm.set_value()
+				refresh_field('process', d.name, 'shelf_ready_service_details');
+			}
+		});	
+	}
 }
 
 cur_frm.cscript.process_type = function(doc, cdt, cdn) {
