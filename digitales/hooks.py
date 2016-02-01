@@ -115,7 +115,7 @@ scheduler_events = {
 		"digitales.digitales.Api_methods.check_APItime"
 		# "digitales.sync_csv.write_csv"
 	],
-	"daily": [
+	"hourly": [
 	# 	"digitales.digitales.Api_methods.make_csv"
 		# "digitales.tasks.daily"
 		"digitales.sync_csv.write_csv",
