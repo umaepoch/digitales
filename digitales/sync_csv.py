@@ -11,13 +11,13 @@ oauth_data = GetOauthDetails()
 headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 def write_csv():
 	pass
-	# so = frappe.get_doc('Sales Order', 'SO-02263')
-	# so.submit()		
 
 def check_lastdate_api():
-	max_item_date = (now_datetime() - timedelta(days = 1)).strftime('%Y-%m-%d %H:%M:%S')
-	print max_item_date
-	status = get_SyncCount(max_item_date)
+	try:
+		max_item_date = (now_datetime() - timedelta(days = 1)).strftime('%Y-%m-%d %H:%M:%S')
+		status = get_SyncCount(max_item_date)
+	except Exception, e:
+		print e
 
 def get_SyncCount(max_date):
 	r = requests.get(url='http://digitales.com.au/api/rest/mcount?start_date='+cstr(max_date)+'', headers=headers, auth=oauth_data)
@@ -27,7 +27,6 @@ def get_SyncCount(max_date):
 
 def get_data(total_page_count, max_date):
 	pages = {'a_product(count, max_date)': 'product_pages_per_100_mcount', 'b_customer()': 'customer_pages_per_100_mcount', 'c_order(count, max_date)': 'orders_pages_per_100_mcount'}
-	print total_page_count
 	for key, value in pages.items():
 		count = total_page_count.get(value)
 		if count > 0:
