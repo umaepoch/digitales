@@ -118,7 +118,8 @@ scheduler_events = {
 	"hourly": [
 	# 	"digitales.digitales.Api_methods.make_csv"
 		# "digitales.tasks.daily"
-		"digitales.sync_csv.write_csv",
+		"digitales.sync_csv.check_lastdate_api"
+		# "digitales.sync_csv.write_csv",
 	],
 	# "hourly": [
 		#"digitales.tasks.hourly"
