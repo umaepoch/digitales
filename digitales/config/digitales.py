@@ -45,7 +45,12 @@ def get_data():
 					"name": "Stock Assignment Log",
 					"doctype": "Stock Assignment Log"
 				},
-				
+				{
+					"type": "report",
+					"is_query_report": True,
+					"name": "Delivery Note Back Order Report",
+					"doctype": "Delivery Note"
+				},				
 			]
 		},
 
