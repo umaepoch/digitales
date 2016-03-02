@@ -1,5 +1,5 @@
 frappe.ui.form.on("Delivery Note", "refresh", function(frm){
-	if(frm.doc.docstatus == 0 || true)
+	if(frm.doc.docstatus == 0)
 		cur_frm.add_custom_button(__('Sort Items'), sort_items, "icon-sort-by-alphabet", "btn-default");
 });
 
