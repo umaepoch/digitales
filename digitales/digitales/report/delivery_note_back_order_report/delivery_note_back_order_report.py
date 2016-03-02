@@ -33,7 +33,8 @@ def get_data(filters):
 							where 
 								so.name = soi.parent and 
 								so.docstatus = 1 and
-								(soi.qty-soi.delivered_qty) != 0 {0}
+								(soi.qty-soi.delivered_qty) != 0 {0} and
+								soi.stop_status != 'Yes'
 						""".format(get_conditions(filters)),as_list=1)
 	return result
 
