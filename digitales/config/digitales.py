@@ -48,7 +48,8 @@ def get_data():
 				{
 					"type": "report",
 					"is_query_report": True,
-					"name": "Delivery Note Back Order Report",
+					"name": "Item Back Order Report",
+					"label": "Item Back Order Report",
 					"doctype": "Delivery Note"
 				},				
 			]

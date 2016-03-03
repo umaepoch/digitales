@@ -1,0 +1,23 @@
+<html>
+	<table class="table table-bordered table-hover table-condensed" style="margin-bottom: 0px !important;">
+		<tr>
+			<td align="center"><input type="checkbox" class="all"></td>
+			<td align="center"><b>Item Code</b></td>
+			<td align="center"><b>Item Name</b></td>
+			<td align="center"><b>Ordered Qty</b></td>
+		</tr>
+		{% $.each(items, function(i, item){ %}
+			<tr>
+				<td align="center"><input type="checkbox" class="select"></td>
+				<td align="center">{%= item.item_code %}</td>
+				<td align="center">{%= item.item_name %}</td>
+				<td align="center">{%= item.qty %}</td>
+			</tr>
+		{% }); %}
+		<tr>
+			<td colspan="4" align="center">
+				<button class="btn btn-primary" id="status_update">Update</button>
+			</td>
+		</tr>
+	</table>
+</html>

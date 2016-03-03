@@ -1,0 +1,5 @@
+{
+	"js/digitales.min.js": [
+		"public/js/templates/po_stop_items.html"
+	]
+}

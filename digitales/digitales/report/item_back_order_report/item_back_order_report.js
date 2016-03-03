@@ -1,7 +1,7 @@
 // Copyright (c) 2013, digitales and contributors
 // For license information, please see license.txt
 
-frappe.query_reports["Delivery Note Back Order Report"] = {
+frappe.query_reports["Item Back Order Report"] = {
 	"filters": [
 		{
 			"fieldname":"item_code",
@@ -47,6 +47,12 @@ frappe.query_reports["Delivery Note Back Order Report"] = {
 			"fieldname":"transaction_date",
 			"label": __("Date"),
 			"fieldtype": "Date"
+		},
+		{
+			"fieldname":"stop_status",
+			"label": __("Stopped"),
+			"fieldtype": "Select",
+			"options": ["", "Yes", "No"]
 		},
 	]
 }
