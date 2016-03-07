@@ -13,7 +13,7 @@ app_version = "0.0.1"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/digitales/css/digitales.css"
-# app_include_js = "/assets/digitales/js/digitales.js"
+app_include_js = "/assets/js/digitales.min.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/digitales/css/digitales.css"
@@ -115,7 +115,7 @@ scheduler_events = {
 		"digitales.digitales.Api_methods.check_APItime"
 		# "digitales.sync_csv.write_csv"
 	],
-	"daily": [
+	"hourly": [
 	# 	"digitales.digitales.Api_methods.make_csv"
 		# "digitales.tasks.daily"
 		"digitales.sync_csv.check_lastdate_api"
@@ -126,9 +126,9 @@ scheduler_events = {
 		#"digitales.digitales.custom_methods.GetItem"
 		#"digitales.digitales.custom_methods.GetCustomer"
 		# "digitales.digitales.custom_methods.GetOrders"
-	# ]
+	#]
 # 	"weekly": [
-# 		"digitales.tasks.weekly"
+# 		"digitales.digitales.Api_methods.make_csv"
 # 	]
 # 	"monthly": [
 # 		"digitales.tasks.monthly"
