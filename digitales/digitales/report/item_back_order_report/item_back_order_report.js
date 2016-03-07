@@ -15,11 +15,6 @@ frappe.query_reports["Item Back Order Report"] = {
 			"fieldtype": "Data"
 		},
 		{
-			"fieldname":"qty_to_deliver",
-			"label": __("Qty to Deliver"),
-			"fieldtype": "Data"
-		},
-		{
 			"fieldname":"new_order_type",
 			"label": __("Order Type"),
 			"fieldtype": "Select",

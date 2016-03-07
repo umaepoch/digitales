@@ -13,14 +13,17 @@ def execute(filters=None):
 	return columns, data
 
 def get_data(filters):
-	result = frappe.db.sql("""select so.customer,
+	result = frappe.db.sql("""SELECT so.customer,
 								so.name, 
 								so.transaction_date,
 								so.new_order_type,
 								so.budget,
 								soi.qty, 
 								soi.delivered_qty, 
-								soi.qty-soi.delivered_qty,
+								CASE
+									WHEN soi.stop_status='No' THEN (soi.qty-soi.delivered_qty)
+									ELSE 0
+								END AS qty_to_deliver,
 								soi.assigned_qty,
 								soi.item_code, 
 								soi.item_name, 
@@ -30,10 +33,10 @@ def get_data(filters):
 								soi.stop_status,
 								soi.stopped_status,
 								soi.date_stopped
-							from 
+							FROM 
 								`tabSales Order`so,
 								`tabSales Order Item`soi 
-							where 
+							WHERE 
 								so.name = soi.parent and 
 								so.docstatus = 1 and
 								(soi.qty-soi.delivered_qty) != 0 {0} 
@@ -45,8 +48,6 @@ def get_conditions(filters):
 	for key in filters:
 		if filters.get(key) and key == 'item_name':
 			conditions.append("soi.item_name like '%%%s%%'"%filters.get(key))
-		elif filters.get(key) and key == 'qty_to_deliver':
-			conditions.append("(soi.qty-soi.delivered_qty)= %s"%filters.get(key))
 		elif filters.get(key) and key != 'qty_to_deliver':
 			conditions.append("%s.%s = '%s'"%("soi" if key in ['item_code', 'qty', 'delivered_qty', 'item_group', 'stop_status', 'stopped_status', 'date_stopped'] else "so", key, filters.get(key)))
 
