@@ -21,6 +21,7 @@ def get_data(filters):
 								soi.qty, 
 								soi.delivered_qty, 
 								soi.qty-soi.delivered_qty, 
+								soi.assigned_qty,
 								soi.item_code, 
 								soi.item_name, 
 								soi.item_group,
@@ -64,6 +65,7 @@ def get_columns():
 			_("Qty") + ":Float:80",
 			_("Delivered Qty") + ":Int:80",
 			_("Qty to Deliver") + ":Int:80",
+			_("Assigned Qty") + ":Int:80",
 			_("Item Code") + ":Link/Item:110",
 			_("Item Name") + ":Data:110",
 			_("Item Group") + ":Data:110",
@@ -72,6 +74,4 @@ def get_columns():
 			_("Stopped") + ":Data:100",
 			_("Stopped Status") + ":Data:100",
 			_("Date Stopped") + ":Data:100",
-			
-			
-		]
+	]
