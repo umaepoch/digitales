@@ -481,6 +481,7 @@ def validate_qty_on_submit(doc,method):
 #For calling API through Poster---------------------------------------------------------------------------------------
 def check_APItime():
 	# sync_existing_customers_address()
+	GetMissingItem()
 	time = frappe.db.sql("""select value from `tabSingles` where doctype='API Configuration Page' and field in ('date','api_type')""",as_list=1)
 	if time:
 		dates= list(itertools.chain.from_iterable(time))
@@ -498,6 +499,27 @@ def get_Data_count(max_date, document_key, headers, oauth_data):
 	if total_page_count.get(document_key) > 0:
 		return total_page_count.get(document_key)
 	return 0
+
+#get missing item start
+def getMissingItemFromSyncItem():
+	return {
+	"get_missing_item": frappe.db.sql("""select distinct(sync_docname) from `tabSync Item` where sync_doctype='Item' and sync_status='Not Sync'""", as_list=1)
+	}
+
+def GetMissingItem():
+	update_execution_date('Customer')
+	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+	oauth = GetOauthDetails()
+	abc=getMissingItemFromSyncItem()
+	j = [i[0] for i in abc["get_missing_item"]]
+	for k in j:
+		url='http://digitales.com.au/api/rest/products?filter[1][attribute]=sku&filter[1][in]='+k
+		r = requests.get(url=url, headers=h, auth=oauth)
+		product_data = json.loads(r.content)
+		frappe.db.sql("""update `tabSync Item` set sync_status='Sync done' where sync_doctype="Item" and sync_docname='%s'"""%(k))
+		for index in product_data:
+			create_item(index, product_data)
+#get missing item end
 
 #Get Item from magento------------------------------------------------------------------------------------------------------------------------------------
 def GetItem():
@@ -555,6 +577,15 @@ def create_item(i,content):
 		item.save(ignore_permissions=True)
 		check_item_price(item.name,i,content)
 	except Exception, e:
+		item = frappe.new_doc("Sync Item")
+		item.method="create_item"
+		item.sync_status = "Not Sync"
+		item.sync_count = 1
+		item.sync_doctype = "Item"
+		item.sync_docname = content[i].get('sku')
+		item.error=e
+		item.obj_traceback=cstr(content[i])
+		item.save(ignore_permissions=True)
 		create_scheduler_exception(e , 'create_item ', content[i])
 
 def update_item(name,i,content):
@@ -836,6 +867,15 @@ def create_new_customer(customer,i,content):
 		customer.modified_date=content[i].get('updated_at')
 		customer.save(ignore_permissions=True)
 	except Exception, e:
+		item = frappe.new_doc("Sync Item")
+		item.method="create_new_customer"
+		# item.sync_status = "Not Sync"
+		# item.sync_count = 1
+		# item.sync_doctype = "Customer"
+		# item.sync_docname = content[i].get('entity_id')
+		# item.error=e
+		item.obj_traceback=cstr(content[i])
+		item.save(ignore_permissions=True)
 		create_scheduler_exception(e , 'Method name create_new_customer: ', content[i])
 
 def create_customer_contact(customer,i,content,contact):
@@ -1077,6 +1117,15 @@ def create_order(i,content,customer):
 				create_new_order(order,i,content,customer)
 				order.save(ignore_permissions=True)
 	except Exception, e:
+		item = frappe.new_doc("Sync Item")
+		item.method="create_order"
+		item.sync_status = "Not Sync"
+		item.sync_count = 1
+		item.sync_doctype = "Sales Order"
+		item.sync_docname = content[i].get('entity_id')
+		item.error=e
+		item.obj_traceback=cstr(content[i])
+		item.save(ignore_permissions=True)
 		create_scheduler_exception(e ,'Method name create_order: ', content[i])
 
 # def create_new_order(order,i,content,customer):
@@ -1138,9 +1187,23 @@ def set_sales_order_address(address_details, order):
 
 def check_item_presence(i,content):
 	for i in content[i].get('order_items'):
+		item_list = []
+		item_list.append(i)
+		status = True
+		# print item_list
 		if not frappe.db.get_value('Item',i.get('sku'),'name'):
-			frappe.throw(_('Item {0} not present').format(i.get('sku')))
-	return True
+			item = frappe.new_doc("Sync Item")
+			item.method="check_item_presence"
+			item.sync_status = "Not Sync"
+			item.sync_count = 1
+			item.sync_doctype = "Item"
+			item.sync_docname = i.get('sku')
+			# item.error=e
+			item.obj_traceback=cstr(i)
+			item.save(ignore_permissions=True)
+			# frappe.throw(_('Item {0} not present').format(i.get('sku')))
+			status = False
+	return status
 
 def create_child_item(i,order):
 	oi = order.append('sales_order_details', {})
