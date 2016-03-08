@@ -492,6 +492,7 @@ def check_APItime():
 			GetCustomer()
 		elif datetime.datetime.now() > api_date and dates[0]=='Order':
 			GetOrders()
+	GetMissingSalesOrder()
 
 def get_Data_count(max_date, document_key, headers, oauth_data):
 	r = requests.get(url='http://digitales.com.au/api/rest/mcount?start_date='+cstr(max_date)+'', headers=headers, auth=oauth_data)
