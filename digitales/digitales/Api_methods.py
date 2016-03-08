@@ -500,7 +500,7 @@ def get_Data_count(max_date, document_key, headers, oauth_data):
 		return total_page_count.get(document_key)
 	return 0
 
-#get missing item start
+#get missing item from magento start
 def getMissingItemFromSyncItem():
 	return {
 	"get_missing_item": frappe.db.sql("""select distinct(sync_docname) from `tabSync Item` where sync_doctype='Item' and sync_status='Not Sync'""", as_list=1)
@@ -520,6 +520,92 @@ def GetMissingItem():
 		for index in product_data:
 			create_item(index, product_data)
 #get missing item end
+#get missing sales order from magento start
+def getMissingSalesOrderFromSyncItem():
+	return {
+	"get_missing_item": frappe.db.sql("""select distinct(sync_docname) from `tabSync Item` where sync_doctype='Sales Order' and sync_status='Not Sync'""", as_list=1)
+	}
+
+def GetMissingSalesOrder():
+	update_execution_date('Customer')
+	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+	oauth = GetOauthDetails()
+	abc=getMissingSalesOrderFromSyncItem()
+	j = [i[0] for i in abc["get_missing_item"]]
+	for k in j:
+		url='http://digitales.com.au/api/rest/orders/'+k
+		r = requests.get(url=url, headers=h, auth=oauth)
+		order_data = json.loads(r.content)
+		try:
+			order_data.get('customer_id')
+			customer = frappe.db.get_value('Contact', {'entity_id': order_data.get('customer_id')}, 'customer')
+			if customer:
+				# create_or_update_customer_address(order_data[index].get('addresses'), customer)
+				order = frappe.db.get_value('Sales Order', {'entity_id': order_data.get('entity_id')}, 'name')
+				if not order:
+					try:
+						if order_data.get('order_items'):
+							child_status = True
+							for i in order_data.get('order_items'):
+								item_list = []
+								item_list.append(i)
+								child_status = True
+								if not frappe.db.get_value('Item',i.get('sku'),'name'):
+									item = frappe.new_doc("Sync Item")
+									item.method="check_item_presence"
+									item.sync_status = "Not Sync"
+									item.sync_count = 1
+									item.sync_doctype = "Item"
+									item.sync_docname = i.get('sku')
+									# item.error=e
+									item.obj_traceback=cstr(i)
+									item.save(ignore_permissions=True)
+									# frappe.throw(_('Item {0} not present').format(i.get('sku')))
+									child_status = False
+							if child_status==True:
+								order = frappe.new_doc('Sales Order')
+								# create_new_order(order,i,content,customer)
+							# def create_new_order(order,index,order_data,customer):
+								from datetime import date
+								from dateutil.relativedelta import relativedelta
+								delivery_date = date.today() + relativedelta(days=+6)
+								order.customer=customer
+								order.entity_id=order_data.get('entity_id')
+								order.modified_date=order_data.get('updated_at')
+								order.delivery_date=delivery_date
+								order.grand_total_export=order_data.get('grand_total')
+								order.order_number_details = order_data.get('increment_id')
+								order.po_no=order_data.get('po_number')
+
+								# If Order type is general then set SO order type as Standard Order
+								if order_data.get('order_type') == "General" or order_data.get('order_type') == None:
+									order.new_order_type="Standard Order"
+								else:
+									order.new_order_type=order_data.get('order_type')
+								for i in order_data.get('order_items'):
+							 		create_child_item(i,order)
+
+							 	# # set shipping and billing address
+							 	set_sales_order_address(order_data.get('addresses'),order)
+								order.save(ignore_permissions=True)
+								print "order save"
+								frappe.db.sql("""update `tabSync Item` set sync_status='Sync done' where sync_doctype="Sales Order" and sync_docname='%s'"""%(k))
+					except Exception, e:
+						item = frappe.new_doc("Sync Item")
+						item.method="create_order"
+						item.sync_status = "Not Sync"
+						item.sync_count = 1
+						item.sync_doctype = "Sales Order"
+						item.sync_docname = order_data.get('entity_id')
+						item.error=e
+						item.obj_traceback=cstr(order_data)
+						item.save(ignore_permissions=True)
+						create_scheduler_exception(e ,'Method name create_order: ', order_data)
+			else:
+				frappe.throw(_('Customer with id {0} not found in erpnext').format(order_data.get('customer_id')))
+		except Exception, e:
+			create_scheduler_exception(e, 'GetMissingSalesOrder', index)
+#get missing sales order end
 
 #Get Item from magento------------------------------------------------------------------------------------------------------------------------------------
 def GetItem():
@@ -869,11 +955,11 @@ def create_new_customer(customer,i,content):
 	except Exception, e:
 		item = frappe.new_doc("Sync Item")
 		item.method="create_new_customer"
-		# item.sync_status = "Not Sync"
-		# item.sync_count = 1
-		# item.sync_doctype = "Customer"
-		# item.sync_docname = content[i].get('entity_id')
-		# item.error=e
+		item.sync_status = "Not Sync"
+		item.sync_count = 1
+		item.sync_doctype = "Customer"
+		item.sync_docname = content[i].get('entity_id')
+		item.error=e
 		item.obj_traceback=cstr(content[i])
 		item.save(ignore_permissions=True)
 		create_scheduler_exception(e , 'Method name create_new_customer: ', content[i])
