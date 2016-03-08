@@ -14,7 +14,9 @@ def execute(filters=None):
 
 def get_data(filters):
 	result = frappe.db.sql("""SELECT so.customer,
-								so.name, 
+								so.po_no,
+								so.name,
+								so.shipping_address_name,
 								so.transaction_date,
 								so.new_order_type,
 								so.budget,
@@ -28,11 +30,14 @@ def get_data(filters):
 								soi.item_code, 
 								soi.item_name, 
 								soi.item_group,
+								soi.line_item,
 								soi.base_rate,
 								((soi.qty-soi.delivered_qty) * soi.base_rate) as extended_rate,
+								((soi.qty-soi.delivered_qty) * soi.base_rate) * 1.1 as gross_amount,
 								soi.stop_status,
 								soi.stopped_status,
-								soi.date_stopped
+								soi.date_stopped,
+								so.comment
 							FROM 
 								`tabSales Order`so,
 								`tabSales Order Item`soi 
@@ -59,7 +64,9 @@ def get_columns():
 	return [
 			# _("Picked") + ":Check:100",
 			_("Customer") + ":Link/Customer:150",
+			_("PO No") + ":Data:110",
 			_("Sales Order") + ":Link/Sales Order:120",
+			_("Shipping address") + ":Link/Address:120",
 			_("Date") + ":Date:",
 			_("Order Type") + ":Data:110",
 			_("Budget") + ":Link/Budget:110",
@@ -70,9 +77,12 @@ def get_columns():
 			_("Item Code") + ":Link/Item:110",
 			_("Item Name") + ":Data:110",
 			_("Item Group") + ":Data:110",
+			_("Line Order Item") + ":Data:110",
 			_("Rate(AUD)") + ":Currency:100",
 			_("Extended Rate") + ":Currency:100",
+			_("Gross Amount (AUD)") + ":Currency:100",
 			_("Stopped") + ":Data:100",
 			_("Stopped Status") + ":Data:100",
 			_("Date Stopped") + ":Data:100",
+			_("Comments") + ":Data:100",
 	]
