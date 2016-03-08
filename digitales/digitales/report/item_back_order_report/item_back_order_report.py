@@ -33,7 +33,7 @@ def get_data(filters):
 								soi.line_item,
 								soi.base_rate,
 								((soi.qty-soi.delivered_qty) * soi.base_rate) as extended_rate,
-								soi.amount,
+								((soi.qty-soi.delivered_qty) * soi.base_rate) * 1.1 as gross_amount,
 								soi.stop_status,
 								soi.stopped_status,
 								soi.date_stopped,
