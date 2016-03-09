@@ -61,8 +61,7 @@ get_and_stop_po_items =function(){
 			"warehouse": $(item).children("td#warehouse").text()
 		}
 	})
-	console.log([items_to_stop.length, items_to_stop])
-	if(items_to_stop.length){
+	if(Object.keys(items_to_stop).length){
 		frappe.call({
 			freeze: true,
 			method:"digitales.digitales.po_stop.stop_po_items",
