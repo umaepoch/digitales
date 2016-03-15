@@ -49,5 +49,12 @@ frappe.query_reports["Item Back Order Report"] = {
 			"fieldtype": "Select",
 			"options": ["", "Yes", "No"]
 		},
+		{
+			"fieldname":"status",
+			"label": __("Status"),
+			"fieldtype": "Select",
+			"default": "Submitted",
+			"options": ["Draft", "Submitted", "Stopped", "Cancelled"]
+		},
 	]
 }
