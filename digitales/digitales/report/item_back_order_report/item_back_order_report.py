@@ -83,5 +83,6 @@ def get_columns():
 			_("Stopped") + ":Data:100",
 			_("Stopped Status") + ":Data:100",
 			_("Date Stopped") + ":Data:100",
+			_("Status") + ":Data:100",
 			_("Comments") + ":Data:100",
 	]
