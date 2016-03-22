@@ -32,6 +32,12 @@ def get_data():
 					"label": _("Shelf Ready Charge"),
 					"description": _("Shelf Ready Charge Details.")
 				},
+				{
+					"type": "doctype",
+					"name": "Sync Item",
+					"label": _("Sync Item"),
+					"description": _("Sync Item Details.")
+				},
 				
 			]
 		},

@@ -1,23 +1,34 @@
-<html>
-	<table class="table table-bordered table-hover table-condensed" style="margin-bottom: 0px !important;">
-		<tr>
-			<td align="center"><input type="checkbox" class="all"></td>
-			<td align="center"><b>Item Code</b></td>
-			<td align="center"><b>Item Name</b></td>
-			<td align="center"><b>Ordered Qty</b></td>
-		</tr>
-		{% $.each(items, function(i, item){ %}
-			<tr>
-				<td align="center"><input type="checkbox" class="select"></td>
-				<td align="center">{%= item.item_code %}</td>
-				<td align="center">{%= item.item_name %}</td>
-				<td align="center">{%= item.qty %}</td>
-			</tr>
-		{% }); %}
-		<tr>
-			<td colspan="4" align="center">
-				<button class="btn btn-primary" id="status_update">Update</button>
-			</td>
-		</tr>
-	</table>
-</html>
+<style type="text/css">
+	.stop-items {
+		overflow-y: scroll;
+		max-height: 300px 
+	}
+</style>
+
+<div class="stop-items">
+  <table class="table table-bordered table-condensed">
+	   <thead>
+	      <tr>
+	        <td align="center"><input type="checkbox" class="all"></input></td>
+	        <td align="center"><b>Item Code</b></td>
+	        <td align="center"><b>Item Name</b></td>
+	        <td align="center"><b>Ordered Qty</b></td>
+	      </tr>
+	    </thead>
+	    {% $.each(items, function(i, item){ %}
+	    	{% if(item.stop_status != "Yes" && (item.qty - item.received_qty) != 0){ %}
+			    <tbody>
+			      <tr id="demo">
+			        <td align="center" id="check_id">
+			        	<input type="checkbox" class="select" data-idx="{%= item.idx %}"></input>
+			        </td>
+			        <td align="left" id="item_code">{%= item.item_code %}</td>
+			        <td align="left" id="item_name">{%= item.item_name %}</td>
+			        <td align="left" id="warehouse" style="display:None">{%= item.warehouse %}</td>
+			        <td align="center" id="qty">{%= item.qty - item.received_qty %}</td>
+			      </tr>
+			    </tbody>
+			{% } %}
+		 {% }); %}
+  </table>
+</div>

@@ -37,13 +37,13 @@ def get_data(filters):
 								soi.stop_status,
 								soi.stopped_status,
 								soi.date_stopped,
+								so.status,
 								so.comment
 							FROM 
 								`tabSales Order`so,
 								`tabSales Order Item`soi 
 							WHERE 
 								so.name = soi.parent and 
-								so.docstatus = 1 and
 								(soi.qty-soi.delivered_qty) != 0 {0} 
 						""".format(get_conditions(filters)),as_list=1)
 	return result
@@ -55,7 +55,6 @@ def get_conditions(filters):
 			conditions.append("soi.item_name like '%%%s%%'"%filters.get(key))
 		elif filters.get(key) and key != 'qty_to_deliver':
 			conditions.append("%s.%s = '%s'"%("soi" if key in ['item_code', 'qty', 'delivered_qty', 'item_group', 'stop_status', 'stopped_status', 'date_stopped'] else "so", key, filters.get(key)))
-
 
 	return " and {}".format(" and ".join(conditions)) if conditions else ""
 
@@ -84,5 +83,6 @@ def get_columns():
 			_("Stopped") + ":Data:100",
 			_("Stopped Status") + ":Data:100",
 			_("Date Stopped") + ":Data:100",
+			_("Status") + ":Data:100",
 			_("Comments") + ":Data:100",
 	]
