@@ -372,6 +372,7 @@ def create_new_po(doc,d,supplier,qty):
 	e.base_amount=d.amount
 	e.warehouse=d.warehouse
 	e.schedule_date=nowdate()
+	e.product_release_date = d.release_date_of_item
 	po.save(ignore_permissions=True)
 	return po.name
 	#update_so_details(doc,d,d.item_code,po.name)
@@ -392,6 +393,7 @@ def update_child_entry(doc,d,purchase_order,qty):
 	poi.base_amount=d.amount
 	poi.warehouse=d.warehouse
 	poi.schedule_date=nowdate()
+	poi.product_release_date = d.release_date_of_item
 	doc1.save(ignore_permissions=True)
 	#update_so_details(doc,d,d.item_code,doc1.name)
 

@@ -1,6 +1,6 @@
 import frappe
 import json
-from frappe.utils import flt
+from frappe.utils import flt, today
 from frappe import _
 
 @frappe.whitelist()
@@ -15,12 +15,13 @@ def update_po_item_status(items, po_name):
 	query = """ update 
 					`tabPurchase Order Item` 
 				set 
-					stop_status = "Yes" 
+					stop_status = "Yes",
+					stop_date = '{}'
 				where 
 					item_code in ({}) 
 				and 
 					parent = "{}" 
-			""".format(",".join(["'%s'"%item_code for item_code in items.keys()]), po_name)
+			""".format(today(), ",".join(["'%s'"%item_code for item_code in items.keys()]), po_name)
 	frappe.db.sql(query)
 
 def update_bin_qty(items):
