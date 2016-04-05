@@ -31,6 +31,7 @@ def get_data(filters):
 								soi.item_name, 
 								soi.item_group,
 								soi.line_item,
+								soi.price_list_rate as rrp_aud,
 								soi.base_rate,
 								((soi.qty-soi.delivered_qty) * soi.base_rate) as extended_rate,
 								((soi.qty-soi.delivered_qty) * soi.base_rate) * 1.1 as gross_amount,
@@ -69,7 +70,7 @@ def get_conditions(filters):
 				if key == "status" and filters.get(key) == "Not Cancelled":
 					cond = "so.%s <> '%s'"%(key, "Cancelled")
 				else:
-					cond = "so.%s = '%s'"%(key, filters.get(key))
+					cond = "so.%s =	'%s'"%(key, filters.get(key))
 
 			conditions.append(cond)
 
@@ -94,6 +95,7 @@ def get_columns():
 			_("Item Name") + ":Data:110",
 			_("Item Group") + ":Data:110",
 			_("Line Order Item") + ":Data:110",
+			_("RRP(AUD)") + ":Currency:100",
 			_("Rate(AUD)") + ":Currency:100",
 			_("Extended Rate") + ":Currency:100",
 			_("Gross Amount (AUD)") + ":Currency:100",
