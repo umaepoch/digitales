@@ -54,7 +54,24 @@ def get_conditions(filters):
 		if filters.get(key) and key == 'item_name':
 			conditions.append("soi.item_name like '%%%s%%'"%filters.get(key))
 		elif filters.get(key) and key != 'qty_to_deliver':
-			conditions.append("%s.%s = '%s'"%("soi" if key in ['item_code', 'qty', 'delivered_qty', 'item_group', 'stop_status', 'stopped_status', 'date_stopped'] else "so", key, filters.get(key)))
+			soi_keys = [
+					'item_code',
+					'qty',
+					'delivered_qty',
+					'item_group',
+					'stop_status',
+					'stopped_status',
+					'date_stopped'
+				]
+			if key in soi_keys:
+				cond = "soi.%s = '%s'"%(key, filters.get(key))
+			else:
+				if key == "status" and filters.get(key) == "Not Cancelled":
+					cond = "so.%s <> '%s'"%(key, "Cancelled")
+				else:
+					cond = "so.%s = '%s'"%(key, filters.get(key))
+
+			conditions.append(cond)
 
 	return " and {}".format(" and ".join(conditions)) if conditions else ""
 
