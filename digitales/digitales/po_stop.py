@@ -44,7 +44,7 @@ def update_bin_qty(items):
 			group by item_code, warehouse
 		""".format(
 				",".join(["'%s'"%item_code for item_code in items.keys()])
-			), as_dict=True)
+			), as_dict=True,debug=1)
 	
 	for item_code, item in items.iteritems():
 		filters = {
@@ -60,24 +60,24 @@ def update_bin_qty(items):
 								item_qty_po_draft
 							)
 		
-		
 		query = """ update 
 						`tabBin` 
 					set 
-						projected_qty = ((actual_qty - %s) - reserved_qty),  
+						projected_qty = (projected_qty - %s),
 						ordered_qty = (ordered_qty - %s)
+						
 					where 
 						item_code = "%s" 
 					and 
 						warehouse = "%s"
 
 				"""%(
-						flt(po_draft_dict[0]["qty"] if po_draft_dict else 0), 
 						flt(item.get('qty')), 
+						flt(item.get('qty')),  
 						item_code, 
 						item.get('warehouse')
 					)
-		frappe.db.sql(query)
+		frappe.db.sql(query,debug=1)
 
 def check_available_pr(items, po_name):
 	query = """
@@ -145,12 +145,11 @@ def create_po_negative_qty(items,po_name):
 							and
 								po.supplier = "%s"
 						"""%(bin_item['item_code'], bin_item['warehouse'], supplier)	
-				draft_po = frappe.db.sql(query,as_dict=1)
+				draft_po = frappe.db.sql(query,as_dict=1,debug=1)
 
 				if draft_po:
 					increase_po_qty(draft_po[0]['name'], bin_item['item_code'], bin_item['projected_qty'])
 				else:
-					# create_new_po(bin_item['item_code'], bin_item['projected_qty'], bin_item['warehouse'], supplier)
 					new_po_items.append({
 						"item_code": bin_item['item_code'],
 						"qty": bin_item['projected_qty'],
@@ -160,27 +159,9 @@ def create_po_negative_qty(items,po_name):
 
 
 def increase_po_qty(draft_po, item_code, pro_qty):
-	frappe.db.sql(""" 
-					update 
-						`tabPurchase Order Item`
-					set 
-						qty = '%s' 
-					where 
-						parent = '%s'
-				"""%((pro_qty * -1), draft_po))
 	item_qty = frappe.db.get_value("Purchase Order Item", {"parent":draft_po, "item_code": item_code}, ["name","qty"])
 	frappe.db.set_value("Purchase Order Item", item_qty[0], "qty", item_qty[1] + (pro_qty*-1))
 
-# def create_new_po(item_code, pro_qty, warehouse, supplier):
-# 	po = frappe.new_doc('Purchase Order')
-# 	po.supplier= supplier
-# 	poi = po.append('po_details', {})
-# 	poi.item_code = item_code
-# 	poi.qty = (pro_qty * -1)
-# 	poi.warehouse = warehouse
-# 	po.save(ignore_permissions=True)
-# 	return po.name
-		
 def create_purchase_order(items, warehouse, supplier):
 	""" create new purchase order for cancelled po """
 	doc = frappe.new_doc("Purchase Order")
@@ -188,7 +169,6 @@ def create_purchase_order(items, warehouse, supplier):
 	
 	doc.set("po_details", [])
 	for item in items:
-		frappe.errprint(item)
 		po_item = doc.append("po_details", {})
 		po_item.item_code = item.get("item_code")
 		po_item.qty = item.get("qty") * -1
