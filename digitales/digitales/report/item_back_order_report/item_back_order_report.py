@@ -39,7 +39,8 @@ def get_data(filters):
 								soi.stopped_status,
 								soi.date_stopped,
 								so.status,
-								so.comment
+								so.comment,
+								soi.release_date_of_item
 							FROM 
 								`tabSales Order`so,
 								`tabSales Order Item`soi 
@@ -104,4 +105,5 @@ def get_columns():
 			_("Date Stopped") + ":Data:100",
 			_("Status") + ":Data:100",
 			_("Comments") + ":Data:100",
+			_("Product Release Date") + ":Date:200",
 	]

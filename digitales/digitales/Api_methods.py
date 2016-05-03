@@ -88,7 +88,7 @@ def assign_extra_qty_to_other(data):
 def get_po_qty(item_code, warehouse=None):
 	cond = 'poi.warehouse ="%s"'%(warehouse) if warehouse else '1=1'
 	qty = frappe.db.sql(''' select sum(ifnull(poi.qty,0)-ifnull(poi.received_qty,0)) from `tabPurchase Order Item` poi, `tabPurchase Order` po
-		where poi.parent = po.name and po.status <> 'Stopped' and poi.docstatus <> 2 and poi.item_code = "%s" and %s'''%(item_code, cond), as_list=1)
+		where poi.parent = po.name and po.status <> 'Stopped' and ifnull(poi.stop_status, 'No') <> 'Yes' and poi.docstatus <> 2 and poi.item_code = "%s" and %s'''%(item_code, cond), as_list=1)
 	qty = flt(qty[0][0]) if qty else 0.0
 	return qty
 
@@ -125,7 +125,7 @@ def create_purchase_order_record(doc,d,qty):
 
 		if purchase_order:
 			qty = qty if flt(qty) < flt(d.qty) else flt(d.qty)
-			frappe.db.sql(''' update `tabSales Order Item` set po_data = "%s", po_qty="%s" where name = "%s"	'''%(purchase_order, qty, d.name))
+			frappe.db.sql(''' update `tabSales Order Item` set po_data = "%s", po_qty="%s" where name = "%s"'''%(purchase_order, qty, d.name))
 	else:
 		frappe.throw("Supplier must be specify for items in Item Master Form.")
 
@@ -198,18 +198,35 @@ def update_stock_assigned_qty_to_zero(doc):
 
 def reduce_po(doc):
 	for data in doc.get('sales_order_details'):
-		if data.po_data:
-			po_details = frappe.db.get_value('Purchase Order Item', {'parent': data.po_data, 'item_code': data.item_code, 'docstatus': 0}, '*', as_dict=1)
+		# get draft order(s)
+		po_qty = data.qty - data.delivered_qty or 0
+		query = '''
+					select distinct poi.parent, poi.qty from `tabPurchase Order Item` poi, `tabPurchase Order` po
+					where poi.parent=po.name and po.docstatus=0 and po.status="Draft" and poi.item_code='%s'
+					and poi.warehouse='%s'
+				'''%(data.item_code, data.warehouse)
+		results = frappe.db.sql(query)
+		order = [result[0] for result in results] if results else None
+		if order and len(order)==1:
+			po_details = frappe.db.get_value('Purchase Order Item', {
+				'parent': order[0],
+				'item_code': data.item_code,
+				'docstatus': 0
+				}, '*', as_dict=1)
+
 			update_child_table(po_details, data)
 			update_parent_table(po_details)
+		elif order and len(order) > 1:
+			frappe.throw("Multiple Draft PO (%s) present for Item %s"%(",".join(order), data.item_code))
 
 def update_child_table(po_details, data):
 	if po_details:
-		po_qty = flt(data.po_qty) or flt(data.qty)
+		# po_qty = flt(data.po_qty) or flt(data.qty)
+		po_qty = data.qty - data.delivered_qty or 0
 		qty = flt(po_details.qty) - po_qty
 		if flt(qty) >= 1.0:
 			frappe.db.sql(""" update `tabPurchase Order Item` set qty = '%s' where name ='%s'"""%(qty, po_details.name))
-		elif flt(qty)==0.0:
+		elif flt(qty) <= 0.0:
 			delete_document('Purchase Order Item', po_details.name)
 
 def update_parent_table(po_details):
@@ -1231,10 +1248,8 @@ def check_item_presence(i,content):
 			item.sync_count = 1
 			item.sync_doctype = "Item"
 			item.sync_docname = i.get('sku')
-			# item.error=e
 			item.obj_traceback=cstr(i)
 			item.save(ignore_permissions=True)
-			# frappe.throw(_('Item {0} not present').format(i.get('sku')))
 			status = False
 	return status
 
@@ -1314,10 +1329,23 @@ def assign_stopQty_toOther(doc,item_list):
 	stopping_items=item_list
 	self = frappe.get_doc('Sales Order', doc)
 	for data in self.get('sales_order_details'):
-		if data.item_code in(stopping_items) and data.stop_status!="Yes":			# check item code in selected stopping item
-			if cint(frappe.db.get_value('Purchase Order', data.po_data, 'docstatus')) == 0 and data.po_data:
-				po_qty = data.po_qty if data.po_qty else 0.0
-				reduce_po_item(data.po_data, data.item_code, po_qty)
+		if data.item_code in (stopping_items) and data.stop_status!="Yes":			# check item code in selected stopping item
+			# get the draft po
+			po_qty = data.qty - data.delivered_qty or 0
+			query = '''
+						select distinct poi.parent, poi.qty from `tabPurchase Order Item` poi, `tabPurchase Order` po
+						where poi.parent=po.name and po.docstatus=0 and po.status="Draft" and poi.item_code='%s'
+						and poi.warehouse='%s'
+					'''%(data.item_code, data.warehouse)
+			results = frappe.db.sql(query)
+			order = [result[0] for result in results] if results else None
+			frappe.errprint(order)
+			if order and len(order)==1:
+				reduce_po_item(order[0], data.item_code, po_qty)
+			elif order and len(order) > 1:
+				frappe.throw("Multiple Draft PO (%s) present for Item %s"%(",".join(order), data.item_code))
+				# what if multiple PO are in draft
+
 			update_so_item_status(data.item_code,data.parent)
 			if flt(data.qty) > flt(data.delivered_qty):
 				update_bin_qty(data.item_code,data.qty,data.delivered_qty,data.warehouse)
@@ -1368,7 +1396,7 @@ def update_child_table_item(po_details, po_qty):
 	qty = flt(po_details.qty) - po_qty
 	if flt(qty) >= 1.0:
 		frappe.db.sql(""" update `tabPurchase Order Item` set qty = '%s' where name ='%s'"""%(qty, po_details.name))
-	elif flt(qty)==0.0:
+	elif flt(qty) <= 0.0:
 		delete_document('Purchase Order Item', po_details.name)
 
 def update_parent_table_item(po_details):

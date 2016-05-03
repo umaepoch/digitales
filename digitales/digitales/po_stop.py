@@ -44,7 +44,7 @@ def update_bin_qty(items):
 			group by item_code, warehouse
 		""".format(
 				",".join(["'%s'"%item_code for item_code in items.keys()])
-			), as_dict=True,debug=1)
+			), as_dict=True)
 	
 	for item_code, item in items.iteritems():
 		filters = {
@@ -65,19 +65,17 @@ def update_bin_qty(items):
 					set 
 						projected_qty = (projected_qty - %s),
 						ordered_qty = (ordered_qty - %s)
-						
 					where 
 						item_code = "%s" 
 					and 
 						warehouse = "%s"
-
 				"""%(
 						flt(item.get('qty')), 
 						flt(item.get('qty')),  
 						item_code, 
 						item.get('warehouse')
 					)
-		frappe.db.sql(query,debug=1)
+		frappe.db.sql(query)
 
 def check_available_pr(items, po_name):
 	query = """
@@ -103,12 +101,11 @@ def check_available_pr(items, po_name):
 	pr_available = frappe.db.sql(query, as_dict=True)
 	
 	if pr_available:
-			pr_data = ["Items: " + item['items'] + " linked with: " + item['pr_name'] for item in pr_available ]
-			frappe.throw(_(pr_data[0]))
+		pr_data = ["Items: " + item['items'] + " linked with: " + item['pr_name'] for item in pr_available ]
+		frappe.throw(_(pr_data[0]))
 
 def create_po_negative_qty(items,po_name):
 	new_po_items = []
-
 	for item_code, item in items.iteritems():
 		query = """
 					select 
@@ -123,46 +120,73 @@ def create_po_negative_qty(items,po_name):
 						warehouse = "%s"
 				"""%(item_code, 
 						item.get('warehouse'))
-		bin_qty = frappe.db.sql(query,as_dict=1)
-
-		for bin_item in bin_qty:
-			if bin_item['projected_qty']<0:
+		bin_details = frappe.db.sql(query)
+		for item_code, warehouse, projected_qty in bin_details:
+			if projected_qty<0:
 				supplier = frappe.db.get_value("Purchase Order", po_name, "supplier")
-				query = """ 
-							select
-								po.name
-							from 
-								`tabPurchase Order Item`poi, 
-								`tabPurchase Order`po 
-							where 
-								poi.parent = po.name 
-							and 
-								poi.item_code = "%s"
-							and 
-								poi.warehouse = "%s"
-							and 
-								po.status = "Draft"
-							and
-								po.supplier = "%s"
-						"""%(bin_item['item_code'], bin_item['warehouse'], supplier)	
-				draft_po = frappe.db.sql(query,as_dict=1,debug=1)
+
+				# get draft po name
+				draft_po = frappe.db.get_value(
+					"Purchase Order", 
+					{ 
+						"supplier": supplier,
+						"docstatus": 0,
+						"status": "Draft"
+					},
+					"name"
+				)
 
 				if draft_po:
-					increase_po_qty(draft_po[0]['name'], bin_item['item_code'], bin_item['projected_qty'])
+					append_or_increase_po_item_qty(draft_po, item_code, projected_qty, warehouse)
 				else:
 					new_po_items.append({
-						"item_code": bin_item['item_code'],
-						"qty": bin_item['projected_qty'],
+						"item_code": item_code,
+						"qty": projected_qty,
+						"warehouse": warehouse
 					})
-		if new_po_items:
-			create_purchase_order(new_po_items, bin_item['warehouse'], supplier)
 
+	if new_po_items:
+		create_purchase_order(new_po_items, supplier)
 
-def increase_po_qty(draft_po, item_code, pro_qty):
-	item_qty = frappe.db.get_value("Purchase Order Item", {"parent":draft_po, "item_code": item_code}, ["name","qty"])
-	frappe.db.set_value("Purchase Order Item", item_qty[0], "qty", item_qty[1] + (pro_qty*-1))
+def append_or_increase_po_item_qty(draft_po, item_code, projected_qty, warehouse):
+	def append_item(draft_po, item_code, qty, warehouse):
+		"""append new item to PO"""
+		po = frappe.get_doc("Purchase Order", draft_po)
+		po_item = po.append("po_details", {})
+		po_item.item_code = item_code
+		po_item.qty = qty
+		po_item.warehouse = warehouse
+		po.save(ignore_permissions=True)
 
-def create_purchase_order(items, warehouse, supplier):
+	def increase_item_qty(draft_po, poi_name, item_code, warehouse):
+		""" increase PO item qty """
+		query = """ select ifnull(sum(qty), 0) as qty from `tabPurchase Order Item` poi, `tabPurchase Order` po
+				where po.name=poi.parent and poi.item_code='{}' and po.name<>'{}' and po.docstatus=0""".format(item_code,draft_po)
+		aready_in_draft = frappe.db.sql(query, as_dict=True)
+
+		if aready_in_draft: aready_in_draft = aready_in_draft[0].get('qty') or 0
+		draft_qty = (projected_qty * -1) - aready_in_draft
+
+		if draft_qty > 0:
+			frappe.db.set_value("Purchase Order Item", poi_name, "qty", draft_qty)
+		else:
+			frappe.throw("You have extra copies of Item : {} in draft".format(item_code))
+
+	poi_name = frappe.db.get_value(
+			"Purchase Order Item",
+			{
+				"parent":draft_po,
+				"item_code": item_code,
+				"warehouse": warehouse
+			},
+			"name")
+
+	if poi_name:
+		increase_item_qty(draft_po, poi_name, item_code, warehouse)
+	else:
+		append_item(draft_po, item_code, projected_qty*-1, warehouse)
+
+def create_purchase_order(items, supplier):
 	""" create new purchase order for cancelled po """
 	doc = frappe.new_doc("Purchase Order")
 	doc.supplier = supplier
@@ -172,6 +196,30 @@ def create_purchase_order(items, warehouse, supplier):
 		po_item = doc.append("po_details", {})
 		po_item.item_code = item.get("item_code")
 		po_item.qty = item.get("qty") * -1
-		po_item.warehouse = warehouse
+		po_item.warehouse = item.get("warehouse")
 	
 	doc.save(ignore_permissions=True)
+
+# def check_po_draft(doc, method):
+# 	item_in_draft = []
+# 	for item in doc.po_details:
+# 		query = """
+# 					select 
+# 						item_code,
+# 						po.name
+# 					from 
+# 						`tabPurchase Order Item`poi,
+# 						`tabPurchase Order`po 
+# 					where 
+# 						poi.parent = po.name
+# 					and
+# 						poi.item_code = "%s"
+# 					and
+# 						po.docstatus = 0
+# 				"""
+# 		item = frappe.db.sql(query%(item.item_code),as_list=True)
+# 		if item:
+# 			item_in_draft.append(item[0][0])
+# 		if item_in_draft:
+# 			frappe.msgprint("Items are Already In PO Draft : " + ",".join(item_in_draft))
+# 	return item_in_draft
