@@ -38,7 +38,12 @@ def get_data():
 					"label": _("Sync Item"),
 					"description": _("Sync Item Details.")
 				},
-				
+				{
+					"type": "doctype",
+					"name": "Sync Error Log",
+					"label": _("Sync Error Log"),
+					"description": _("Magento > ERPNext Synchronization Error Logs")
+				},
 			]
 		},
 		{

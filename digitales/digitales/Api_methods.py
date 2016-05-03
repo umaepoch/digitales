@@ -140,30 +140,8 @@ def create_stock_assignment_document(args, sales_order, assigned_qty):
 	sa.media  = frappe.db.get_value("Item",args.item_code,'item_group')
 	sa.customer_name = frappe.db.get_value('Sales Order',sa.sales_order,'customer_name')
 
-	# # creating Document Stock Assignment entry
-	# bin_details = frappe.db.get_value('Bin', {'item_code': child_args.item_code, 'warehouse': child_args.warehouse}, '*', as_dict=1)
-	# if bin_details:
-	# 	bin_qty = flt(bin_details.actual_qty) - flt(bin_details.reserved_qty)
-	# 	if flt(bin_qty) > 0.0 and flt(bin_details.actual_qty) >= flt(child_args.qty):
-	# 		# make_history_of_assignment
-	# 		sal_child = sa.append('document_stock_assignment', {})
-	# 		sal_child.created_date = frappe.get_value("Sales Order",sales_order,"transcation_date")
-	# 		sal_child.document_type = "Stock In Hand"
-	# 		sal_child.document_no = ""
-	# 		sal_child.qty = assigned_qty
-
 	sa.save(ignore_permissions=True)
 	return sa.name
-
-# def delete_stock_assignment(doc, method):
-# 	stl = frappe.db.sql(""" select name from `tabStock Assignment Log` where sales_order = '%s'"""%(doc.name), as_dict=1)
-# 	if stl:
-# 		for data in stl:
-# 			delete_stl(data.name)
-# 	# reduce_po(doc)
-# 	reduce_po(doc)
-# 	update_stock_assigned_qty_to_zero(doc)
-
 
 def delete_stock_assignment(doc, method):
 	st_error=stop_error(doc)
@@ -297,13 +275,6 @@ def get_document_STOCK_qty(name):
 		sum_qty = qty[0][0]
 	return sum_qty
 
-# def make_history_of_assignment(sal, pr_name, qty):
-# 	sal= frappe.get_doc('Stock Assignment Log', sal)
-# 	sal_child = sal.append('document_stock_assignment', {})
-# 	sal_child.document_no = pr_name
-# 	sal_child.qty = qty
-# 	sal.save(ignore_permissions=True)
-
 def make_history_of_assignment(sal, date, doc_type, pr_name, qty):
 	sal= frappe.get_doc('Stock Assignment Log', sal)
 	sal_child = sal.append('document_stock_assignment', {})
@@ -317,7 +288,6 @@ def stock_cancellation(doc,method):
 	cancel_all_child_table(doc)
 	cancel_parent_table(doc)
 	# check_assigned_qty(doc)
-
 
 def check_assigned_qty(doc):
 	for data in doc.get('purchase_receipt_details'):
@@ -348,20 +318,6 @@ def cancel_parent_table(doc):
 		for data in sal_data:
 			obj = frappe.get_doc('Stock Assignment Log', data.name)
 			obj.delete()
-
-# def stock_cancellation(doc,method):
-# 	sal_details = frappe.db.sql(''' select * from `tabDocument Stock Assignment`
-# 		where document_no = "%s"'''%(doc.name), as_dict=1)
-# 	if sal_details:
-# 		for sal in sal_details:
-# 			obj = frappe.get_doc('Stock Assignment Log', sal.parent)
-
-# 			obj.assign_qty = flt(obj.assign_qty) - flt(sal.qty)
-# 			for d in obj.get('document_stock_assignment'):
-# 				if d.name == sal.name:
-# 					obj.remove(d)
-
-# 			obj.save(ignore_permissions=True)
 
 def delete_document(table, name):
 	frappe.db.sql(''' delete from `tab%s` where name = "%s" '''%(table, name))
@@ -625,16 +581,9 @@ def create_item(i,content):
 		item.save(ignore_permissions=True)
 		check_item_price(item.name,i,content)
 	except Exception, e:
-		item = frappe.new_doc("Sync Item")
-		item.method="create_item"
-		item.sync_status = "Not Sync"
-		item.sync_count = 1
-		item.sync_doctype = "Item"
-		item.sync_docname = content[i].get('sku')
-		item.error=e
-		item.obj_traceback=cstr(content[i])
-		item.save(ignore_permissions=True)
-		create_scheduler_exception(e , 'create_item ', content[i])
+		docname = content[i].get('sku')
+		response = content
+		log_sync_error("Item", docname, response, e, "create_item")
 
 def update_item(name,i,content):
 	try:
@@ -642,7 +591,9 @@ def update_item(name,i,content):
 		create_new_product(item,i,content)
 		item.save(ignore_permissions=True)
 	except Exception, e:
-		create_scheduler_exception(e , 'method name update_item: ' ,content[i])
+		docname = content[i].get('sku')
+		response = content
+		log_sync_error("Item", docname, response, e, "update_item")
 
 def check_item_price(name,i,content):
 	if content[i].get('price'):
@@ -668,7 +619,9 @@ def update_price_list(price_list_name,i,content,price_list):
 		create_new_item_price(item_price,i,content,price_list)
 		item_price.save(ignore_permissions=True)
 	except Exception, e:
-		create_scheduler_exception(e , 'method name update_price_list: ' , content[i])
+		docname = content[i].get('sku')
+		response = content
+		log_sync_error("Item", docname, response, e, "update_price_list")
 
 def create_price_list(item,i,content,price_list):
 	try:
@@ -676,7 +629,9 @@ def create_price_list(item,i,content,price_list):
 		create_new_item_price(item_price,i,content,price_list)
 		item_price.save(ignore_permissions=True)
 	except Exception, e:
-		create_scheduler_exception(e , 'method name create_price_list: ' ,content[i])
+		docname = content[i].get('sku')
+		response = content
+		log_sync_error("Item", docname, response, e, "update_price_list")
 
 def create_new_item_price(item_price,i,content,price_list):
 	item_price.price_list=price_list
@@ -775,17 +730,6 @@ def check_uom_conversion(item):
 				return True
 	else:
 		return False
-
-# def create_new_itemgroup(i,content):
-# 	try:
-# 		itemgroup=frappe.new_doc('Item Group')
-# 		itemgroup.parent_item_group='All Item Groups'
-# 		itemgroup.item_group_name=content[i].get('media')
-# 		itemgroup.is_group='No'
-# 		itemgroup.save()
-# 	except Exception, e:
-# 		create_scheduler_exception(e , 'method name create_new_itemgroup: ' , content[i])
-# 	return itemgroup.name or 'Products'
 
 def create_new_itemgroup(item_group):
 	try:
@@ -915,16 +859,9 @@ def create_new_customer(customer,i,content):
 		customer.modified_date=content[i].get('updated_at')
 		customer.save(ignore_permissions=True)
 	except Exception, e:
-		item = frappe.new_doc("Sync Item")
-		item.method="create_new_customer"
-		item.sync_status = "Not Sync"
-		item.sync_count = 1
-		item.sync_doctype = "Customer"
-		item.sync_docname = content[i].get('entity_id')
-		item.error=e
-		item.obj_traceback=cstr(content[i])
-		item.save(ignore_permissions=True)
-		create_scheduler_exception(e , 'Method name create_new_customer: ', content[i])
+		docname = content[i].get('entity_id')
+		response = content
+		log_sync_error("Customer", docname, response, e, "create_new_customer")
 
 def create_customer_contact(customer,i,content,contact):
 	try:
@@ -937,7 +874,9 @@ def create_customer_contact(customer,i,content,contact):
 			contact.email_id=content[i].get('email')
 			contact.save(ignore_permissions=True)
 	except Exception, e:
-		create_scheduler_exception(e , 'Method name create_customer_contact: ', content[i])
+		docname = content[i].get('entity_id')
+		response = content
+		log_sync_error("Customer", docname, response, e, "create_customer_contact")
 
 def create_new_contact(customer,i,content):
 	try:
@@ -1062,7 +1001,6 @@ def get_SyncOrdersCount(max_date, header, oauth_data):
 		for index in range(1, count+1):
 			get_orders_from_magento(index, max_date,header, oauth_data, 'missed')
 
-
 addr_details = {}
 
 def get_orders_from_magento(page, max_date, header, oauth_data,type_of_data=None):
@@ -1154,7 +1092,9 @@ def update_order(order,i,content,customer):
 		create_new_order(order,i,content,customer)
 		order.save(ignore_permissions=True)
 	except Exception, e:
-		create_scheduler_exception(e , 'Method name update_order: ', content[i])
+		docname = content[i].get('increment_id')
+		response = content
+		log_sync_error("Sales Order", docname, response, e, "update_order")
 
 def create_order(i,content,customer):
 	try:
@@ -1167,37 +1107,11 @@ def create_order(i,content,customer):
 			if child_status==False:
 				frappe.throw(_("Some Item not present"))
 	except Exception, e:
-		item = frappe.new_doc("Sync Item")
-		item.method="create_order"
-		item.sync_status = "Not Sync"
-		item.sync_count = 1
-		item.sync_doctype = "Sales Order"
-		item.sync_docname = content[i].get('entity_id')
-		item.error=e
-		item.obj_traceback=cstr(content[i])
-		item.save(ignore_permissions=True)
-		create_scheduler_exception(e ,'Method name create_order: ', content[i])
+		docname = content[i].get('increment_id')
+		print "docname", docname, i
+		response = content
+		log_sync_error("Sales Order", docname, response, e, "create_order")
 
-# def create_new_order(order,i,content,customer):
-# 	from datetime import date
-# 	from dateutil.relativedelta import relativedelta
-# 	delivery_date = date.today() + relativedelta(days=+6)
-# 	order.customer=customer
-# 	order.entity_id=content[i].get('entity_id')
-# 	order.modified_date=content[i].get('updated_at')
-# 	order.delivery_date=delivery_date
-# 	order.grand_total_export=content[i].get('grand_total')
-# 	#order.discount_amount=content[i].get('discount_amount')
-# 	if content[i].get('po_number'):
-# 		order.po_no=content[i].get('po_number')
-# 	order.order_type=content[i].get('order_type')
-# 	for i in content[i].get('order_items'):
-#  		create_child_item(i,order)
-
-#  	# # set shipping and billing address
-#  	# set_sales_order_address(content[i].get('addresses'))
-
-# Makarand
 def create_new_order(order,index,content,customer):
 	from datetime import date
 	from dateutil.relativedelta import relativedelta
@@ -1242,14 +1156,9 @@ def check_item_presence(i,content):
 		item_list.append(i)
 		# print item_list
 		if not frappe.db.get_value('Item',i.get('sku'),'name'):
-			item = frappe.new_doc("Sync Item")
-			item.method="check_item_presence"
-			item.sync_status = "Not Sync"
-			item.sync_count = 1
-			item.sync_doctype = "Item"
-			item.sync_docname = i.get('sku')
-			item.obj_traceback=cstr(i)
-			item.save(ignore_permissions=True)
+			docname = i.get('sku')
+			response = content
+			log_sync_error("Item", docname, response, "Few Of the Order Items are missing", "check_item_presence")
 			status = False
 	return status
 
@@ -1307,20 +1216,6 @@ def upload():
 	if error:
 		frappe.db.rollback()
 	return {"messages": ret, "error": error}
-
-# @frappe.whitelist()
-# def assign_stopQty_toOther(doc):
-# 	import json
-# 	self = frappe.get_doc('Sales Order', doc)
-# 	for data in self.get('sales_order_details'):
-# 		qty = flt(data.assigned_qty) - flt(data.delivered_qty)
-# 		if flt(data.assigned_qty) > 0.0:
-# 			update_sal(data.item_code, data.parent, flt(data.delivered_qty), qty)
-# 			sales_order = get_SODetails(data.item_code)
-# 			if sales_order:
-# 				create_StockAssignment_AgainstSTopSO(data, sales_order, qty)
-# 	return "Done"
-
 
 # added by pitambar
 @frappe.whitelist()
@@ -1425,17 +1320,6 @@ def make_history_of_assignment_item(sal, date, doc_type, pr_name, qty):
 	sal_child.document_no = pr_name
 	sal_child.qty = qty
 
-# def create_stock_assignment_document_item(item_name,item_code, sales_order, assigned_qty):
-# 	sa = frappe.new_doc('Stock Assignment Log')
-# 	sa.item_name = item_name
-# 	sa.sales_order = sales_order
-# 	sa.ordered_qty = frappe.db.get_value('Sales Order Item', {'item_code':item_code, 'parent': sales_order}, 'qty') if args.doctype == 'Purchase Receipt Item' else args.qty
-# 	sa.assign_qty = assigned_qty
-# 	sa.purchase_receipt_no = args.parent if args.doctype == 'Purchase Receipt Item' else ''
-# 	sa.item_code = args.item_code
-# 	sa.customer_name = frappe.db.get_value('Sales Order',sa.sales_order,'customer_name')
-
-
 def get_item_SODetails(item_c):
 	return frappe.db.sql('''select s.parent as parent,ifnull(s.qty,0)-ifnull(s.assigned_qty,0) AS qty,
 				s.assigned_qty as assigned_qty from `tabSales Order Item` s inner join `tabSales Order` so
@@ -1527,5 +1411,28 @@ def get_artist(item_code):
 
 def set_artist(doc, method):
 	for i in doc.item_details:
-		art = frappe.db.get_value('Item', {'name':i.item_code}, 'artist') or ''
-		i.artist=art		
+		art = frappe.db.get_value('Item', {'name':i.item_code }, 'artist') or ''
+		i.artist=art
+
+def log_sync_error(doctype, docname, response, error, method):
+	import traceback
+	name = frappe.db.get_value("Sync Error Log", { "sync_doctype": doctype, "sync_docname":docname }, "name")
+
+	if name:
+		log = frappe.get_doc("Sync Error Log", name)
+	else:
+		log = frappe.new_doc("Sync Error Log")
+		log.sync_doctype = doctype
+		log.sync_docname = "{}".format(docname)
+
+	log.is_synced = "No"
+	log.sync_attempts += 1
+
+	err = log.append("errors", {})
+	err.method = method
+	err.error = str(error)
+	err.obj_traceback = frappe.get_traceback()
+	err.response = json.dumps(response)
+	
+	log.magento_response = "<pre><code>%s</code></pre>"%(json.dumps(response, indent=2))
+	log.save(ignore_permissions=True)

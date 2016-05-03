@@ -66,13 +66,7 @@ fixtures = ['Custom Field', 'Property Setter']
 # Hook on document methods and events
 
 doc_events = {
-	# "*": {
-	# 	"on_update": "method",
-	# 	"on_cancel": "method",
-	# 	"on_trash": "method"
-	# }
 	"Sales Order": {
-		# "on_update": "digitales.digitales.Api_methods.create_purchase_order",
 		"on_submit": "digitales.digitales.Api_methods.create_purchase_order",
 		"on_cancel": "digitales.digitales.Api_methods.delete_stock_assignment"
 	},
@@ -100,8 +94,7 @@ doc_events = {
 
 	"Scheduler Log":{
 		"validate" : "digitales.digitales.custom_methods.send_mail_SchedulerLog" 
-	}
-	
+	}	
 }
 
 # Scheduled Tasks
@@ -109,30 +102,20 @@ doc_events = {
 
 scheduler_events = {
 	"all": [
-		#"digitales.digitales.custom_methods.GetItem"
-		#"digitales.digitales.custom_methods.GetCustomer"
-		#"digitales.digitales.custom_methods.GetOrders"
 		"digitales.digitales.Api_methods.check_APItime"
-		# "digitales.sync_csv.write_csv"
 	],
 	"hourly": [
-	# 	"digitales.digitales.Api_methods.make_csv"
-		# "digitales.tasks.daily"
 		"digitales.sync_csv.check_lastdate_api"
-		# "digitales.sync_csv.write_csv",
 	],
 	# "hourly": [
-		#"digitales.tasks.hourly"
-		#"digitales.digitales.custom_methods.GetItem"
-		#"digitales.digitales.custom_methods.GetCustomer"
-		# "digitales.digitales.custom_methods.GetOrders"
-	#]
-# 	"weekly": [
-# 		"digitales.digitales.Api_methods.make_csv"
-# 	]
-# 	"monthly": [
-# 		"digitales.tasks.monthly"
-# 	]
+	# 	"digitales.tasks.hourly"
+	# ]
+	# "weekly": [
+	# 	"digitales.tasks.weekly"
+	# ]
+	# "monthly": [
+	# 	"digitales.tasks.monthly"
+	# ]
  }
 
 # Testing
@@ -146,4 +129,3 @@ scheduler_events = {
 # override_whitelisted_methods = {
 # 	"frappe.core.doctype.event.event.get_events": "digitales.event.get_events"
 # }
-
