@@ -54,9 +54,7 @@ function create_dialog(doc){
 
 	checkall();
 	var outer_this=this;
-	console.log("out")
 	$(this.fd.status_update.input).click(function() {
-		console.log("in")
 		this.item_dict={};
 		var inner_me=this;
 		inner_me.check = false;
