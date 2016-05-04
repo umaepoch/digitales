@@ -3,7 +3,6 @@ import frappe
 from frappe.widgets.reportview import get_match_cond
 from frappe.utils import add_days, cint, cstr, date_diff, rounded, flt, getdate, nowdate, \
 	get_first_day, get_last_day,money_in_words, now, nowtime
-#from frappe.utils import add_days, cint, cstr, flt, getdate, nowdate, rounded
 from frappe import _
 from frappe.model.db_query import DatabaseQuery
 from requests_oauthlib import OAuth1 as OAuth
@@ -15,8 +14,6 @@ import datetime
 import time
 import itertools
 
-
-# On submission of sales order---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def create_purchase_order(doc,method):
 	check_duplicate_item_code(doc)
 	check_ispurchase_item(doc,method)
@@ -215,7 +212,6 @@ def update_parent_table(po_details):
 				obj = frappe.get_doc('Purchase Order', po_details.parent)
 				obj.delete()
 
-# On submission of Purchase Receipt--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def stock_assignment(doc,method):
 	for pr_details in doc.get('purchase_receipt_details'):
 		if frappe.db.get_value("Item",{'is_stock_item':'Yes','name':pr_details.item_code},'name'):
@@ -348,8 +344,6 @@ def create_new_po(doc,d,supplier,qty):
 	e.product_release_date = d.release_date_of_item
 	po.save(ignore_permissions=True)
 	return po.name
-	#update_so_details(doc,d,d.item_code,po.name)
-	#update_sales_order(doc,d.item_code,po.name,e.name)
 
 def update_child_entry(doc,d,purchase_order,qty):
 	doc1 = frappe.get_doc("Purchase Order", purchase_order)
@@ -368,15 +362,12 @@ def update_child_entry(doc,d,purchase_order,qty):
 	poi.schedule_date=nowdate()
 	poi.product_release_date = d.release_date_of_item
 	doc1.save(ignore_permissions=True)
-	#update_so_details(doc,d,d.item_code,doc1.name)
 
 def update_qty(doc,d,item,purchase_order,qty,rate):
 	amount=rate*qty
 	frappe.db.sql("""update `tabPurchase Order Item` set qty='%s', amount='%s'
 						where parent='%s' and item_code='%s'"""
 							%(qty,amount,purchase_order,item))
-
-	#update_so_details(doc,d,item,purchase_order)
 
 def update_so_details(doc,d,item,purchase_order):
 	doc2 = frappe.get_doc("Purchase Order", purchase_order)
@@ -386,8 +377,6 @@ def update_so_details(doc,d,item,purchase_order):
 	so.sales_order_name=doc.name
 	doc2.save(ignore_permissions=True)
 
-
-# On sibmission of delivery Note---------------------------------------------------------------------------------------------------------------------------------
 def update_stock_assignment_log_on_submit(doc,method):
 	for d in doc.get('delivery_note_details'):
 		sales_order_name=frappe.db.sql("""select s.against_sales_order from
@@ -406,7 +395,6 @@ def update_stock_assignment_log_on_submit(doc,method):
 									where sales_order='%s' and item_code='%s'"""
 										%(d.qty,doc.name,sales_order_name[0][0],d.item_code))
 			else:
-				# delivery_note = delivery_note_name[0][0] + ', ' + doc.name
 				delivery_note = doc.name
 				delivery_note_details=frappe.db.sql("""select delivered_qty from `tabStock Assignment Log`
 												where sales_order='%s' and item_code='%s'"""%(sales_order_name[0][0],d.item_code))
@@ -452,22 +440,20 @@ def validate_qty_on_submit(doc,method):
 			frappe.throw("Delivered Quantity must be less than or equal to assigned_qty for item_code='"+d.item_code+"'")
 	doc.total_qty = qty_count
 
-
-#For calling API through Poster---------------------------------------------------------------------------------------
 def check_APItime():
-	# sync_existing_customers_address()
 	time = frappe.db.sql("""select value from `tabSingles` where doctype='API Configuration Page' and field in ('date','api_type')""",as_list=1)
 	if time:
 		dates= list(itertools.chain.from_iterable(time))
 		api_date = datetime.datetime.strptime(dates[1], '%Y-%m-%d %H:%M:%S')
 		if datetime.datetime.now() > api_date and dates[0] =='Product':
 			GetItem()
-			GetMissingItem()
+			get_missing_items()
 		elif datetime.datetime.now() > api_date and dates[0]=='Customer':
 			GetCustomer()
+			get_missing_customers()
 		elif datetime.datetime.now() > api_date and dates[0]=='Order':
 			GetOrders()
-			GetMissingSalesOrder()
+			get_missing_orders()
 
 def get_Data_count(max_date, document_key, headers, oauth_data):
 	r = requests.get(url='http://digitales.com.au/api/rest/mcount?start_date='+cstr(max_date)+'', headers=headers, auth=oauth_data)
@@ -476,56 +462,33 @@ def get_Data_count(max_date, document_key, headers, oauth_data):
 		return total_page_count.get(document_key)
 	return 0
 
-#get missing item from magento start
-def getMissingItemFromSyncItem():
-	return {
-	"get_missing_item": frappe.db.sql("""select distinct(sync_docname) from `tabSync Item` where sync_doctype='Item' and sync_status='Not Sync' ORDER BY creation LIMIT 100""", as_list=1)
-	}
+# def getMissingSalesOrderFromSyncItem():
+# 	return {
+# 	"get_missing_item": frappe.db.sql("""select distinct(sync_docname) from `tabSync Item` where sync_doctype='Sales Order' and sync_status='Not Sync' ORDER BY creation LIMIT 100""", as_list=1)
+# 	}
 
-def GetMissingItem():
-	update_execution_date('Customer')
-	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
-	oauth = GetOauthDetails()
-	abc=getMissingItemFromSyncItem()
-	j = [i[0] for i in abc["get_missing_item"]]
-	for k in j:
-		url='http://digitales.com.au/api/rest/products?filter[1][attribute]=sku&filter[1][in]='+k
-		r = requests.get(url=url, headers=h, auth=oauth)
-		product_data = json.loads(r.content)
-		for index in product_data:
-			create_item(index, product_data)
-			frappe.db.sql("""update `tabSync Item` set sync_status='Sync done' where sync_doctype="Item" and sync_docname='%s'"""%(k))
-#get missing item end
-#get missing sales order from magento start
-def getMissingSalesOrderFromSyncItem():
-	return {
-	"get_missing_item": frappe.db.sql("""select distinct(sync_docname) from `tabSync Item` where sync_doctype='Sales Order' and sync_status='Not Sync' ORDER BY creation LIMIT 100""", as_list=1)
-	}
+# def GetMissingSalesOrder():
+# 	update_execution_date('Customer')
+# 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+# 	oauth = GetOauthDetails()
+# 	abc=getMissingSalesOrderFromSyncItem()
+# 	j = [i[0] for i in abc["get_missing_item"]]
+# 	for k in j:
+# 		url='http://digitales.com.au/api/rest/orders/'+k
+# 		r = requests.get(url=url, headers=h, auth=oauth)
+# 		order_data = json.loads(r.content)
+# 		try:
+# 			customer = frappe.db.get_value('Contact', {'entity_id': order_data.get('customer_id')}, 'customer')
+# 			if customer:
+# 				order = frappe.db.get_value('Sales Order', {'entity_id': order_data.get('entity_id')}, 'name')
+# 				if not order:
+# 					create_order('key', {'key':order_data}, customer)
+# 					frappe.db.sql("""update `tabSync Item` set sync_status='Sync done' where sync_doctype="Sales Order" and sync_docname='%s'"""%(k))
+# 			else:
+# 				frappe.throw(_('Customer with id {0} not found in erpnext').format(order_data.get('customer_id')))
+# 		except Exception, e:
+# 			create_scheduler_exception(e, 'GetMissingSalesOrder', order_data)
 
-def GetMissingSalesOrder():
-	update_execution_date('Customer')
-	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
-	oauth = GetOauthDetails()
-	abc=getMissingSalesOrderFromSyncItem()
-	j = [i[0] for i in abc["get_missing_item"]]
-	for k in j:
-		url='http://digitales.com.au/api/rest/orders/'+k
-		r = requests.get(url=url, headers=h, auth=oauth)
-		order_data = json.loads(r.content)
-		try:
-			customer = frappe.db.get_value('Contact', {'entity_id': order_data.get('customer_id')}, 'customer')
-			if customer:
-				order = frappe.db.get_value('Sales Order', {'entity_id': order_data.get('entity_id')}, 'name')
-				if not order:
-					create_order('key', {'key':order_data}, customer)
-					frappe.db.sql("""update `tabSync Item` set sync_status='Sync done' where sync_doctype="Sales Order" and sync_docname='%s'"""%(k))
-			else:
-				frappe.throw(_('Customer with id {0} not found in erpnext').format(order_data.get('customer_id')))
-		except Exception, e:
-			create_scheduler_exception(e, 'GetMissingSalesOrder', order_data)
-#get missing sales order end
-
-#Get Item from magento------------------------------------------------------------------------------------------------------------------------------------
 def GetItem():
 	update_execution_date('Customer')
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
@@ -979,9 +942,6 @@ def get_address_type(content):
 	else:
 		return {"type":"Other", "is_primary_address":0, "is_shipping_address":0}
 
-
-
-#Get Order data API
 def GetOrders():
 	update_execution_date('Product')
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
@@ -1063,30 +1023,6 @@ def update_address_forCustomer(cust_address,address_details, customer, address_t
 		cad.save(ignore_permissions=True)
 	except Exception, e:
 		create_scheduler_exception(e , 'Method name update_address_forCustomer: ', customer)
-
-def get_missing_customers(header,oauth_data):
-	list1=[]
-	order=[]
-	for i in range(1,4):
-		r = requests.get(url='http://digitales.com.au/api/rest/orders?&page='+cstr(i)+'&limit=100',headers=header, auth=oauth_data)
-		order_data = json.loads(r.content)
-		for index in order_data:
-			if not frappe.db.get_value('Contact',{'entity_id':order_data[index].get('customer_id')},'name'):
-				list1.append(order_data[index].get('customer_id'))
-				order.append(order_data[index].get('entity_id'))
-
-def get_missing_products(header,oauth_data):
-	list2=[]
-	order1=[]
-	for i in range(1,4):
-		r = requests.get(url='http://digitales.com.au/api/rest/orders?&page='+cstr(i)+'&limit=100',headers=header, auth=oauth_data)
-		order_data = json.loads(r.content)
-		for index in order_data:
-			if order_data[index].get('order_items'):
-				for i in order_data[index].get('order_items'):
-					if not frappe.db.get_value('Item',i.get('sku'),'name'):
-						list2.append(i.get('sku'))
-						order1.append(order_data[index].get('entity_id'))
 
 def update_order(order,i,content,customer):
 	try:
@@ -1416,7 +1352,12 @@ def set_artist(doc, method):
 		art = frappe.db.get_value('Item', {'name':i.item_code }, 'artist') or ''
 		i.artist=art
 
-def log_sync_error(doctype, docname, response, error, method, missing_items=None, missing_customer=None):
+def log_sync_error(
+		doctype, docname, response,
+		error, method, missing_items=None,
+		missing_customer=None, force_stop=False
+	):
+
 	import traceback
 	name = frappe.db.get_value("Sync Error Log", { "sync_doctype": doctype, "sync_docname":docname }, "name")
 
@@ -1428,7 +1369,7 @@ def log_sync_error(doctype, docname, response, error, method, missing_items=None
 		log.sync_docname = "{}".format(docname)
 
 	log.sync_attempts += 1
-	log.is_synced = "Stopped" if log.sync_attempts >= 3 else "No"
+	log.is_synced = "Stopped" if log.sync_attempts >= 3 or force_stop else "No"
 
 	err = log.append("errors", {})
 	err.method = method
