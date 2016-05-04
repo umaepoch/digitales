@@ -1012,12 +1012,14 @@ def get_orders_from_magento(page, max_date, header, oauth_data,type_of_data=None
 				try:
 					customer = frappe.db.get_value('Contact', {'entity_id': order_data[index].get('customer_id')}, 'customer')
 					if customer:
-						# create_or_update_customer_address(order_data[index].get('addresses'), customer)
 						order = frappe.db.get_value('Sales Order', {'entity_id': order_data[index].get('entity_id')}, 'name')
 						if not order:
 							create_order(index,order_data,customer)
 					else:
-						frappe.throw(_('Customer with id {0} not found in erpnext').format(order_data[index].get('customer_id')))
+						docname = order_data[index].get('increment_id')
+						response = order_data
+						log_sync_error("Sales Order", docname, response, e, "get_orders_from_magento", missing_customer=order_data[index].get('customer_id'))
+						# frappe.throw(_('Customer with id {0} not found in erpnext').format(order_data[index].get('customer_id')))
 				except Exception, e:
 					create_scheduler_exception(e, 'get_orders_from_magento', index)
 	return True
@@ -1097,20 +1099,20 @@ def update_order(order,i,content,customer):
 		log_sync_error("Sales Order", docname, response, e, "update_order")
 
 def create_order(i,content,customer):
+	missing_items = []
 	try:
 		if content[i].get('order_items'):
-			child_status=check_item_presence(i,content)
-			if child_status==True:
+			missing_items = check_item_presence(i,content)
+			if not missing_items:
 				order = frappe.new_doc('Sales Order')
 				create_new_order(order,i,content,customer)
 				order.save(ignore_permissions=True)
-			if child_status==False:
-				frappe.throw(_("Some Item not present"))
+			else:
+				frappe.throw(_("Few of the Items in Order #%s are missing or not yet synced"%(content[i].get("increment_id"))))
 	except Exception, e:
 		docname = content[i].get('increment_id')
-		print "docname", docname, i
 		response = content
-		log_sync_error("Sales Order", docname, response, e, "create_order")
+		log_sync_error("Sales Order", docname, response, e, "create_order", missing_items=missing_items)
 
 def create_new_order(order,index,content,customer):
 	from datetime import date
@@ -1149,18 +1151,17 @@ def set_sales_order_address(address_details, order):
 				if cstr(address.get('address_type')) == "shipping":
 					order.shipping_address_name = frappe.db.get_value('Address',{'entity_id':cust_address},'name')
 
-def check_item_presence(i,content):
-	status = True
-	for i in content[i].get('order_items'):
-		item_list = []
-		item_list.append(i)
-		# print item_list
+def check_item_presence(key,content):
+	missing_items = []
+	for i in content[key].get('order_items'):
 		if not frappe.db.get_value('Item',i.get('sku'),'name'):
-			docname = i.get('sku')
-			response = content
-			log_sync_error("Item", docname, response, "Few Of the Order Items are missing", "check_item_presence")
-			status = False
-	return status
+			error = Exception("%s Item from order #%s is missing or not synced"%(
+						i.get('sku'),
+						content[key].get("increment_id") or ""
+					))
+			log_sync_error("Item", i.get('sku'), content, error, "check_item_presence")
+			missing_items.append(i.get('sku'))
+	return missing_items
 
 def create_child_item(i,order):
 	oi = order.append('sales_order_details', {})
@@ -1234,7 +1235,6 @@ def assign_stopQty_toOther(doc,item_list):
 					'''%(data.item_code, data.warehouse)
 			results = frappe.db.sql(query)
 			order = [result[0] for result in results] if results else None
-			frappe.errprint(order)
 			if order and len(order)==1:
 				reduce_po_item(order[0], data.item_code, po_qty)
 			elif order and len(order) > 1:
@@ -1249,10 +1249,10 @@ def assign_stopQty_toOther(doc,item_list):
 					update_sal(data.item_code, data.parent, flt(data.delivered_qty), qty)
 					sales_order = get_item_SODetails(data.item_code)
 					if sales_order:
-						create_StockAssignment_AgainstSTopSOItem(data, sales_order, qty)
+						create_StockAssignment_AgainstSTopSOItem(data, sales_order, qty, reduce_po=False)
 	return "Done"
 
-def create_StockAssignment_AgainstSTopSOItem(data, sales_order, qty):
+def create_StockAssignment_AgainstSTopSOItem(data, sales_order, qty, reduce_po=True):
 	for so_data in sales_order:
 		if flt(so_data.qty) > 0.0 and qty > 0.0:
 			stock_assigned_qty = so_data.qty if flt(qty) >= flt(so_data.qty) else flt(qty)
@@ -1266,9 +1266,9 @@ def create_StockAssignment_AgainstSTopSOItem(data, sales_order, qty):
 					sal.assign_qty = cint(sal.assign_qty) + cint(stock_assigned_qty)
 				make_history_of_assignment_item(sal, nowdate(), "Stock In Hand", "", stock_assigned_qty)
 				sal.save(ignore_permissions=True)
-				update_or_reducePoQty(so_data.parent, data.item_code)
+				update_or_reducePoQty(so_data.parent, data.item_code, reduce_po=reduce_po)
 
-def update_or_reducePoQty(sales_order, item_code):
+def update_or_reducePoQty(sales_order, item_code, reduce_po=True):
 	obj = frappe.get_doc('Sales Order', sales_order)
 	for data in obj.get('sales_order_details'):
 		if data.item_code == item_code:
@@ -1279,10 +1279,14 @@ def update_or_reducePoQty(sales_order, item_code):
 				po_qty = 0.0
 			frappe.db.sql(""" update `tabSales Order Item` set
 				po_qty = '%s' where name ='%s'"""%(po_qty, data.name))
-			reduce_po_item(data.po_data, data.item_code, data.assigned_qty)
+			if reduce_po: reduce_po_item(data.po_data, data.item_code, data.assigned_qty)
 
 def reduce_po_item(purchase_order,item, assign_qty):
-	po_details = frappe.db.get_value('Purchase Order Item', {'parent': purchase_order, 'item_code': item, 'docstatus': 0}, '*', as_dict=1)
+	po_details = frappe.db.get_value('Purchase Order Item', {
+						'parent': purchase_order,
+						'item_code': item,
+						'docstatus': 0
+					}, '*', as_dict=1)
 	if po_details:
 		update_child_table_item(po_details, assign_qty)
 		update_parent_table_item(po_details)
@@ -1331,12 +1335,10 @@ def update_bin_qty(item_code,qty,delivered_qty,warehouse):
 	obj.reserved_qty=flt(obj.reserved_qty)-(flt(qty) - flt(delivered_qty))
 	obj.save(ignore_permissions=True)
 
-
 def update_so_item_status(item_code,parent):
 	frappe.db.sql(''' update `tabSales Order Item` set stop_status = "Yes" where item_code = "%s" and parent="%s"'''%(item_code,parent))
 	frappe.db.sql(''' update `tabDelivery Note Item` set stop_status = "Yes" where item_code = "%s" and against_sales_order="%s" and docstatus<>2'''%(item_code,parent))
 	frappe.db.sql(''' update `tabSales Invoice Item` set stop_status = "Yes" where item_code = "%s" and sales_order="%s" and docstatus<>2'''%(item_code,parent))
-
 
 def create_StockAssignment_AgainstSTopSO(data, sales_order, qty):
 	for so_data in sales_order:
@@ -1414,7 +1416,7 @@ def set_artist(doc, method):
 		art = frappe.db.get_value('Item', {'name':i.item_code }, 'artist') or ''
 		i.artist=art
 
-def log_sync_error(doctype, docname, response, error, method):
+def log_sync_error(doctype, docname, response, error, method, missing_items=None, missing_customer=None):
 	import traceback
 	name = frappe.db.get_value("Sync Error Log", { "sync_doctype": doctype, "sync_docname":docname }, "name")
 
@@ -1425,8 +1427,8 @@ def log_sync_error(doctype, docname, response, error, method):
 		log.sync_doctype = doctype
 		log.sync_docname = "{}".format(docname)
 
-	log.is_synced = "No"
 	log.sync_attempts += 1
+	log.is_synced = "Stopped" if log.sync_attempts >= 3 else "No"
 
 	err = log.append("errors", {})
 	err.method = method
@@ -1434,5 +1436,7 @@ def log_sync_error(doctype, docname, response, error, method):
 	err.obj_traceback = frappe.get_traceback()
 	err.response = json.dumps(response)
 	
+	log.missing_items = json.dumps(missing_items) or ""
+	log.missing_customer = missing_customer or ""
 	log.magento_response = "<pre><code>%s</code></pre>"%(json.dumps(response, indent=2))
 	log.save(ignore_permissions=True)
