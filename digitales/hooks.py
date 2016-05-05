@@ -107,9 +107,9 @@ scheduler_events = {
 	"hourly": [
 		"digitales.sync_csv.check_lastdate_api"
 	],
-	# "hourly": [
-	# 	"digitales.tasks.hourly"
-	# ]
+	"daily": [
+		"digitales.digitales.sync_missing_entities.notifiy_stopped_entities_status"
+	]
 	# "weekly": [
 	# 	"digitales.tasks.weekly"
 	# ]

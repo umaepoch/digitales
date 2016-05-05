@@ -976,7 +976,7 @@ def get_orders_from_magento(page, max_date, header, oauth_data,type_of_data=None
 						if not order:
 							create_order(index,order_data,customer)
 					else:
-						docname = order_data[index].get('increment_id')
+						docname = order_data[index].get('entity_id')
 						response = order_data
 						log_sync_error("Sales Order", docname, response, e, "get_orders_from_magento", missing_customer=order_data[index].get('customer_id'))
 						# frappe.throw(_('Customer with id {0} not found in erpnext').format(order_data[index].get('customer_id')))
@@ -1030,7 +1030,7 @@ def update_order(order,i,content,customer):
 		create_new_order(order,i,content,customer)
 		order.save(ignore_permissions=True)
 	except Exception, e:
-		docname = content[i].get('increment_id')
+		docname = content[i].get('entity_id')
 		response = content
 		log_sync_error("Sales Order", docname, response, e, "update_order")
 
@@ -1046,7 +1046,7 @@ def create_order(i,content,customer):
 			else:
 				frappe.throw(_("Few of the Items in Order #%s are missing or not yet synced"%(content[i].get("increment_id"))))
 	except Exception, e:
-		docname = content[i].get('increment_id')
+		docname = content[i].get('entity_id')
 		response = content
 		log_sync_error("Sales Order", docname, response, e, "create_order", missing_items=missing_items)
 

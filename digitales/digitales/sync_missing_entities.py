@@ -3,11 +3,27 @@ import frappe
 import requests
 from requests_oauthlib import OAuth1 as OAuth
 from digitales.digitales.Api_methods import (GetOauthDetails, create_scheduler_exception,
-		log_sync_error, create_item)
+		log_sync_error, create_item, create_order)
 
-def get_missing_items(item=None, mannual_sync=False):
+@frappe.whitelist()
+def manually_sync_entity(entity_type, entity):
+	func_map = {
+		"Item": get_missing_items,
+		"Sales Order": get_missing_orders,
+		"Customer": get_missing_customers
+	}
+	
+	func_map[entity_type](entity, manual_sync=True)
+
+def get_missing_items(item=None, manual_sync=False):
 	""" Get the missing items from magento """
-	items = get_entity_ids_to_sync(entity_type="Item") if not all(item, mannual_sync) else [item]
+	# items = get_entity_ids_to_sync(entity_type="Item") if not all(item, manual_sync) else [item]
+	if all([item, manual_sync]):
+		results = json.loads(item) if item else None
+		if results: results = [results]
+	
+	items = get_entity_ids_to_sync(entity_type="Item", results=results)
+	
 	if not items:
 		return
 
@@ -15,50 +31,88 @@ def get_missing_items(item=None, mannual_sync=False):
 
 	for item in items:
 		response = get_entity_from_magento(url%(item), entity_type="Item", entity_id=item)
-
-		idx = response.keys()[0]
-		create_item(idx, response)
+		if response:
+			idx = response.keys()[0]
+			create_item(idx, response)
 
 	update_sync_status("Item", items)
 
-def get_missing_customers(customer=None, mannual_sync=False):
+def get_missing_customers(customer=None, manual_sync=False):
 	""" Get the missing customer from magento """
-	customers = get_entity_ids_to_sync(entity_type="Customer") if not all(customer, mannual_sync) else [customer]
+	if all([customer, manual_sync]):
+		results = json.loads(customer) if customer else None
+		if results: results = [results]
 
-def get_missing_orders(order=None, mannual_sync=False):
+	if not customers:
+		return
+
+	# url = "http://digitales.com.au/api/rest/orders?filter[1][attribute]=increment_id&filter[1][eq]=%s"
+
+	# for customer in customers:
+	# 	response = get_entity_from_magento(url%(customer), entity_type="Customer", entity_id=customer)
+	# 	if response:
+	# 		idx = response.keys()[0]
+	# 		create_order(idx, response, customer)
+
+	# update_sync_status("Sales Order", orders)
+
+def get_missing_orders(order=None, manual_sync=False):
 	""" Get the missing orders from magento """
-	orders = get_entity_ids_to_sync(entity_type="Sales Order") if not all(order, mannual_sync) else [order]
+	# orders = get_entity_ids_to_sync(entity_type="Sales Order") if not all(order, manual_sync) else [order]
+	if all([order, manual_sync]):
+		results = json.loads(order) if order else None
+		if results: results = [results]
 
-def get_entity_ids_to_sync(entity_type=None):
+	orders = get_entity_ids_to_sync(entity_type="Sales Order", results=results)
+	if not orders:
+		return
+
+	url = "http://digitales.com.au/api/rest/orders?filter[1][attribute]=entity_id&filter[1][eq]=%s"
+
+	for order in orders:
+		response = get_entity_from_magento(url%(order), entity_type="Sales Order", entity_id=order)
+		if response:
+			idx = response.keys()[0]
+			customer = frappe.db.get_value('Contact', {'entity_id': response[idx].get("customer_id") }, 'customer')
+			create_order(idx, response, customer)
+
+	update_sync_status("Sales Order", orders)
+
+def get_entity_ids_to_sync(entity_type=None, results=None):
 	""" get the list of entity ids from `Sync Error Log` to re-sync """
 	entities = []
 	if not entity_type:
-		frappe.errprint("Select the DocType to sync")
+		return
 
-	filters = {
-		"sync_doctype": entity_type,
-		"is_synced": "No",
-		"sync_attempts": ("<", 4)
-	}
-	fields = "sync_docname" if entity_type != "Sales Order" else ["sync_docname", "missing_items", "missing_customer"]		
-	results = frappe.db.get_values("Sync Error Log", filters, fields, as_dict=True)
+	if not results:
+		filters = {
+			"sync_doctype": entity_type,
+			"is_synced": "No",
+			"sync_attempts": ("<", 4)
+		}
+		fields = "sync_docname" if entity_type != "Sales Order" else ["sync_docname", "missing_items", "missing_customer"]		
+		results = frappe.db.get_values("Sync Error Log", filters, fields, as_dict=True)
 
 	if entity_type == "Sales Order":
 		for order in results:
 			entity_id = order.get("sync_docname")
 			items = []
 			customer = []
+			sales_order = []
 
 			if order.get("missing_items"):
-				missing_items = [item for item in json.dumps(order.get("missing_items")) or []]
+				missing_items = [item for item in json.loads(order.get("missing_items")) or []]
 				if missing_items: items = check_if_entity_already_synced("Item", missing_items)
 			
 			if not items and order.get("missing_customer"):
 				customer = check_if_entity_already_synced("Customer", [order.get("missing_customer")])
 
 			if not customer:
-				entities.append(entity_id)
+				sales_order = check_if_entity_already_synced("Sales Order", [order.get("sync_docname")])
+
+			if sales_order: entities.append(entity_id)
 	else:
+		frappe.errprint(results)
 		entities = list(set([result.get("sync_docname") for result in results]))
 		if entities: entities = check_if_entity_already_synced(entity_type, entities)
 
@@ -74,28 +128,33 @@ def update_sync_status(entity_type, entities):
 
 def check_if_entity_already_synced(entity_type, entities):
 	""" check if Items or Customer is already synced """
+	field_map = { "Item": "name", "Sales Order": "entity_id", "customer": "name" }
+	
 	if not entities:
 		return []
 
-	query = """ select name from `tab{table}` where name in ({names}) """.format(
+	# for item check name, for order check entity id, for customer check organization
+	query = """ select {fieldname} from `tab{table}` where {fieldname} in ({names}) """.format(
 				table=entity_type,
+				fieldname=field_map.get(entity_type),
 				names=",".join(["'%s'"%entity for entity in entities])
 			)
 
 	results = frappe.db.sql(query, as_dict=True)
-	
+
 	if not results:
 		return entities
 	
-	synced_entities = list(set([result.get("name") for result in results]))
+	synced_entities = list(set([result.get(field_map.get(entity_type)) for result in results]))
 	
 	if synced_entities:
 		""" Update the Sync Status """
-		query = """ update `tabSync Error Log` set is_synced='Yes' where sync_docname in ({names})""".format(
+		query = """ update `tabSync Error Log` set is_synced='Yes' where sync_docname in ({names})
+					and is_synced<>'Yes' """.format(
 					table=entity_type,
 					names=",".join(["'%s'"%entity for entity in synced_entities])
 				)
-		frappe.db.sql(query, debug=True)
+		frappe.db.sql(query)
 
 	entities = list(set(entities) - set(synced_entities))
 	return entities
@@ -114,6 +173,7 @@ def get_entity_from_magento(url, entity_type=None, entity_id=None):
 		""" error while fetching item, create scheduler log"""
 		msg = "Error While fetching missing %s #%s"%(entity_type, entity_id)
 		create_scheduler_exception(msg, "get_entity_from_magento", obj=json.dumps(response.json() or {}))
+		return None
 		
 	elif not response.json():
 		""" create log entity not available in magento """
@@ -123,5 +183,29 @@ def get_entity_from_magento(url, entity_type=None, entity_id=None):
 				error, "get_entity_from_magento",
 				force_stop=True
 			)
+		return None
 	else:
 		return response.json()
+
+def notifiy_stopped_entities_status():
+	""" Notify User about stopped entities """
+
+	filters = { "is_synced": "Stopped" }
+	fields = ["name", "sync_doctype", "sync_docname", "sync_attempts"]
+	entities = frappe.db.get_values("Sync Error Log", filters, fields, as_dict=True)
+	if not entities:
+		return
+
+	recipients = frappe.get_hooks("error_report_email", app_name="erpnext")
+	subject = "Magento >> ERP Sync Failed"
+	template = "templates/emails/failed_synced.html"
+
+	frappe.sendmail(recipients=recipients, subject=subject,
+			message=frappe.get_template(template).render({"entities": entities}))
+
+	# update notification sent status
+	query = """ update `tabSync Error Log` set notification_sent='Yes' where
+				name in ({names}) """.format(
+					names=",".join(["'%s'"%entity.get("name") for entity in entities])
+				)
+	frappe.db.sql(query)
