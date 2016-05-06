@@ -462,33 +462,6 @@ def get_Data_count(max_date, document_key, headers, oauth_data):
 		return total_page_count.get(document_key)
 	return 0
 
-# def getMissingSalesOrderFromSyncItem():
-# 	return {
-# 	"get_missing_item": frappe.db.sql("""select distinct(sync_docname) from `tabSync Item` where sync_doctype='Sales Order' and sync_status='Not Sync' ORDER BY creation LIMIT 100""", as_list=1)
-# 	}
-
-# def GetMissingSalesOrder():
-# 	update_execution_date('Customer')
-# 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}
-# 	oauth = GetOauthDetails()
-# 	abc=getMissingSalesOrderFromSyncItem()
-# 	j = [i[0] for i in abc["get_missing_item"]]
-# 	for k in j:
-# 		url='http://digitales.com.au/api/rest/orders/'+k
-# 		r = requests.get(url=url, headers=h, auth=oauth)
-# 		order_data = json.loads(r.content)
-# 		try:
-# 			customer = frappe.db.get_value('Contact', {'entity_id': order_data.get('customer_id')}, 'customer')
-# 			if customer:
-# 				order = frappe.db.get_value('Sales Order', {'entity_id': order_data.get('entity_id')}, 'name')
-# 				if not order:
-# 					create_order('key', {'key':order_data}, customer)
-# 					frappe.db.sql("""update `tabSync Item` set sync_status='Sync done' where sync_doctype="Sales Order" and sync_docname='%s'"""%(k))
-# 			else:
-# 				frappe.throw(_('Customer with id {0} not found in erpnext').format(order_data.get('customer_id')))
-# 		except Exception, e:
-# 			create_scheduler_exception(e, 'GetMissingSalesOrder', order_data)
-
 def GetItem():
 	update_execution_date('Customer')
 	h = {'Content-Type': 'application/json', 'Accept': 'application/json'}

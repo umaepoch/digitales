@@ -3,7 +3,7 @@ import frappe
 import requests
 from requests_oauthlib import OAuth1 as OAuth
 from digitales.digitales.Api_methods import (GetOauthDetails, create_scheduler_exception,
-		log_sync_error, create_item, create_order)
+		log_sync_error, create_item, create_order, create_customer, GetAddress)
 
 @frappe.whitelist()
 def manually_sync_entity(entity_type, entity):
@@ -46,15 +46,16 @@ def get_missing_customers(customer=None, manual_sync=False):
 	if not customers:
 		return
 
-	# url = "http://digitales.com.au/api/rest/orders?filter[1][attribute]=increment_id&filter[1][eq]=%s"
+	url = "http://digitales.com.au/api/rest/customers?filter[1][attribute]=entity_id&filter[1][eq]=%s"
 
-	# for customer in customers:
-	# 	response = get_entity_from_magento(url%(customer), entity_type="Customer", entity_id=customer)
-	# 	if response:
-	# 		idx = response.keys()[0]
-	# 		create_order(idx, response, customer)
+	for customer in customers:
+		response = get_entity_from_magento(url%(customer), entity_type="Customer", entity_id=customer)
+		if response:
+			idx = response.keys()[0]
+			create_customer(idx, response)
+			GetAddress(response.get('entity_id'))
 
-	# update_sync_status("Sales Order", orders)
+	update_sync_status("Customer", customers)
 
 def get_missing_orders(order=None, manual_sync=False):
 	""" Get the missing orders from magento """
@@ -128,7 +129,7 @@ def update_sync_status(entity_type, entities):
 
 def check_if_entity_already_synced(entity_type, entities):
 	""" check if Items or Customer is already synced """
-	field_map = { "Item": "name", "Sales Order": "entity_id", "customer": "name" }
+	field_map = { "Item": "name", "Sales Order": "entity_id", "customer": "entity_id" }
 	
 	if not entities:
 		return []

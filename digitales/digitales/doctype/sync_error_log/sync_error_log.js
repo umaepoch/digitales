@@ -1,6 +1,6 @@
 frappe.ui.form.on("Sync Error Log", "refresh", function(frm) {
 	if(frm.doc.is_synced != "Yes") {
-		frm.add_custom_button("Mannual Sync", function() {
+		frm.add_custom_button("Manual Sync", function() {
 			// manually sync entity
 			entity = {}
 			if(frm.doc.sync_doctype == "Sales Order"){
