@@ -31,19 +31,19 @@ def get_data():
 					"name": "Process",
 					"label": _("Shelf Ready Charge"),
 					"description": _("Shelf Ready Charge Details.")
-				},
-				{
-					"type": "doctype",
-					"name": "Sync Item",
-					"label": _("Sync Item"),
-					"description": _("Sync Item Details.")
-				},
+				}
+			]
+		},
+		{
+			"label": _("Setup"),
+			"icon": "icon-cog",
+			"items": [
 				{
 					"type": "doctype",
 					"name": "Sync Error Log",
 					"label": _("Sync Error Log"),
 					"description": _("Magento > ERPNext Synchronization Error Logs")
-				},
+				}
 			]
 		},
 		{

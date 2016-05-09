@@ -1,0 +1,38 @@
+<style type="text/css">
+	.log-stat {
+		overflow-y: scroll;
+		max-height: 300px 
+	}
+	.sucess {
+		/*background-color: rgba(0, 128, 0, 0.24)*/
+	}
+	.error {
+		background-color: rgba(233, 30, 99, 0.24)
+	}
+	.log-text {
+		color: rgba(0, 0, 0, 0.85);
+	}
+</style>
+<div class="log-stat">
+  <table class="table table-bordered table-condensed">
+	   <thead>
+	      <tr>
+	        <td align="center"><b>Entity ID</b></input></td>
+	        <td align="center"><b>ERPNext ID</b></td>
+	        <td align="center"><b>Status</b></td>
+	        <td align="center"><b>Modified Date</b></td>
+	      </tr>
+	    </thead>
+	    <tbody>
+	    {% $.each(entities, function(entity_id, entity){ %}
+	    {% var cls = entity.operation? "sucess": "error" %}
+			<tr>
+				<td class="small log-text {%=cls%}" align="center">{%= entity_id %}</td>
+				<td class="small log-text {%=cls%}" align="center">{%= entity.name || "NA" %}</td>
+				<td class="small log-text {%=cls%}" align="center">{%= entity.operation || "Sync Failed" %}</td>
+				<td class="small log-text {%=cls%}" align="center">{%= entity.modified_date %}</td>
+			</tr>
+		 {% }); %}
+	    </tbody>
+  </table>
+</div>

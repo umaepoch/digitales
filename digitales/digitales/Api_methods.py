@@ -491,6 +491,8 @@ def get_products_from_magento(page, max_date, header, oauth_data):
 		r = requests.get(url='http://digitales.com.au/api/rest/products?filter[1][attribute]=updated_at&filter[1][gt]=%s&page=%s&limit=100&order=updated_at&dir=asc'%(max_date, page), headers=header, auth=oauth_data)
 		product_data = json.loads(r.content)
 		products_count = len(product_data)
+		print 'http://digitales.com.au/api/rest/products?filter[1][attribute]=updated_at&filter[1][gt]=%s&page=%s&limit=100&order=updated_at&dir=asc'%(max_date, page), products_count
+		s
 		if products_count > 0:
 			for index in product_data:
 				name = frappe.db.get_value('Item', product_data[index].get('sku'), 'name')
@@ -1002,6 +1004,7 @@ def update_order(order,i,content,customer):
 		order = frappe.get_doc("Sales Order", order)
 		create_new_order(order,i,content,customer)
 		order.save(ignore_permissions=True)
+		print order.name
 	except Exception, e:
 		docname = content[i].get('entity_id')
 		response = content
