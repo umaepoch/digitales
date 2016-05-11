@@ -9,13 +9,17 @@ def sync_entity_from_magento():
 	conf = frappe.get_doc("API Configuration Page", "API Configuration Page")
 	if get_datetime(now()) > get_datetime(conf.date):
 		get_and_sync_entities(api_type=conf.api_type)
+	elif conf.api_type != "Product":
+		prev_type = { "Order": "Customer", "Customer": "Product" }
+		get_and_sync_entities(api_type=prev_type[conf.api_type], update_config=False)
 
-def get_and_sync_entities(api_type="Product"):
+def get_and_sync_entities(api_type="Product", update_config=True):
 	""" get and sync the Item, Customer, Sales Order """
 	count = {}
 	sync_stat = {}
 	page_count = 0
 	total_entities_to_sync = 0
+	total_entities_received = 0
 	start = end = now_datetime()
 	entity_map = { "Product": "Item", "Customer": "Customer", "Order": "Sales Order" }
 	next_sync_type = { "Product": "Customer", "Customer": "Order", "Order": "Product" }
@@ -30,14 +34,14 @@ def get_and_sync_entities(api_type="Product"):
 	try:
 		query = "select max(modified_date) as max_date from `tab{}`".format(entity_type)
 		max_date = frappe.db.sql(query, as_dict=True)
-		max_date = "1991-09-07 05:43:13" if not max_date else max_date[0].get("max_date")
+		max_date = "1991-09-07 05:43:13" if not all([max_date, max_date[0].get("max_date")]) else max_date[0].get("max_date")
+
 		count = get_entity_and_page_count(max_date, entity_type=entity_type)
 		if not count:
 			return
 
 		total_entities_to_sync = count.get("entity_count")
 		page_count = count.get("page_count") + 1 if count.get("page_count") else 0
-		print total_entities_to_sync, page_count
 
 		url = "http://digitales.com.au/api/rest/{}?filter[1][attribute]=updated_at".format(entity_url[entity_type])
 		url += "&filter[1][gt]={}&page={}&limit=100&order=updated_at&dir=asc"
@@ -45,7 +49,14 @@ def get_and_sync_entities(api_type="Product"):
 			response = get_entities_from_magento(url.format(date_minus_sec(max_date), idx), entity_type=entity_type)
 			if not response:
 				continue
-			sync_stat.update({ entity_id: { "modified_date": entity.get("updated_at") } for entity_id, entity in response.iteritems() })
+
+			total_entities_received += len(response)
+
+			if entity_type in ["Sales Order", "Customer"]:
+				sync_stat.update({ entity_id: { "modified_date": entity.get("updated_at") } for entity_id, entity in response.iteritems() })
+			else:
+				sync_stat.update({ entity.get("sku"): { "modified_date": entity.get("updated_at") } for entity_id, entity in response.iteritems() })
+
 			for entity_id, entity in response.iteritems():
 				status = sync_methods[entity_type](entity)
 				if status: sync_stat.update(status)
@@ -57,7 +68,7 @@ def get_and_sync_entities(api_type="Product"):
 		end = now_datetime()
 		log_sync_status(
 			entity_type, count_response=count, entities_to_sync=total_entities_to_sync, 
-			pages_to_sync=page_count, synced_entities=sync_stat, start=start,
-			end=end
+			pages_to_sync=page_count, entities_received=total_entities_received, synced_entities=sync_stat,
+			start=start, end=end
 		)
-		update_execution_date(next_sync_type[api_type])
+		if update_config: update_execution_date(next_sync_type[api_type])
