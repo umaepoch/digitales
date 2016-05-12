@@ -10,6 +10,20 @@
  "document_type": "System", 
  "fields": [
   {
+   "depends_on": "eval: doc.is_resync == 1", 
+   "fieldname": "is_resync", 
+   "fieldtype": "Check", 
+   "label": "Is Re-Sync", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "section_break_2", 
+   "fieldtype": "Section Break", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
    "allow_on_submit": 0, 
    "default": "", 
    "fieldname": "date", 
@@ -203,7 +217,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2016-05-11 16:54:45.776273", 
+ "modified": "2016-05-12 14:34:59.133295", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Sync Log", 

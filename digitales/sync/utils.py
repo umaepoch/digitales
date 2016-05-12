@@ -61,7 +61,7 @@ def get_entities_from_magento(url, entity_type=None):
 		
 	elif not response.json():
 		""" create log entity not available in magento """
-		error = "empty response from magento, please contact administrator"
+		msg = "empty response from magento, please contact administrator"
 		create_scheduler_exception(msg, "get_entity_from_magento", obj=json.dumps(response.json() or {}))
 		return None
 	else:
@@ -71,7 +71,7 @@ def log_sync_status(
 	entity_type, count_response={},
 	entities_to_sync=0, pages_to_sync=0,
 	entities_received=0, synced_entities={},
-	start=None, end=None):
+	start=None, end=None, is_resync=False):
 
 	""" log Magento >> ERPNext entity sync status """
 
@@ -88,6 +88,7 @@ def log_sync_status(
 	log.count_api_response = json.dumps(count_response)
 	log.synced_entities = json.dumps(synced_entities)
 	log.sync_stat = ""
+	log.is_resync = 1 if is_resync else 0
 	log.save(ignore_permissions=True)
 
 def log_sync_error(

@@ -19,6 +19,9 @@ def manually_sync_entity(entity_type, entity):
 
 def get_missing_items(item=None, manual_sync=False):
 	""" Get the missing items from magento """
+	results = None
+	sync_stat = {}
+
 	if all([item, manual_sync]):
 		results = json.loads(item) if item else None
 		if results: results = [results]
@@ -29,16 +32,22 @@ def get_missing_items(item=None, manual_sync=False):
 
 	url = "http://digitales.com.au/api/rest/products?filter[1][attribute]=sku&filter[1][eq]=%s"
 
+	sync_stat.update({ item: {} for item in items })
 	for item in items:
 		response = get_entity_from_magento(url%(item), entity_type="Item", entity_id=item)
 		if response:
 			idx = response.keys()[0]
-			create_or_update_item(response[idx])
+			status = create_or_update_item(response[idx])
+			sync_stat.update(status) if status else sync_stat.update({ item: { "modified_date":  response[idx].get("updated_at") or ""} })
 
 	update_sync_status("Item", items)
+	return sync_stat
 
 def get_missing_customers(customer=None, manual_sync=False):
 	""" Get the missing customer from magento """
+	results = None
+	sync_stat = {}
+
 	if all([customer, manual_sync]):
 		results = json.loads(customer) if customer else None
 		if results: results = [results]
@@ -49,17 +58,23 @@ def get_missing_customers(customer=None, manual_sync=False):
 
 	url = "http://digitales.com.au/api/rest/customers?filter[1][attribute]=entity_id&filter[1][eq]=%s"
 
+	sync_stat.update({ customer: {} for customer in customers })
 	for customer in customers:
 		response = get_entity_from_magento(url%(customer), entity_type="Customer", entity_id=customer)
 		if response:
 			idx = response.keys()[0]
-			create_or_update_customer(response[idx])
+			status = create_or_update_customer(response[idx])
+			if status: print customer
+			sync_stat.update(status) if status else sync_stat.update({ customer: { "modified_date":  response[idx].get("updated_at") or ""} })
 
 	update_sync_status("Customer", customers)
+	return sync_stat
 
 def get_missing_orders(order=None, manual_sync=False):
 	""" Get the missing orders from magento """
-	# orders = get_entity_ids_to_sync(entity_type="Sales Order") if not all(order, manual_sync) else [order]
+	results = None
+	sync_stat = {}
+
 	if all([order, manual_sync]):
 		results = json.loads(order) if order else None
 		if results: results = [results]
@@ -70,13 +85,16 @@ def get_missing_orders(order=None, manual_sync=False):
 
 	url = "http://digitales.com.au/api/rest/orders?filter[1][attribute]=entity_id&filter[1][eq]=%s"
 
+	sync_stat.update({ order: {} for order in orders })
 	for order in orders:
 		response = get_entity_from_magento(url%(order), entity_type="Sales Order", entity_id=order)
 		if response:
 			idx = response.keys()[0]
-			create_or_update_sales_order(response[idx])
+			status = create_or_update_sales_order(response[idx])
+			sync_stat.update(status) if status else sync_stat.update({ order: { "modified_date":  response[idx].get("updated_at") or ""} })
 
 	update_sync_status("Sales Order", orders)
+	return sync_stat
 
 def get_entity_ids_to_sync(entity_type=None, results=None):
 	""" get the list of entity ids from `Sync Error Log` to re-sync """
@@ -178,7 +196,7 @@ def get_entity_from_magento(url, entity_type=None, entity_id=None):
 		""" create log entity not available in magento """
 		error = "can not find %s #%s in magento, please contact administrator"
 		log_sync_error(
-				entity_type, entity_id, response,
+				entity_type, entity_id, response.json(),
 				error, "get_entity_from_magento",
 				force_stop=True
 			)

@@ -3,8 +3,11 @@ from frappe.utils import now, get_datetime, now_datetime
 from .utils import (date_minus_sec, get_entity_and_page_count, get_entities_from_magento,
 	log_sync_status, update_execution_date, create_scheduler_exception) 
 from digitales.sync import (create_or_update_item, create_or_update_customer, create_or_update_sales_order)
-from digitales.sync.sync_missing_entities import (get_missing_items, get_missing_customers, get_missing_orders)
+from digitales.sync.sync_missing_entities import (get_missing_items, get_missing_customers, get_missing_orders,
+	get_sync_error_entities_count)
 
+entity_map = { "Product": "Item", "Customer": "Customer", "Order": "Sales Order" }
+next_sync_type = { "Product": "Customer", "Customer": "Order", "Order": "Product" }
 missing_entity_methods = {
 	"Product": get_missing_items,
 	"Customer": get_missing_customers,
@@ -20,7 +23,18 @@ def sync_entity_from_magento():
 		prev_type = { "Order": "Customer", "Customer": "Product" }
 		get_and_sync_entities(api_type=prev_type[conf.api_type], update_config=False)
 
-	missing_entity_methods[conf.api]()
+	start = now_datetime()
+	total_entities_to_resync = get_sync_error_entities_count(entity_map[conf.api_type])
+	if not total_entities_to_resync:
+		return
+
+	sync_stat = missing_entity_methods[conf.api_type]()
+	end = now_datetime()
+	log_sync_status(
+		entity_map[conf.api_type], count_response=total_entities_to_resync, entities_to_sync=total_entities_to_resync, 
+		pages_to_sync=1, entities_received=0, synced_entities=sync_stat, start=start, end=end,
+		is_resync=True
+	)
 
 def get_and_sync_entities(api_type="Product", update_config=True):
 	""" get and sync the Item, Customer, Sales Order """
@@ -30,8 +44,6 @@ def get_and_sync_entities(api_type="Product", update_config=True):
 	total_entities_to_sync = 0
 	total_entities_received = 0
 	start = end = now_datetime()
-	entity_map = { "Product": "Item", "Customer": "Customer", "Order": "Sales Order" }
-	next_sync_type = { "Product": "Customer", "Customer": "Order", "Order": "Product" }
 	entity_url = { "Item": "products", "Customer": "customers", "Sales Order": "orders" } 
 	sync_methods = {
 		"Item": create_or_update_item,

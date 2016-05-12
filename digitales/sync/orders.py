@@ -10,7 +10,14 @@ def create_or_update_sales_order(entity):
 		name = frappe.db.get_value("Sales Order", { "entity_id": entity.get("entity_id") })
 		customer = frappe.db.get_value('Contact', {'entity_id': entity.get('customer_id')}, 'customer')
 		if name:
-			raise Exception("#{} Order updated after sync".format(entity.get("increment_id")))
+			# raise Exception("#{} Order updated after sync".format(entity.get("increment_id")))
+			return {
+				entity.get("entity_id"): {
+					"operation": "Order Already Exists",
+					"name": name,
+					"modified_date": entity.get("updated_at")
+				}
+			}
 		if not entity.get("order_items"):
 			raise Exception("#{} Order has no Items".format(entity.get("increment_id")))
 		if not customer:
@@ -71,9 +78,9 @@ def get_missing_items(items, increment_id):
 		if not frappe.db.get_value('Item',item.get('sku')):
 			error = Exception("%s Item from order #%s is missing or not synced"%(
 						item.get('sku'),
-						content[key].get("increment_id") or ""
+						increment_id or ""
 					))
-			log_sync_error("Item", i.get('sku'), content, error, "check_item_presence")
+			log_sync_error("Item", item.get('sku'), item, error, "check_item_presence")
 			missing_items.append(item.get('sku'))
 	return missing_items
 
