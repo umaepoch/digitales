@@ -3,6 +3,13 @@ from frappe.utils import now, get_datetime, now_datetime
 from .utils import (date_minus_sec, get_entity_and_page_count, get_entities_from_magento,
 	log_sync_status, update_execution_date, create_scheduler_exception) 
 from digitales.sync import (create_or_update_item, create_or_update_customer, create_or_update_sales_order)
+from digitales.sync.sync_missing_entities import (get_missing_items, get_missing_customers, get_missing_orders)
+
+missing_entity_methods = {
+	"Product": get_missing_items,
+	"Customer": get_missing_customers,
+	"Order": get_missing_orders
+}
 
 def sync_entity_from_magento():
 	""" check and decide which entity to sync """
@@ -12,6 +19,8 @@ def sync_entity_from_magento():
 	elif conf.api_type != "Product":
 		prev_type = { "Order": "Customer", "Customer": "Product" }
 		get_and_sync_entities(api_type=prev_type[conf.api_type], update_config=False)
+
+	missing_entity_methods[conf.api]()
 
 def get_and_sync_entities(api_type="Product", update_config=True):
 	""" get and sync the Item, Customer, Sales Order """
@@ -30,7 +39,7 @@ def get_and_sync_entities(api_type="Product", update_config=True):
 		"Sales Order": create_or_update_sales_order
 	}
 	entity_type = entity_map[api_type]
-
+	
 	try:
 		query = "select max(modified_date) as max_date from `tab{}`".format(entity_type)
 		max_date = frappe.db.sql(query, as_dict=True)
