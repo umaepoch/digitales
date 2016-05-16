@@ -1248,6 +1248,8 @@ def create_child_item(i,order):
 			oi.release_date_of_item=item_release_date[0][0]
 	oi.qty=i['qty_ordered']
 	oi.rate=i['price']
+	oi.barcode = frappe.db.get_value("Item", i['sku'],"barcode") or ""
+	oi.default_supplier = frappe.db.get_value("Item", i['sku'],"default_supplier") or ""
 	art = frappe.db.get_value("Item", i['sku'],"artist")
 	if art:
 		oi.artist = art

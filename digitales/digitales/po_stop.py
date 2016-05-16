@@ -44,7 +44,7 @@ def update_bin_qty(items):
 			group by item_code, warehouse
 		""".format(
 				",".join(["'%s'"%item_code for item_code in items.keys()])
-			), as_dict=True,debug=1)
+			), as_dict=True)
 	
 	for item_code, item in items.iteritems():
 		filters = {
@@ -77,7 +77,7 @@ def update_bin_qty(items):
 						item_code, 
 						item.get('warehouse')
 					)
-		frappe.db.sql(query,debug=1)
+		frappe.db.sql(query)
 
 def check_available_pr(items, po_name):
 	query = """
@@ -123,7 +123,7 @@ def create_po_negative_qty(items,po_name):
 						warehouse = "%s"
 				"""%(item_code, 
 						item.get('warehouse'))
-		bin_qty = frappe.db.sql(query,as_dict=1)
+		bin_qty = frappe.db.sql(query, as_dict=1)
 
 		for bin_item in bin_qty:
 			if bin_item['projected_qty']<0:
@@ -145,7 +145,7 @@ def create_po_negative_qty(items,po_name):
 							and
 								po.supplier = "%s"
 						"""%(bin_item['item_code'], bin_item['warehouse'], supplier)	
-				draft_po = frappe.db.sql(query,as_dict=1,debug=1)
+				draft_po = frappe.db.sql(query, as_dict=1)
 
 				if draft_po:
 					increase_po_qty(draft_po[0]['name'], bin_item['item_code'], bin_item['projected_qty'])
