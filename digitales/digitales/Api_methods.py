@@ -1503,3 +1503,8 @@ def set_artist(doc, method):
 	for i in doc.item_details:
 		art = frappe.db.get_value('Item', {'name':i.item_code}, 'artist') or ''
 		i.artist=art		
+
+def fetch_barcode_supplier(doc, method):
+	for item in doc.sales_order_details:
+		item.barcode = frappe.db.get_value("Item", item.item_code, "barcode")
+		item.default_supplier = frappe.db.get_value("Item", item.item_code, "default_supplier")
