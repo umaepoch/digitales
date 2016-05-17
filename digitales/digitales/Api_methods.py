@@ -88,7 +88,7 @@ def assign_extra_qty_to_other(data):
 def get_po_qty(item_code, warehouse=None):
 	cond = 'poi.warehouse ="%s"'%(warehouse) if warehouse else '1=1'
 	qty = frappe.db.sql(''' select sum(ifnull(poi.qty,0)-ifnull(poi.received_qty,0)) from `tabPurchase Order Item` poi, `tabPurchase Order` po
-		where poi.parent = po.name and po.status <> 'Stopped' and poi.docstatus <> 2 and poi.item_code = "%s" and %s'''%(item_code, cond), as_list=1)
+		where poi.parent = po.name and po.status <> 'Stopped' and ifnull(poi.stop_status, 'No') <> 'Yes' and poi.docstatus <> 2 and poi.item_code = "%s" and %s'''%(item_code, cond), as_list=1)
 	qty = flt(qty[0][0]) if qty else 0.0
 	return qty
 
@@ -1248,14 +1248,13 @@ def create_child_item(i,order):
 			oi.release_date_of_item=item_release_date[0][0]
 	oi.qty=i['qty_ordered']
 	oi.rate=i['price']
-	oi.barcode = frappe.db.get_value("Item", i['sku'],"barcode") or ""
-	oi.default_supplier = frappe.db.get_value("Item", i['sku'],"default_supplier") or ""
 	art = frappe.db.get_value("Item", i['sku'],"artist")
 	if art:
 		oi.artist = art
-	# oi.amount=i['row_total_incl_tax']
-	return True
+	oi.barcode = frappe.db.get_value("Item", i['sku'],"barcode") or ""
+	oi.default_supplier = frappe.db.get_value("Item", i['sku'],"default_supplier") or ""
 
+	return True
 
 @frappe.whitelist()
 def upload():
@@ -1502,8 +1501,8 @@ def get_artist(item_code):
 def set_artist(doc, method):
 	for i in doc.item_details:
 		art = frappe.db.get_value('Item', {'name':i.item_code}, 'artist') or ''
-		i.artist=art		
-
+		i.artist=art
+		
 def fetch_barcode_supplier(doc, method):
 	for item in doc.sales_order_details:
 		item.barcode = frappe.db.get_value("Item", item.item_code, "barcode")
