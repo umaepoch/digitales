@@ -1,5 +1,6 @@
 // Copyright (c) 2013, Web Notes Technologies Pvt. Ltd. and Contributors
 // License: GNU General Public License v3. See license.txt
+{% include 'digitales/process.js' %};
 
 cur_frm.add_fetch('get_sales_order','customer','customer_id');
 cur_frm.add_fetch('get_sales_order','customer_name','customer_name');
