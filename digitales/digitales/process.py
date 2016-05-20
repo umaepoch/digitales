@@ -49,3 +49,9 @@ def check_billed_processes(doc, method):
 	if processes_billed:
 		frappe.throw("Sales Invoice for Process:  {0} is already Submitted.".format(", ".join(processes_billed)))
 	
+def get_sales_order(doctype, txt, searchfield, start, page_len, filters):
+	query = """
+				select distinct s.parent from `tabSales Order Item` s inner join `tabSales Order` so 
+				on s.parent=so.name where so.docstatus=1 and s.assigned_qty>0 and s.stop_status = "No" and s.parent like "%%%s%%" limit %s, %s
+			"""%(txt, start, page_len)
+	return frappe.db.sql(query, as_list = 1)
