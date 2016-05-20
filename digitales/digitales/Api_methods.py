@@ -225,16 +225,17 @@ def stock_assignment(doc,method):
 	for pr_details in doc.get('purchase_receipt_details'):
 		if frappe.db.get_value("Item",{'is_stock_item':'Yes','name':pr_details.item_code},'name'):
 			qty = flt(pr_details.qty)
-			sales_order = get_SODetails(pr_details.item_code)
+			sales_order = get_SODetails(pr_details.item_code, pr_details.warehouse)
 			if sales_order:
 				check_stock_assignment(qty, sales_order, pr_details)
 
 # So list which has stock not assign or partially assign
-def get_SODetails(item_code):
+def get_SODetails(item_code, warehouse):
 	return frappe.db.sql('''select s.parent as parent,ifnull(s.qty,0)-ifnull(s.assigned_qty,0) AS qty,
 				s.assigned_qty as assigned_qty from `tabSales Order Item` s inner join `tabSales Order` so
 				on s.parent=so.name where s.item_code="%s" and so.docstatus=1 and ifnull(s.stop_status, 'No') <> 'Yes' and
-				ifnull(s.qty,0)>ifnull(s.assigned_qty,0) and so.status!='Stopped' order by so.priority,so.creation'''%(item_code),as_dict=1)
+				ifnull(s.qty,0)>ifnull(s.assigned_qty,0) and so.status!='Stopped' and s.warehouse="%s"
+				order by so.priority,so.creation'''%(item_code, warehouse),as_dict=1)
 
 def check_stock_assignment(qty, sales_order, pr_details):
 	for so_details in sales_order:
