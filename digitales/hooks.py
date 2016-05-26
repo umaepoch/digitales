@@ -67,6 +67,7 @@ fixtures = ['Custom Field', 'Property Setter']
 
 doc_events = {
 	"Sales Order": {
+		"validate": "digitales.digitales.Api_methods.fetch_barcode_supplier",
 		"on_submit": "digitales.digitales.Api_methods.create_purchase_order",
 		"on_cancel": "digitales.digitales.Api_methods.delete_stock_assignment"
 	},
@@ -85,7 +86,8 @@ doc_events = {
 
 	"Sales Invoice": {
 		"validate": "digitales.digitales.Api_methods.validate_sales_invoice",
-		"on_submit": "digitales.digitales.Api_methods.update_sales_invoice"
+		"on_submit": "digitales.digitales.Api_methods.update_sales_invoice",
+		"before_submit": "digitales.digitales.process.check_billed_processes"
 	},
 
 	"Packing Slip": {

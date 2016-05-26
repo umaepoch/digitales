@@ -156,6 +156,7 @@ def append_or_increase_po_item_qty(draft_po, item_code, projected_qty, warehouse
 		po_item.item_code = item_code
 		po_item.qty = qty
 		po_item.warehouse = warehouse
+		po_item.product_release_date = frappe.db.get_value("Item", item_code, "product_release_date") or ""
 		po.save(ignore_permissions=True)
 
 	def increase_item_qty(draft_po, poi_name, item_code, warehouse):
@@ -197,29 +198,6 @@ def create_purchase_order(items, supplier):
 		po_item.item_code = item.get("item_code")
 		po_item.qty = item.get("qty") * -1
 		po_item.warehouse = item.get("warehouse")
+		po_item.product_release_date = frappe.db.get_value("Item",item.get("item_code"), "product_release_date") or ""
 	
 	doc.save(ignore_permissions=True)
-
-# def check_po_draft(doc, method):
-# 	item_in_draft = []
-# 	for item in doc.po_details:
-# 		query = """
-# 					select 
-# 						item_code,
-# 						po.name
-# 					from 
-# 						`tabPurchase Order Item`poi,
-# 						`tabPurchase Order`po 
-# 					where 
-# 						poi.parent = po.name
-# 					and
-# 						poi.item_code = "%s"
-# 					and
-# 						po.docstatus = 0
-# 				"""
-# 		item = frappe.db.sql(query%(item.item_code),as_list=True)
-# 		if item:
-# 			item_in_draft.append(item[0][0])
-# 		if item_in_draft:
-# 			frappe.msgprint("Items are Already In PO Draft : " + ",".join(item_in_draft))
-# 	return item_in_draft
