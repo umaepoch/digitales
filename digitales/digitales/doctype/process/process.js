@@ -1,5 +1,6 @@
 // Copyright (c) 2013, Web Notes Technologies Pvt. Ltd. and Contributors
 // License: GNU General Public License v3. See license.txt
+{% include 'digitales/process.js' %};
 
 cur_frm.add_fetch('get_sales_order','customer','customer_id');
 cur_frm.add_fetch('get_sales_order','customer_name','customer_name');
@@ -39,7 +40,9 @@ cur_frm.cscript.process_type = function(doc, cdt, cdn) {
 }
 	
 cur_frm.get_field("get_sales_order").get_query=function(doc,cdt,cdn){
-	return "select distinct s.parent from `tabSales Order Item` s inner join `tabSales Order` so on s.parent=so.name where so.docstatus=1 and s.assigned_qty>0"
+	return {
+		query: "digitales.digitales.process.get_sales_order"
+	}
 }
 
 // cur_frm.cscript.qty = function(doc, cdt, cdn){
