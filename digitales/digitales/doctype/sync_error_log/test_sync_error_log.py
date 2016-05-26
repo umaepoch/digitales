@@ -4,7 +4,7 @@
 import frappe
 import unittest
 
-test_records = frappe.get_test_records('Sync Item')
+test_records = frappe.get_test_records('Sync Error Log')
 
-class TestSyncItem(unittest.TestCase):
+class TestSyncErrorLog(unittest.TestCase):
 	pass

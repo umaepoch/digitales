@@ -1,5 +1,6 @@
 {
 	"js/digitales.min.js": [
-		"public/js/templates/po_stop_items.html"
+		"public/js/templates/po_stop_items.html",
+		"public/js/templates/sync_log_status.html"
 	]
 }
