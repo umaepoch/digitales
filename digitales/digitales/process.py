@@ -12,7 +12,7 @@ def make_sales_invoice(source_name, target_doc=None):
 		target.customer_name = source.customer_name
 		target.run_method("set_missing_values");
 
-	def update_item(source, target, source_parent):
+	def update_values(source, target, source_parent):
 		target.sales_order = source_parent.get_sales_order
 		target.delivery_note = source_parent.get_delivery_note
 		target.cost_center = "Processing - D"
@@ -33,7 +33,7 @@ def make_sales_invoice(source_name, target_doc=None):
 				"item_barcode": "barcode",
 				"file_name": "marcfile_name"
 			},
-			"postprocess": update_item,
+			"postprocess": update_values,
 		}, 
 	}, target_doc, set_missing_values)
 
