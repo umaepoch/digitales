@@ -1,0 +1,18 @@
+<div class="row" style="max-height: 32px; margin-bottom: 3px;">
+	<div class="col-xs-11">
+		<div class="text-ellipsis">
+			{%= list.get_avatar_and_id(doc) %}
+			<span class="label label-{%= frappe.utils.guess_style(doc.is_synced || 'No') %} filterable"
+				data-filter="is_synced,=,{%= doc.is_synced %}"> Status : {%= doc.is_synced || "No" %}</span>
+
+			<span class="label label-{%= frappe.utils.guess_style(doc.notification_sent || 'No') %} filterable"
+				data-filter="notification_sent,=,{%= doc.notification_sent %}">Notification : {%= doc.notification_sent || "No" %}</span>
+
+			<span class="label label-danger filterable"
+				data-filter="sync_doctype,=,{%= doc.sync_doctype %}">Entity : {%= doc.sync_doctype %}</span>
+
+			<span class="label label-danger filterable"
+				data-filter="sync_docname,=,{%= doc.sync_docname %}">ID : {%= doc.sync_docname %}</span>
+		</div>
+	</div>
+</div>

@@ -5,5 +5,5 @@ from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 
-class SyncItem(Document):
+class ErrorLog(Document):
 	pass

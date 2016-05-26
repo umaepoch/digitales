@@ -2,38 +2,7 @@ erpnext.selling.CustomSalesOrder = erpnext.selling.SalesOrderController.extend({
   init:function(){
     var a;
   }
-
-
-
 });
-
-// cur_frm.cscript['Stop Sales Order'] = function(doc) {
-// 	var doc = cur_frm.doc;
-// 	var check = confirm(__("Are you sure you want to STOP ") + doc.name);
-
-// 	if (check) {
-
-// 		return $c('runserverobj', {
-// 			'method':'stop_sales_order',
-// 			'docs': doc
-// 			}, function(r,rt) {
-// 				frappe.call({
-// 					method: "digitales.digitales.Api_methods.assign_stopQty_toOther",
-// 					args: {'doc': doc.name},
-// 					callback: function(r) {
-// 						refresh_field('sales_order_details')
-// 						cur_frm.reload_doc();
-// 					}
-// 				})
-// 				cur_frm.refresh();
-// 		});
-// 	}
-// }
-
-
-
-
-// //added by pitambar
 
 frappe.require("assets/css/tab_scroll.css");
 cur_frm.cscript['Stop Sales Order'] = function(doc) {
@@ -43,18 +12,18 @@ cur_frm.cscript['Stop Sales Order'] = function(doc) {
 		create_dialog(doc);
 	}
 	else{
-		alert("No Item to STOP");
+		msgprint("No Item to STOP");
 	}
 }
 
 function create_dialog(doc){
 	this.dialog = new frappe.ui.Dialog({
-	title:__('Select Item To Stop'),
-	fields: [
-	{fieldtype:'HTML', fieldname:'styles_name', label:__('Styles'), reqd:false,
-	description: __("")},
-	{fieldtype:'Button', fieldname:'status_update', label:__('Action') }
-	]
+		title:__('Select Item To Stop'),
+		fields: [
+			{fieldtype:'HTML', fieldname:'styles_name', label:__('Styles'), reqd:false,
+			description: __("")},
+			{fieldtype:'Button', fieldname:'status_update', label:__('Action') }
+		]
 	})
 	this.fd = dialog.fields_dict;
 
@@ -88,14 +57,8 @@ function create_dialog(doc){
 	$(this.fd.status_update.input).click(function() {
 		this.item_dict={};
 		var inner_me=this;
-		var check = confirm(__("Are you sure you want to STOP selected items"));
-    	$(outer_this.fd.styles_name.wrapper).find('#tb1 tbody tr').filter(':has(:checkbox:checked)').each(function() {
-          var $tds = $(this).find('td');
-            item_c = $tds.eq(1).text();
-            item_q = $tds.eq(3).text();
-            inner_me.item_dict[item_c]=item_q;
-   });
-    	if (check) {
+		inner_me.check = false;
+		frappe.confirm(__("Are you sure you want to STOP selected items"), function(){
 			outer_this.dialog.hide()
 			frappe.call({
 					method: "digitales.digitales.Api_methods.assign_stopQty_toOther",
@@ -107,7 +70,14 @@ function create_dialog(doc){
 						cur_frm.reload_doc();
 					}
 			})
-		}
+		}, function(){});
+
+    	$(outer_this.fd.styles_name.wrapper).find('#tb1 tbody tr').filter(':has(:checkbox:checked)').each(function() {
+          var $tds = $(this).find('td');
+            item_c = $tds.eq(1).text();
+            item_q = $tds.eq(3).text();
+            inner_me.item_dict[item_c]=item_q;
+   		});
 	})
 }
 
