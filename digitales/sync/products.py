@@ -31,6 +31,8 @@ def create_or_update_item(entity):
 		item.expense_account, item.income_account = default_ExpenxeIncomeAccount(item.item_group)
 		item.save(ignore_permissions=True)
 
+		create_or_update_item_price(entity)
+
 		return {
 			cstr(entity.get("sku")): {
 				"operation": "Item Created" if not name else "Item Updated",
@@ -109,3 +111,33 @@ def default_ExpenxeIncomeAccount(media):
 		income_account = "4-1100 Product Sales"
 
 	return expense_account, income_account
+
+def create_or_update_item_price(entity):
+	# create new Item Price if not available else update
+	price = entity.get("price")
+	if not price:
+		return
+
+	price_list = frappe.db.get_value("Configuration Page", "Configuration Page", "price_list")
+	if not price_list:
+		frappe.throw("Please Specify the Price List in Configuration Page")
+
+	item_price_name = frappe.db.get_value(
+						"Item Price", 
+						{
+							"item_code": entity.get("sku"),
+							"price_list": price_list
+						},
+						"name"
+					)
+
+	if not item_price_name:
+		item_price = frappe.new_doc("Item Price")
+	else:
+		item_price = frappe.get_doc("Item Price", item_price_name)
+
+	item_price.item_code = cstr(entity.get("sku"))
+	item_price.price_list = price_list
+	item_price.price_list_rate = entity.get("price", 0)
+
+	item_price.save(ignore_permissions=True)
