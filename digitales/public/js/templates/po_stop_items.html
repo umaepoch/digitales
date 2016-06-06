@@ -25,7 +25,7 @@
 			        <td align="left" id="item_code">{%= item.item_code %}</td>
 			        <td align="left" id="item_name">{%= item.item_name %}</td>
 			        <td align="left" id="warehouse" style="display:None">{%= item.warehouse %}</td>
-			        <td align="center" id="qty">{%= item.qty - item.received_qty %}</td>
+			        <td align="center" id="qty">{%= item.qty - (item.received_qty || 0) %}</td>
 			      </tr>
 			    </tbody>
 			{% } %}
