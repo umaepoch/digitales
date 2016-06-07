@@ -71,11 +71,13 @@ def log_sync_status(
 	entity_type, count_response={},
 	entities_to_sync=0, pages_to_sync=0,
 	entities_received=0, synced_entities={},
-	start=None, end=None, is_resync=False):
+	start=None, end=None, is_resync=False,
+	max_date=None):
 
 	""" log Magento >> ERPNext entity sync status """
 
 	log = frappe.new_doc("Sync Log")
+	log.max_updated_at = max_date
 	log.date = start or now_datetime()
 	log.sync_end = end or now_datetime()
 	log.sync_time = end - start

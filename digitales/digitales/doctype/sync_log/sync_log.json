@@ -18,6 +18,23 @@
    "precision": ""
   }, 
   {
+   "fieldname": "col_break_1", 
+   "fieldtype": "Column Break", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "max_updated_at", 
+   "fieldtype": "Datetime", 
+   "in_filter": 1, 
+   "in_list_view": 1, 
+   "label": "Max Updated At", 
+   "permlevel": 0, 
+   "precision": "", 
+   "read_only": 1, 
+   "reqd": 0
+  }, 
+  {
    "fieldname": "section_break_2", 
    "fieldtype": "Section Break", 
    "permlevel": 0, 
@@ -217,7 +234,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2016-05-12 14:34:59.133295", 
+ "modified": "2016-06-07 15:57:37.404281", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Sync Log", 

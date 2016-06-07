@@ -68,6 +68,7 @@ fixtures = ['Custom Field', 'Property Setter']
 doc_events = {
 	"Sales Order": {
 		"validate": "digitales.digitales.Api_methods.fetch_barcode_supplier",
+		"before_submit": "digitales.digitales.Api_methods.update_assinged_qty",
 		"on_submit": "digitales.digitales.Api_methods.create_purchase_order",
 		"on_cancel": "digitales.digitales.Api_methods.delete_stock_assignment"
 	},
@@ -96,6 +97,9 @@ doc_events = {
 
 	"Scheduler Log":{
 		"validate" : "digitales.digitales.custom_methods.send_mail_SchedulerLog" 
+	},
+	"Attendance": {
+		"validate": "digitales.digitales.custom_methods.attendance_workflow"
 	}	
 }
 
@@ -110,7 +114,7 @@ scheduler_events = {
 	# 	"digitales.sync_csv.check_lastdate_api"
 	# ],
 	"daily": [
-		"digitales.digitales.sync_missing_entities.notifiy_stopped_entities_status"
+		"digitales.sync.sync_missing_entities.notifiy_stopped_entities_status"
 	]
 	# "weekly": [
 	# 	"digitales.tasks.weekly"
