@@ -740,6 +740,12 @@ def fetch_barcode_supplier(doc, method):
 
 	if doc.doctype == "Sales Order":
 		items = doc.sales_order_details
+		if doc.budget and not doc.po_no:
+			doc.po_no = frappe.db.get_value("Budget Details", {
+							"parent": doc.customer,
+							"budget": doc.budget
+						}, "po_number") or ""
+
 	elif doc.doctype == "Purchase Order":
 		items = doc.po_details
 
