@@ -22,7 +22,7 @@ def get_data(filters):
 								so.new_order_type,
 								so.budget,
 								soi.qty, 
-								soi.delivered_qty, 
+								ifnull(soi.delivered_qty, 0),
 								CASE
 									WHEN soi.stop_status='No' THEN (soi.qty-ifnull(soi.delivered_qty, 0))
 									ELSE 0
