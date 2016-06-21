@@ -62,9 +62,10 @@ function create_dialog(doc){
 			outer_this.dialog.hide()
 			frappe.call({
 					method: "digitales.digitales.Api_methods.assign_stopQty_toOther",
-					args: {'doc': doc.name,
-							'item_list':inner_me.item_dict
-						},
+					args: {
+						'doc': doc.name,
+						'item_list':inner_me.item_dict
+					},
 					callback: function(r) {
 						refresh_field('sales_order_details')
 						cur_frm.reload_doc();
