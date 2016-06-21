@@ -34,14 +34,20 @@ def check_ispurchase_item(doc,method):
 				Stock_Availability(doc,d)
 				assign_extra_qty_to_other(d)
 			else:
-				bin_details = frappe.db.sql(''' select ifnull(sum(soi.qty), 0) - ifnull(sum(soi.delivered_qty), 0)  from
-                                               `tabSales Order Item` soi, `tabSales Order` so where soi.parent = so.name
-                                               and ifnull(soi.stop_status, "No") <> "Yes" and so.status <> "Stopped" and soi.docstatus = 1
-                                               and soi.item_code ="%s" and soi.warehouse = "%s" '''%(d.item_code, d.warehouse), as_list=1)
-				so_qty = flt(bin_details[0][0]) if bin_details else 0.0
-				po_qty = get_po_qty(d.item_code, d.warehouse) - so_qty # if negative then make po
-				if po_qty < 0:
-					create_purchase_order_record(doc,d, flt(po_qty*-1))
+				create_purchase_order_record(doc,d, d.qty)
+				# print d.qty
+				# bin_details = frappe.db.sql(''' select ifnull(sum(soi.qty), 0) - ifnull(sum(soi.delivered_qty), 0)  from
+                #                                `tabSales Order Item` soi, `tabSales Order` so where soi.parent = so.name
+                #                               and ifnull(soi.stop_status, "No") <> "Yes" and so.status <> "Stopped" and soi.docstatus = 1
+                #                              and soi.item_code ="%s" and soi.warehouse = "%s" '''%(d.item_code, d.warehouse), as_list=1, debug=1)
+				# print "bin_details***********",bin_details
+				# so_qty = flt(bin_details[0][0]) if bin_details else 0.0
+				# print"so_qty",so_qty
+				# po_qty = get_po_qty(d.item_code, d.warehouse) - so_qty # if negative then make po
+				# print "PO qty", po_qty
+				# ss
+				# if po_qty < 0:
+				# 	create_purchase_order_record(doc,d, flt(po_qty*-1))
 
 def Stock_Availability(so_doc, child_args):
 	bin_details = frappe.db.get_value('Bin', {'item_code': child_args.item_code, 'warehouse': child_args.warehouse}, '*', as_dict=1)
@@ -150,7 +156,9 @@ def delete_stock_assignment(doc, method):
 			for data in stl:
 				delete_stl(data)
 		reduce_po(doc)
+		#update_assigned_qty(doc)
 		update_stock_assigned_qty_to_zero(doc)
+		
 
 def stop_error(doc):
 	st_error=''
@@ -170,6 +178,36 @@ def update_stock_assigned_qty_to_zero(doc):
 		data.assigned_qty = 0.0
 		data.po_data = ''
 		data.po_qty = 0.0
+
+def update_assigned_qty(doc):
+	query = '''	select s.parent as parent,ifnull(s.qty,0)-ifnull(s.assigned_qty,0) AS qty,
+				s.assigned_qty as assigned_qty 
+				from `tabSales Order Item` s inner join `tabSales Order` so
+				on s.parent=so.name 
+				where s.item_code="%s" and so.docstatus=1 and ifnull(s.stop_status, 'No') <> 'Yes' 
+				and ifnull(s.qty,0)>ifnull(s.assigned_qty,0) 
+				and so.status!='Stopped' order by so.priority,so.creation'''
+
+	for item in doc.get('sales_order_details'):
+		if item.assigned_qty > 0:
+			sales_order = frappe.db.sql(query%(item.item_code), as_dict=1)
+			
+			if sales_order and len(sales_order)==1:
+				assigned_qty_to_so(sales_order[0], item)
+			elif sales_order and len(sales_order) > 1:
+				so = [so[0] for so in sales_order]
+				frappe.throw("Multiple Draft SO (%s) present for Item %s"%(",".join(so), item.item_code))
+	
+def assigned_qty_to_so(so, item):
+	'''update assign qty to available so'''
+	query = '''update `tabSales Order Item` 
+			set assigned_qty = %s where item_code = "%s" and parent = "%s"'''
+	if so.qty >= item.assigned_qty:
+		frappe.db.sql(query%(item.assigned_qty, item.item_code, so.parent))
+	elif so.qty < item.assigned_qty:
+		frappe.db.sql(query%(so.qty, item.item_code, so.parent))
+	
+
 
 def reduce_po(doc):
 	for data in doc.get('sales_order_details'):
@@ -342,7 +380,7 @@ def create_new_po(doc,d,supplier,qty):
 	e.base_amount=d.amount
 	e.warehouse=d.warehouse
 	e.schedule_date=nowdate()
-	e.product_release_date = d.release_date_of_item
+	e.product_release_date = frappe.db.get_value("Item", d.item_code, "product_release_date")
 	po.save(ignore_permissions=True)
 	return po.name
 
@@ -501,7 +539,7 @@ def assign_stopQty_toOther(doc,item_list):
 	for data in self.get('sales_order_details'):
 		if data.item_code in (stopping_items) and data.stop_status!="Yes":			# check item code in selected stopping item
 			# get the draft po
-			po_qty = data.qty - data.delivered_qty or 0
+			po_qty = data.qty - (data.delivered_qty or 0)
 			query = '''
 						select distinct poi.parent, poi.qty from `tabPurchase Order Item` poi, `tabPurchase Order` po
 						where poi.parent=po.name and po.docstatus=0 and po.status="Draft" and poi.item_code='%s'
@@ -524,6 +562,9 @@ def assign_stopQty_toOther(doc,item_list):
 					sales_order = get_item_SODetails(data.item_code)
 					if sales_order:
 						create_StockAssignment_AgainstSTopSOItem(data, sales_order, qty, reduce_po=False)
+					# 	change_assigned_qty(data.item_code,data.parent,qty)
+					# else:
+					# 	change_assigned_qty(data.item_code,data.parent,qty)
 	return "Done"
 
 def create_StockAssignment_AgainstSTopSOItem(data, sales_order, qty, reduce_po=True):
@@ -681,6 +722,10 @@ def set_contract_details(doc):
 	doc.contract_number = contract_details.get("contract_no") if not doc.contract_number else doc.contract_number
 	doc.tender_group = contract_details.get("tender_group") if not doc.tender_group else doc.tender_group
 
+def change_assigned_qty(item_code,parent,qty):
+	# frappe.db.sql(''' update `tabSales Order Item` set assigned_qty = assigned_qty - %s where item_code = "%s" and parent="%s"'''%(qty,item_code,parent))
+	frappe.db.sql(''' update `tabSales Order Item` set assigned_qty = 0 where item_code = "%s" and parent="%s"'''%(item_code,parent))
+
 @frappe.whitelist()
 def get_artist(item_code):
 	return frappe.db.get_value('Item', {'name':item_code}, 'artist') or ''
@@ -691,9 +736,75 @@ def set_artist(doc, method):
 		i.artist=art
 		
 def fetch_barcode_supplier(doc, method):
-	for item in doc.sales_order_details:
-		item.barcode = frappe.db.get_value("Item", item.item_code, "barcode")
-		item.default_supplier = frappe.db.get_value("Item", item.item_code, "default_supplier")
+	items = []
+
+	if doc.doctype == "Sales Order":
+		items = doc.sales_order_details
+	elif doc.doctype == "Purchase Order":
+		items = doc.po_details
+
+	for item in items:
+		item_details = frappe.db.get_value(
+							"Item", item.item_code, 
+							["barcode", "default_supplier", "product_release_date"],
+							as_dict=True
+						)
+		item.release_date_of_item = item_details.get("product_release_date") or ""
+		if doc.doctype == "Sales Order":
+			item.barcode = item_details.get("barcode") or ""
+			item.default_supplier = item_details.get("default_supplier") or ""
+
+#def update_assinged_qty(doc, method):
+	#"""on new so submit it will check previous stop so's assigned qty and assigned to current so"""
+	# for item in doc.sales_order_details:
+	# 	query = '''
+	# 				select so.name, soi.item_code, ifnull(soi.assigned_qty,0) as assigned_qty, sum(soi.assigned_qty) as sum
+	# 				from `tabSales Order`so , `tabSales Order Item`soi 
+	# 				where soi.stop_status = "Yes" and soi.item_code = "%s" 
+	# 				and ifnull(soi.assigned_qty, 0) > 0 and soi.parent = so.name
+	# 				and so.status!='Stopped'
+	# 			'''
+	# 	stopped_so_assigned_qty = frappe.db.sql(query%(item.item_code), as_dict=1)
+	# 	item_qty = item.qty
+	# 	print "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",stopped_so_assigned_qty
+		
+	# 	query = '''	update `tabSales Order Item` set assigned_qty = "%s" 
+	# 				where parent = "%s" and item_code = "%s"'''
+		
+	# 	if stopped_so_assigned_qty[0]['sum']:
+	# 		if item_qty == stopped_so_assigned_qty[0]['sum']:
+	# 			print "item_qty {0} == assigned_qty {1}".format(item_qty, stopped_so_assigned_qty[0]['sum'])
+	# 			print"SO", item.parent,"item", item.item_code,"ass_qty", item_qty
+	# 			item_qty = 0
+	# 			#item.assigned_qty = stopped_so_assigned_qty['sum']
+	# 			frappe.db.sql(query%(item.qty, item.parent, item.item_code), debug=1)
+	# 			for so in stopped_so_assigned_qty:
+	# 				frappe.db.sql(query%(0,so['name'], so['item_code']))
+	# 		else:
+	# 			print "item_qty {0} != assigned_qty {1}".format(item_qty, stopped_so_assigned_qty[0]['sum'])
+	# 			for so in stopped_so_assigned_qty:
+					
+	# 				if so['assigned_qty'] > item_qty and item_qty > 0:
+	# 					print"SO", item.parent,"item", item.item_code,"ass_qty", item.qty
+	# 					print "{0}assi_qty > {1}i_qty".format(so['assigned_qty'], item_qty)
+	# 					frappe.db.sql(query%((so['assigned_qty'] - item_qty),so['name'], so['item_code']),debug=1)
+	# 					frappe.db.sql(query%(item_qty, item.parent, item.item_code),debug=1)
+	# 					item_qty = 0
+	# 				elif so['assigned_qty'] == item_qty and item_qty > 0:
+	# 					print"SO", item.parent,"item", item.item_code,"ass_qty", item_qty
+	# 					print "{0}assi_qty == {1}i_qty".format(so['assigned_qty'], item_qty)
+	# 					frappe.db.sql(query%(0,so['name'], so['item_code']))
+	# 					frappe.db.sql(query%(item_qty, item.parent, item.item_code),debug=1)
+	# 					item_qty = 0
+	# 				elif so['assigned_qty'] < item_qty:
+	# 					print "{0}assi_qty < {1}i_qty".format(so['assigned_qty'], item_qty)
+	# 					frappe.db.sql(query%(0,so['name'], so['item_code']))
+	# 					frappe.db.sql(query%(so['assigned_qty'], item.parent, item.item_code),debug=1)
+	# 					item_qty = item_qty - so['assigned_qty']
+	# 					print"SO", item.parent,"item", item.item_code,"ass_qty", so['assigned_qty']
+	
+
+	# create_purchase_order(doc, method);
 
 # def check_APItime():
 # 	time = frappe.db.sql("""select value from `tabSingles` where doctype='API Configuration Page' and field in ('date','api_type')""",as_list=1)

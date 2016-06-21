@@ -44,6 +44,7 @@ def get_and_sync_entities(api_type="Product", update_config=True):
 	total_entities_to_sync = 0
 	total_entities_received = 0
 	start = end = now_datetime()
+	max_date = "1991-09-07 05:43:13"
 	entity_url = { "Item": "products", "Customer": "customers", "Sales Order": "orders" } 
 	sync_methods = {
 		"Item": create_or_update_item,
@@ -90,6 +91,6 @@ def get_and_sync_entities(api_type="Product", update_config=True):
 		log_sync_status(
 			entity_type, count_response=count, entities_to_sync=total_entities_to_sync, 
 			pages_to_sync=page_count, entities_received=total_entities_received, synced_entities=sync_stat,
-			start=start, end=end
+			start=start, end=end, max_date=max_date
 		)
 		if update_config: update_execution_date(next_sync_type[api_type])
