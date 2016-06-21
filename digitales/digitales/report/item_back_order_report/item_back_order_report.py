@@ -24,7 +24,7 @@ def get_data(filters):
 								soi.qty, 
 								soi.delivered_qty, 
 								CASE
-									WHEN soi.stop_status='No' THEN (soi.qty-soi.delivered_qty)
+									WHEN soi.stop_status='No' THEN (soi.qty-ifnull(soi.delivered_qty, 0))
 									ELSE 0
 								END AS qty_to_deliver,
 								soi.assigned_qty,
