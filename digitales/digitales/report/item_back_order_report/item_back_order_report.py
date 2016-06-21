@@ -47,7 +47,7 @@ def get_data(filters):
 								`tabSales Order Item`soi 
 							WHERE 
 								so.name = soi.parent and 
-								(soi.qty-soi.delivered_qty) != 0 {0} 
+								(soi.qty-ifnull(soi.delivered_qty, 0)) != 0 {0}
 						""".format(get_conditions(filters)),as_list=1)
 	return result
 
