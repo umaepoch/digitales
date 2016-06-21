@@ -106,3 +106,23 @@ function checkall(){
 	    }
 	});
 }
+
+frappe.ui.form.on("Sales Order", "budget", function(frm){
+	return frappe.call({
+		method: "frappe.client.get_value",
+		args: {
+			doctype: "Budget Details",
+			fieldname: "po_number",
+			filters: {
+				parent:frm.doc.customer,
+				budget:frm.doc.budget
+			}
+		},
+		callback: function(r){
+			if(r.message){
+				frm.set_value("po_no", r.message.po_number);
+				frm.refresh_fields();
+			}
+		}
+	});
+});
