@@ -539,7 +539,7 @@ def assign_stopQty_toOther(doc,item_list):
 	for data in self.get('sales_order_details'):
 		if data.item_code in (stopping_items) and data.stop_status!="Yes":			# check item code in selected stopping item
 			# get the draft po
-			po_qty = data.qty - data.delivered_qty or 0
+			po_qty = data.qty - (data.delivered_qty or 0)
 			query = '''
 						select distinct poi.parent, poi.qty from `tabPurchase Order Item` poi, `tabPurchase Order` po
 						where poi.parent=po.name and po.docstatus=0 and po.status="Draft" and poi.item_code='%s'
@@ -736,9 +736,23 @@ def set_artist(doc, method):
 		i.artist=art
 		
 def fetch_barcode_supplier(doc, method):
-	for item in doc.sales_order_details:
-		item.barcode = frappe.db.get_value("Item", item.item_code, "barcode")
-		item.default_supplier = frappe.db.get_value("Item", item.item_code, "default_supplier")
+	items = []
+
+	if doc.doctype == "Sales Order":
+		items = doc.sales_order_details
+	elif doc.doctype == "Purchase Order":
+		items = doc.po_details
+
+	for item in items:
+		item_details = frappe.db.get_value(
+							"Item", item.item_code, 
+							["barcode", "default_supplier", "product_release_date"],
+							as_dict=True
+						)
+		item.release_date_of_item = item_details.get("product_release_date") or ""
+		if doc.doctype == "Sales Order":
+			item.barcode = item_details.get("barcode") or ""
+			item.default_supplier = item_details.get("default_supplier") or ""
 
 #def update_assinged_qty(doc, method):
 	#"""on new so submit it will check previous stop so's assigned qty and assigned to current so"""

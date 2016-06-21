@@ -94,8 +94,8 @@ doc_events = {
 		"validate": "digitales.digitales.Api_methods.set_artist"
 	},
 
-	"Scheduler Log":{
-		"validate" : "digitales.digitales.custom_methods.send_mail_SchedulerLog" 
+	"Purchase Order": {
+		"validate": "digitales.digitales.Api_methods.fetch_barcode_supplier"
 	}
 }
 
@@ -106,18 +106,9 @@ scheduler_events = {
 	"all": [
 		"digitales.sync.sync_entities.sync_entity_from_magento"
 	],
-	# "hourly": [
-	# 	"digitales.sync_csv.check_lastdate_api"
-	# ],
 	"daily": [
 		"digitales.sync.sync_missing_entities.notifiy_stopped_entities_status"
 	]
-	# "weekly": [
-	# 	"digitales.tasks.weekly"
-	# ]
-	# "monthly": [
-	# 	"digitales.tasks.monthly"
-	# ]
  }
 
 # Testing
