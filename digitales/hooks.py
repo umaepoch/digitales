@@ -87,7 +87,8 @@ doc_events = {
 	"Sales Invoice": {
 		"validate": "digitales.digitales.Api_methods.validate_sales_invoice",
 		"on_submit": "digitales.digitales.Api_methods.update_sales_invoice",
-		"before_submit": "digitales.digitales.process.check_billed_processes"
+		"before_submit": "digitales.digitales.process.check_billed_processes",
+		"on_cancel": "digitales.digitales.process.remove_sales_invoice_from_process"
 	},
 
 	"Packing Slip": {
