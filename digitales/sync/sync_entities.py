@@ -58,7 +58,7 @@ def get_and_sync_entities(api_type="Product", update_config=True):
 		max_date = frappe.db.sql(query, as_dict=True)
 		max_date = "1991-09-07 05:43:13" if not all([max_date, max_date[0].get("max_date")]) else max_date[0].get("max_date")
 
-		count = get_entity_and_page_count(max_date, entity_type=entity_type)
+		count = get_entity_and_page_count(date_minus_sec(max_date), entity_type=entity_type)
 		if not count:
 			return
 
