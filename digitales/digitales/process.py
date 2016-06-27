@@ -55,3 +55,17 @@ def get_sales_order(doctype, txt, searchfield, start, page_len, filters):
 				on s.parent=so.name where so.docstatus=1 and s.assigned_qty>0 and s.stop_status = "No" and s.parent like "%%%s%%" limit %s, %s
 			"""%(txt, start, page_len)
 	return frappe.db.sql(query, as_list = 1)
+
+def remove_sales_invoice_from_process(doc,method):
+	'''if sales invoice link with any process remove it'''
+	query = '''select distinct name from `tabProcess` where sales_invoice = "%s"'''%(doc.name)
+	remove_invoice_query = 	'''update `tabProcess`
+								set sales_invoice_status = "Not Done",
+								sales_invoice = ""
+								where name = "%s"
+							'''
+	processes = frappe.db.sql(query,as_dict=True)
+	if processes:
+		for p in processes:
+			frappe.db.sql(remove_invoice_query%(p['name']))
+			frappe.db.commit()
