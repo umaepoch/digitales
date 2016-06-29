@@ -72,7 +72,7 @@ def log_sync_status(
 	entities_to_sync=0, pages_to_sync=0,
 	entities_received=0, synced_entities={},
 	start=None, end=None, is_resync=False,
-	max_date=None):
+	max_date=None, urls=[], response=[]):
 
 	""" log Magento >> ERPNext entity sync status """
 
@@ -91,6 +91,8 @@ def log_sync_status(
 	log.synced_entities = json.dumps(synced_entities)
 	log.sync_stat = ""
 	log.is_resync = 1 if is_resync else 0
+	log.url = "<pre><code>%s</code></pre>"%(json.dumps(urls or [], indent=2))
+	log.magento_response = "<pre><code>%s</code></pre>"%(json.dumps(response or {}, indent=2))
 	log.save(ignore_permissions=True)
 
 def log_sync_error(

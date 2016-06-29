@@ -206,12 +206,6 @@
    "precision": ""
   }, 
   {
-   "fieldname": "fold_15", 
-   "fieldtype": "Fold", 
-   "permlevel": 0, 
-   "precision": ""
-  }, 
-  {
    "fieldname": "entity_sync_status", 
    "fieldtype": "Section Break", 
    "label": "Entity Sync Status", 
@@ -225,6 +219,42 @@
    "permlevel": 0, 
    "precision": "", 
    "read_only": 0
+  }, 
+  {
+   "fieldname": "fold_15", 
+   "fieldtype": "Fold", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "section_break_magento_response", 
+   "fieldtype": "Section Break", 
+   "label": "Magento Response", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "url", 
+   "fieldtype": "Small Text", 
+   "label": "URL", 
+   "permlevel": 0, 
+   "precision": "", 
+   "read_only": 1
+  }, 
+  {
+   "fieldname": "section_break_27", 
+   "fieldtype": "Section Break", 
+   "label": "", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "magento_response", 
+   "fieldtype": "Long Text", 
+   "label": "Magento Response", 
+   "permlevel": 0, 
+   "precision": "", 
+   "read_only": 1
   }
  ], 
  "hide_heading": 0, 
@@ -234,7 +264,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2016-06-07 15:57:37.404281", 
+ "modified": "2016-06-29 19:49:27.746573", 
  "modified_by": "Administrator", 
  "module": "digitales", 
  "name": "Sync Log", 

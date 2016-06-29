@@ -38,9 +38,11 @@ def sync_entity_from_magento():
 
 def get_and_sync_entities(api_type="Product", update_config=True):
 	""" get and sync the Item, Customer, Sales Order """
+	urls = []
 	count = {}
 	sync_stat = {}
 	page_count = 0
+	magento_response = []
 	total_entities_to_sync = 0
 	total_entities_received = 0
 	start = end = now_datetime()
@@ -72,7 +74,9 @@ def get_and_sync_entities(api_type="Product", update_config=True):
 			if not response:
 				continue
 
+			magento_response.append(response)
 			total_entities_received += len(response)
+			urls.append(url.format(date_minus_sec(max_date), idx))
 
 			if entity_type in ["Sales Order", "Customer"]:
 				sync_stat.update({ entity_id: { "modified_date": entity.get("updated_at") } for entity_id, entity in response.iteritems() })
@@ -91,6 +95,6 @@ def get_and_sync_entities(api_type="Product", update_config=True):
 		log_sync_status(
 			entity_type, count_response=count, entities_to_sync=total_entities_to_sync, 
 			pages_to_sync=page_count, entities_received=total_entities_received, synced_entities=sync_stat,
-			start=start, end=end, max_date=max_date
+			start=start, end=end, max_date=max_date, urls=urls, response=magento_response
 		)
 		if update_config: update_execution_date(next_sync_type[api_type])
