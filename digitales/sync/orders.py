@@ -61,6 +61,8 @@ def create_or_update_sales_order(entity):
 					"modified_date": entity.get("updated_at")
 				}
 			}
+		else:
+			raise Exception("({}) items is not yet syned".format(",".join(missing_items)))
 	except Exception, e:
 		docname = entity.get('entity_id')
 		response = entity
@@ -80,7 +82,7 @@ def get_missing_items(items, increment_id):
 						item.get('sku'),
 						increment_id or ""
 					))
-			log_sync_error("Item", item.get('sku'), item, error, "check_item_presence")
+			log_sync_error("Item", item.get('sku'), item, error, "get_missing_items")
 			missing_items.append(item.get('sku'))
 	return missing_items
 
