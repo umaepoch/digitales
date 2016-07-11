@@ -67,8 +67,8 @@ def get_and_sync_entities(api_type="Product", update_config=True):
 		total_entities_to_sync = count.get("entity_count")
 		page_count = count.get("page_count") + 1 if count.get("page_count") else 0
 
-		url = "http://digitales.com.au/api/rest/{}?filter[1][attribute]=updated_at".format(entity_url[entity_type])
-		url += "&filter[1][gt]={}&page={}&limit=100&order=updated_at&dir=asc"
+		url = "http://digitales.com.au/api/rest/{}?filter[0][attribute]=updated_at".format(entity_url[entity_type])
+		url += "&filter[0][from][0]={}&page={}&limit=100&order=updated_at&dir=asc"
 		for idx in xrange(1, page_count):
 			response = get_entities_from_magento(url.format(date_minus_sec(max_date), idx), entity_type=entity_type)
 			if not response:
