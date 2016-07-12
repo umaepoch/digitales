@@ -760,9 +760,9 @@ def fetch_barcode_supplier(doc, method):
 			item.barcode = item_details.get("barcode") or ""
 			item.default_supplier = item_details.get("default_supplier") or ""
 
-	def check_and_update_status(doc, method):
-		if doc.docstatus == 0 and doc.status != "Draft":
-			doc.status = "Draft"
+def check_and_update_status(doc, method):
+	if doc.docstatus == 0 and doc.status != "Draft":
+		doc.status = "Draft"
 
 #def update_assinged_qty(doc, method):
 	#"""on new so submit it will check previous stop so's assigned qty and assigned to current so"""
