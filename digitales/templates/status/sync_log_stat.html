@@ -8,7 +8,7 @@
 		</tr>
 	</thead>
 	<tbody>
-		{% for entity_id, stat in entities.iteritems() %}
+		{% for entity_id, stat in sync_stat.iteritems() %}
 		<tr>
 			<td>{{ entity_id }}</td>
 			<td>{{ stat.get("name", "NA") }}</td>

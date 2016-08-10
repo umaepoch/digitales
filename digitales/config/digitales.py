@@ -50,6 +50,13 @@ def get_data():
 					"name": "Sync Error Log",
 					"label": _("Sync Error Log"),
 					"description": _("Magento > ERPNext Synchronization Error Logs")
+				},
+				{
+					"type": "doctype",
+					"icon": "icon-table",
+					"name": "Sync Missing Entities",
+					"label": _("Sync Missing Entities"),
+					"description": _("Magento > ERPNext Manual Synchronization")
 				}
 			]
 		},
