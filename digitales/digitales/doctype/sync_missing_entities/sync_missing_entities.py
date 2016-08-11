@@ -15,8 +15,13 @@ func_map = {
 }
 
 class SyncMissingEntities(Document):
+
+	def onload(self):
+		self.sync_stat = ""
 	
 	def sync_entity(self):
+		self.sync_stat = ""
+
 		if self.missing_entities:
 			entities = self.missing_entities.split(",")
 			entity_type = "Item" if self.entity == "Products" else "Sales Order"
@@ -45,6 +50,13 @@ class SyncMissingEntities(Document):
 				idx = response.keys()[0]
 				status = func_map[entity_type](response[idx])
 				sync_stat.update(status) if status else sync_stat.update({ entity: { "modified_date":  response[idx].get("updated_at") or ""} })
+			else:
+				sync_stat.update({
+					entity: {
+						"operation": "Entity Not Found",
+						"name": entity,
+					}
+				})
 
 		html = frappe.get_template("templates/status/sync_log_stat.html").render({"sync_stat": sync_stat})
 		self.sync_stat = html.strip()
