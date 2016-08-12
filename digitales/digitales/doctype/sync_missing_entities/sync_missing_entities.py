@@ -43,7 +43,6 @@ class SyncMissingEntities(Document):
 			)
 
 		sync_stat = {}
-		sync_stat.update({ entity: {} for entity in entities })
 		for entity in entities:
 			response = get_entity_from_magento(url%(entity), entity_type=entity_type, entity_id=entity)
 			if response:
@@ -54,9 +53,10 @@ class SyncMissingEntities(Document):
 				sync_stat.update({
 					entity: {
 						"operation": "Entity Not Found",
-						"name": entity,
+						"name": response.get("entity_od") if response and response.get("entity_id") else entity,
 					}
 				})
 
-		html = frappe.get_template("templates/status/sync_log_stat.html").render({"sync_stat": sync_stat})
+		uri = "{url}/desk#Form/{dt}/".format(url=frappe.utils.get_url(), dt=entity_type)
+		html = frappe.get_template("templates/status/sync_log_stat.html").render({"sync_stat": sync_stat, "uri":uri})
 		self.sync_stat = html.strip()
