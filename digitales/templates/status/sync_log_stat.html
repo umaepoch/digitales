@@ -11,7 +11,13 @@
 		{% for entity_id, stat in sync_stat.iteritems() %}
 		<tr>
 			<td>{{ entity_id }}</td>
-			<td>{{ stat.get("name", "NA") }}</td>
+			<td>
+				{% if stat.get("name") %}
+					<a href='{{ uri }}{{ stat.get("name", "NA") }}'>{{ stat.get("name", "NA") }}</a>
+				{% else %}
+					{{ "NA" }}
+				{% endif %}
+			</td>
 			<td>{{ stat.get("operation", "Sync Failed") }}</td>
 			<td>{{ stat.get("modified_date", "NA") }}</td>
 		</tr>
