@@ -12,7 +12,7 @@ def create_or_update_item(entity):
 		name = frappe.db.get_value("Item", entity.get("sku"))
 		if not name:
 			item = frappe.new_doc("Item")
-			item.item_code = cstr(entity.get("sku"))
+			item.item_code = cstr(entity.get("sku")).strip()
 		else:
 			item = frappe.get_doc("Item", name)
 
