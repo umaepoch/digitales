@@ -246,8 +246,7 @@ def update_parent_table(po_details):
 		count = frappe.db.sql(''' select ifnull(count(*),0) from `tabPurchase Order Item` where parent = "%s"	'''%(po_details.parent), as_list=1)
 		if count:
 			if count[0][0] == 0:
-				obj = frappe.get_doc('Purchase Order', po_details.parent)
-				obj.delete(ignore_permissions=True)
+				frappe.delete_doc('Purchase Order', po_details.parent, ignore_permissions=True)
 
 def stock_assignment(doc,method):
 	for pr_details in doc.get('purchase_receipt_details'):
