@@ -23,7 +23,7 @@ class SyncMissingEntities(Document):
 		self.sync_stat = ""
 
 		if self.missing_entities:
-			entities = self.missing_entities.split(",")
+			entities = [idx.strip() for idx in self.missing_entities.split(",")]
 			entity_type = "Item" if self.entity == "Products" else "Sales Order"
 			self.sync_entities(entity_type, entities)
 		else:
