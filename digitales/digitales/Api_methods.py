@@ -141,8 +141,7 @@ def create_stock_assignment_document(args, sales_order, assigned_qty):
 	sa.purchase_receipt_no = args.parent if args.doctype == 'Purchase Receipt Item' else ''
 	sa.item_code = args.item_code
 	sa.media  = frappe.db.get_value("Item",args.item_code,'item_group')
-	sa.customer_name = frappe.db.get_value('Sales Order',sa.sales_order,'customer_name')
-
+	sa.customer, sa.customer_name = frappe.db.get_value('Sales Order',sa.sales_order,['customer', 'customer_name'])
 	sa.save(ignore_permissions=True)
 	return sa.name
 
@@ -631,7 +630,7 @@ def create_stock_assignment_document_item(args, sales_order, qty, assigned_qty):
 	sa.purchase_receipt_no = args.parent if args.doctype == 'Purchase Receipt Item' else ''
 	sa.item_code = args.item_code
 	sa.media  = frappe.db.get_value("Item",args.item_code,'item_group')
-	sa.customer_name = frappe.db.get_value('Sales Order',sa.sales_order,'customer_name')
+	sa.customer, sa.customer_name = frappe.db.get_value('Sales Order',sa.sales_order,['customer', 'customer_name'])
 	return sa
 
 def make_history_of_assignment_item(sal, date, doc_type, pr_name, qty):
