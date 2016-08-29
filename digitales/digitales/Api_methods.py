@@ -248,7 +248,7 @@ def update_parent_table(po_details):
 		if count:
 			if count[0][0] == 0:
 				obj = frappe.get_doc('Purchase Order', po_details.parent)
-				obj.delete()
+				obj.delete(ignore_permissions=True)
 
 def stock_assignment(doc,method):
 	for pr_details in doc.get('purchase_receipt_details'):
@@ -368,13 +368,14 @@ def create_new_po(doc,d,supplier,qty):
 	po.supplier= supplier
 	po.currency = frappe.db.get_value('Supplier', supplier, 'default_currency')
 	e = po.append('po_details', {})
+	item_price = frappe.db.get_value("Item Price", {"item_code": d.item_code, "buying": 1}, "price_list_rate")
 	e.item_code=d.item_code
 	e.item_name=d.item_name
 	e.description=d.description
 	e.qty= qty
 	e.uom=d.stock_uom
 	e.conversion_factor=1
-	e.rate=d.rate
+	e.rate= item_price if item_price else d.rate
 	e.amount=d.amount
 	e.base_rate=d.rate
 	e.base_amount=d.amount
@@ -387,13 +388,14 @@ def create_new_po(doc,d,supplier,qty):
 def update_child_entry(doc,d,purchase_order,qty):
 	doc1 = frappe.get_doc("Purchase Order", purchase_order)
 	poi = doc1.append('po_details', {})
+	item_price = frappe.db.get_value("Item Price", {"item_code": d.item_code, "buying": 1}, "price_list_rate")
 	poi.item_code=d.item_code
 	poi.item_name=d.item_name
 	poi.description=d.description
 	poi.qty=qty
 	poi.uom=d.stock_uom
 	poi.conversion_factor=1
-	poi.rate=d.rate
+	poi.rate = item_price if item_price else d.rate
 	poi.amount=d.amount
 	poi.base_rate=d.rate
 	poi.base_amount=d.amount
