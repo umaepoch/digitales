@@ -103,6 +103,9 @@ doc_events = {
 
 	"Purchase Order": {
 		"validate": "digitales.digitales.Api_methods.fetch_barcode_supplier"
+	},
+	"Attendance": {
+		"on_submit": "digitales.digitales.custom_methods.attendance_workflow"
 	}
 }
 

@@ -14,14 +14,9 @@ def delivery_note(doctype, txt, searchfield, start, page_len, filters):
 	return frappe.db.sql(''' select name from `tabDelivery Note`
 		where docstatus <> 2 and name like "%%%s%%" limit %s, %s'''%(txt, start, page_len), as_list = 1)
 
-# def attendance_workflow(doc, method):
-# 	user = frappe.session.user
-# 	if doc.workflow_state == "Approved" and user != doc.attendance_approver:
-# 		frappe.throw(_("Only {0} can Approved this").format(doc.attendance_approver))
-# 	elif doc.workflow_state == "Approved" and user == doc.attendance_approver:
-# 		doc.workflow_state = "Approved By Manager"
-# 		doc.docstatus = 1
-		
-# def cancel_attendance(doc,method):
-# 	doc.workflow_state = "Cancelled"
-# 	doc.docstatus = 2
+def attendance_workflow(doc, method):
+	user = frappe.session.user
+	if not doc.attendance_approver:
+		frappe.throw(_("Please set Attendance Approver on Employee form"))
+	if doc.attendance_approver and user != doc.attendance_approver:
+		frappe.throw(_("Only '{0}' can Approved this Attendance").format(doc.attendance_approver))
