@@ -40,5 +40,4 @@ def approve_attendance(doc, method):
 		subject = "Attendance approved for date {0}.".format(doc.att_date)
 		recipients = frappe.db.get_value("Employee", doc.employee, "user_id")
 		message = frappe.get_template(template).render({"att_details": att_details})
-
 		frappe.sendmail(recipients=recipients, subject=subject,message= message)
