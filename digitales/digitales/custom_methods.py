@@ -15,7 +15,9 @@ def delivery_note(doctype, txt, searchfield, start, page_len, filters):
 		where docstatus <> 2 and name like "%%%s%%" limit %s, %s'''%(txt, start, page_len), as_list = 1)
 
 def pending_approval(doc, method):
-	doc.status = "Pending approval"
+	doc.approval_status = "Pending approval"
+	if not doc.attendance_approver:
+		frappe.throw(_("Please set Attendance Approver on Employee form"))
 	att_details = {"employee": doc.employee_name, "date": doc.att_date,
 				"path": get_url_to_form(doc.doctype, doc.name), "status": "pending"}
 	template = "templates/emails/attendance_notification.html"
@@ -32,7 +34,7 @@ def approve_attendance(doc, method):
 	if doc.attendance_approver and user != doc.attendance_approver:
 		frappe.throw(_("Only '{0}' can approve this Attendance.").format(doc.attendance_approver))
 	else:
-		frappe.db.set_value(doc.doctype, doc.name, "status", "Approved")
+		frappe.db.set_value(doc.doctype, doc.name, "approval_status", "Approved")
 		att_details = {"approver": doc.attendance_approver, "date": doc.att_date,
 				"path": get_url_to_form(doc.doctype, doc.name), "status": "approved"}
 		template = "templates/emails/attendance_notification.html"
