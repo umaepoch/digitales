@@ -138,7 +138,6 @@ frappe.ui.form.on("Sales Order", "budget", function(frm){
 		},
 		callback: function(r){
 			if(r.message){
-				console.log("r.message", r.message)
 				frm.set_value("po_no", r.message);
 				frm.refresh_fields();
 			}
