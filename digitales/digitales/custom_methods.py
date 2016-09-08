@@ -43,3 +43,13 @@ def approve_attendance(doc, method):
 		recipients = frappe.db.get_value("Employee", doc.employee, "user_id")
 		message = frappe.get_template(template).render({"att_details": att_details})
 		frappe.sendmail(recipients=recipients, subject=subject,message= message)
+
+@frappe.whitelist()
+def update_po_no(parent, budget, so_name, status):
+	po_no = frappe.db.get_value("Budget Details", {'budget':budget, 'parent':parent}, 'po_number')
+	if po_no and int(status) == 1:
+		frappe.db.set_value("Sales Order", so_name, "po_no", po_no)
+		frappe.db.set_value("Sales Order", so_name, "budget", budget)
+
+	if po_no and int(status) == 0:
+		return po_no
