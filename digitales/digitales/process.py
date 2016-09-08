@@ -1,6 +1,7 @@
 import frappe
 from frappe import _, msgprint, throw
 from frappe.model.mapper import get_mapped_doc
+from erpnext.utilities.doctype.address.address import get_address_display
 
 @frappe.whitelist()
 def make_sales_invoice(source_name, target_doc=None):
@@ -10,7 +11,11 @@ def make_sales_invoice(source_name, target_doc=None):
 	def set_missing_values(source, target):
 		target.customer = source.customer_id
 		target.customer_name = source.customer_name
-		target.run_method("set_missing_values");
+		target.run_method("set_missing_values")
+
+		# set billing address
+		if target.customer_address:
+			target.bill_to_address = get_address_display(target.customer_address)
 
 	def update_values(source, target, source_parent):
 		target.sales_order = source_parent.get_sales_order
