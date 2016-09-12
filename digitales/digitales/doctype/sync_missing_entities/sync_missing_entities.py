@@ -53,7 +53,7 @@ class SyncMissingEntities(Document):
 				sync_stat.update({
 					entity: {
 						"operation": "Entity Not Found",
-						"name": response.get("entity_od") if response and response.get("entity_id") else entity,
+						"name": response.get("entity_id") if response and response.get("entity_id") else entity,
 					}
 				})
 
