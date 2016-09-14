@@ -1,0 +1,10 @@
+<p>Hi,</p>
+{% if att_details.get("status") == "pending" %}
+<p>{{ att_details.get("employee") }}  has completed attendance for {{ att_details.get("date") or "" }}.</p>
+<p>Attendance {{ att_details.get("path") }} is pending approval.</p>
+{% else %}
+<p>Your attendance for {{ att_details.get("date") or "" }} has been approved by
+{{ att_details.get("approver") }}</p>
+<p>To view the form click on {{ att_details.get("path") }}</p>
+{% endif %}
+<p>Thank you.</p>
