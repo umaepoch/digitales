@@ -104,10 +104,10 @@ doc_events = {
 	"Purchase Order": {
 		"validate": "digitales.digitales.Api_methods.fetch_barcode_supplier"
 	},
-	"Attendance": {
-		"validate": "digitales.digitales.custom_methods.pending_approval",
-		"on_submit": "digitales.digitales.custom_methods.approve_attendance"
-	}
+	# "Attendance": {
+	# 	"validate": "digitales.digitales.custom_methods.pending_approval",
+	# 	"on_submit": "digitales.digitales.custom_methods.approve_attendance"
+	# }
 }
 
 # Scheduled Tasks
