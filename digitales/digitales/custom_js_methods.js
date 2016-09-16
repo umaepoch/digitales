@@ -107,26 +107,6 @@ function checkall(){
 	});
 }
 
-/*frappe.ui.form.on("Sales Order", "budget", function(frm){
-	return frappe.call({
-		method: "frappe.client.get_value",
-		args: {
-			doctype: "Budget Details",
-			fieldname: "po_number",
-			filters: {
-				parent:frm.doc.customer,
-				budget:frm.doc.budget
-			}
-		},
-		callback: function(r){
-			if(r.message){
-				frm.set_value("po_no", r.message.po_number);
-				frm.refresh_fields();
-			}
-		}
-	});
-});
-*/
 frappe.ui.form.on("Sales Order", "budget", function(frm){
 	return frappe.call({
 		method: "digitales.digitales.custom_methods.update_po_no",
@@ -137,12 +117,12 @@ frappe.ui.form.on("Sales Order", "budget", function(frm){
 			"status":frm.doc.docstatus
 		},
 		callback: function(r){
-			if(r.message){
+			if(r.message == "Reload")
+				frm.reload_doc()
+			else{
 				frm.set_value("po_no", r.message);
 				frm.refresh_fields();
 			}
-			else
-				frm.reload_doc()
 		}
 	});
 });
