@@ -6,6 +6,7 @@ def create_or_update_sales_order(entity):
 	""" create new Sales Order """
 	missing_items = []
 	missing_customer = None
+
 	try:
 		name = frappe.db.get_value("Sales Order", { "entity_id": entity.get("entity_id") })
 		customer = frappe.db.get_value('Contact', {'entity_id': entity.get('customer_id')}, 'customer')
@@ -43,12 +44,13 @@ def create_or_update_sales_order(entity):
 
 			so.set('sales_order_details', [])
 			for item in entity.get('order_items'):
-				soi = so.append('sales_order_details', {})
-				soi.item_code = item.get("sku")
-				soi.release_date_of_item = frappe.db.get("Item", item.get("sku"), "product_release_date") or ""
-				soi.qty = item.get('qty_ordered') or 0
-				soi.rate = item.get('price')
-				soi.artist = frappe.db.get_value("Item", item.get("sku"), "artist") or ""
+				if item and item.get('sku'):
+					soi = so.append('sales_order_details', {})
+					soi.item_code = item.get("sku")
+					soi.release_date_of_item = frappe.db.get("Item", item.get("sku"), "product_release_date") or ""
+					soi.qty = item.get('qty_ordered') or 0
+					soi.rate = item.get('price')
+					soi.artist = frappe.db.get_value("Item", item.get("sku"), "artist") or ""
 
 				# # set shipping and billing address
 			set_sales_order_address(entity.get('addresses'), so)
@@ -77,13 +79,14 @@ def get_missing_items(items, increment_id):
 	""" check if all the items from orders are synced in ERP """
 	missing_items = []
 	for item in items:
-		if not frappe.db.get_value('Item',item.get('sku')):
+		if item and item.get('sku', None) and not frappe.db.get_value('Item',item.get('sku')):
 			error = Exception("%s Item from order #%s is missing or not synced"%(
 						item.get('sku'),
 						increment_id or ""
 					))
 			log_sync_error("Item", item.get('sku'), item, error, "get_missing_items")
 			missing_items.append(item.get('sku'))
+
 	return missing_items
 
 def set_sales_order_address(address_details, order):
