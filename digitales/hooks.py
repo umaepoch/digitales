@@ -69,7 +69,8 @@ doc_events = {
 	"Sales Order": {
 		"validate": [
 			"digitales.digitales.Api_methods.check_and_update_status",
-			"digitales.digitales.Api_methods.fetch_barcode_supplier"
+			"digitales.digitales.Api_methods.fetch_barcode_supplier",
+			"digitales.digitales.Api_methods.fetch_and_set_address_display"
 		],
 		"on_submit": "digitales.digitales.Api_methods.create_purchase_order",
 		"on_cancel": "digitales.digitales.Api_methods.delete_stock_assignment"
