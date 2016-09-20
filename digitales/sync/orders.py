@@ -91,14 +91,16 @@ def get_missing_items(items, increment_id):
 
 def set_sales_order_address(address_details, order):
 	# Check if Address is available if it is then set addr id in SO else set None
-	address_type_mapper = {'billing': 'Billing', 'shipping': 'Shipping'}
 	if not address_details:
 		return
+
 	for address in address_details:
 		addr_filter = { 'entity_id': address.get('customer_address_id') }
 		cust_address = frappe.db.get_value('Address', addr_filter)
+		
 		if cust_address and address.get('address_type') == "billing":
 			# Check the address type if billing the set to billing addr likewise for shipping
 			order.customer_address = frappe.db.get_value('Address',{ 'entity_id':cust_address })
+		
 		elif cust_address and address.get('address_type') == "shipping":
 			order.shipping_address_name = frappe.db.get_value('Address', { 'entity_id':cust_address })
