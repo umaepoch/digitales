@@ -19,6 +19,7 @@ def pending_approval(doc, method):
 	doc.approval_status = "Pending approval"
 	if not doc.attendance_approver:
 		frappe.throw(_("Please set Attendance Approver on Employee form"))
+	
 
 def approve_attendance(doc, method):
 	user = frappe.session.user
@@ -42,6 +43,9 @@ def approve_attendance(doc, method):
 @frappe.whitelist()
 def send_mail_to_approver(doctype,doc_name,att_date,employee_name,attendance_approver,send_mail_to_approver):
 	if float(send_mail_to_approver) == 0:
+		attendance_doc = frappe.get_doc("Attendance",doc_name)
+		attendance_doc.send_mail_to_approver = 1
+		attendance_doc.save(ignore_permissions=True)
 		att_details = {"employee": employee_name, "date": att_date,
 					"path": get_url_to_form(doctype, doc_name), "status": "pending"}
 		template = "templates/emails/attendance_notification.html"
