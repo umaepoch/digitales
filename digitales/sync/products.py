@@ -32,6 +32,7 @@ def create_or_update_item(entity):
 		item.expense_account, item.income_account = default_ExpenxeIncomeAccount(item.item_group)
 
 		item.net_weight = entity.get("weight", 0)
+		item.publisher = entity.get("publisher", "")
 		item.valid_from = entity.get("special_from_date")
 		item.valid_upto = entity.get("special_to_date")
 		item.trade_price = entity.get("trade_price", 0)
