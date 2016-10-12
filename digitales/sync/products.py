@@ -16,6 +16,7 @@ def create_or_update_item(entity):
 		else:
 			item = frappe.get_doc("Item", name)
 
+		item.weight_uom = "Kg"
 		item.event_id = cstr(entity.get("entity_id"))
 		item.artist = entity.get('artist')
 		item.item_name = cstr(entity.get('name')) or cstr(entity.get('sku'))
@@ -29,6 +30,13 @@ def create_or_update_item(entity):
 		item.product_release_date = entity.get('release_date')
 		item.default_supplier = get_supplier(entity.get('distributor'))
 		item.expense_account, item.income_account = default_ExpenxeIncomeAccount(item.item_group)
+
+		item.net_weight = entity.get("weight", 0)
+		item.valid_from = entity.get("special_from_date")
+		item.valid_upto = entity.get("special_to_date")
+		item.trade_price = entity.get("trade_price", 0)
+		item.discounted_price = entity.get("special_price", 0)
+
 		item.save(ignore_permissions=True)
 
 		create_or_update_item_price(entity)
