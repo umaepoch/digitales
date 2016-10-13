@@ -10,7 +10,6 @@ items_key_mapper = {
 
 sort_items = function(){
 	var item_names = [];
-	var item_idx = {};
 
 	key = items_key_mapper[cur_frm.doctype];
 	if(key){
@@ -19,14 +18,20 @@ sort_items = function(){
 			items = cur_frm.doc[key];
 		
 			items.map(function(item, idx){
-				item_names.push(item.item_name);
-				item_idx[item.item_name] = idx;
+				var _item = {}
+				_item.name = item.name;
+				_item.item_name = item.item_name
+				_item.idx = idx;
+
+				item_names.push(_item);
 			});
 
-			item_names.sort()
-			$.each(item_names, function(idx, item_name){
-				index = item_idx[item_name];
-				cur_frm.doc[key][index].idx = idx+1;
+			item_names.sort(function(a, b) {
+				return (a.item_name > b.item_name) ? 1 : ((b.item_name > a.item_name) ? -1 : 0);
+			});
+
+			$.each(item_names, function(idx, item){
+				cur_frm.doc[key][item.idx].idx = idx+1;
 			})
 
 			cur_frm.doc.__unsaved=true
