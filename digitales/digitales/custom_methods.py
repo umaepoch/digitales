@@ -14,13 +14,7 @@ def send_mail_SchedulerLog(doc, method):
 def delivery_note(doctype, txt, searchfield, start, page_len, filters):
 	return frappe.db.sql(''' select name from `tabDelivery Note`
 		where docstatus <> 2 and name like "%%%s%%" limit %s, %s'''%(txt, start, page_len), as_list = 1)
-
-def pending_approval(doc, method):
-	doc.approval_status = "Pending approval"
-	if not doc.attendance_approver:
-		frappe.throw(_("Please set Attendance Approver on Employee form"))
 	
-
 def approve_attendance(doc, method):
 	user = frappe.session.user
 	if not doc.attendance_approver:
@@ -42,23 +36,22 @@ def approve_attendance(doc, method):
 		frappe.throw(_("This attendance is not sent for approval yet."))
 
 @frappe.whitelist()
-def send_mail_to_approver(doctype,doc_name,att_date,employee_name,attendance_approver,send_mail_to_approver):
-	if float(send_mail_to_approver) == 0:
-		attendance_doc = frappe.get_doc("Attendance",doc_name)
-		attendance_doc.send_mail_to_approver = 1
-		attendance_doc.save(ignore_permissions=True)
-		att_details = {"employee": employee_name, "date": att_date,
-					"path": get_url_to_form(doctype, doc_name), "status": "pending"}
-		template = "templates/emails/attendance_notification.html"
+def send_mail_to_approver(doctype,doc_name,att_date,employee_name,attendance_approver):
+	attendance_doc = frappe.get_doc("Attendance",doc_name)
+	attendance_doc.send_mail_to_approver = 1
+	attendance_doc.save(ignore_permissions=True)
+	att_details = {"employee": employee_name, "date": att_date,
+				"path": get_url_to_form(doctype, doc_name), "status": "pending"}
+	template = "templates/emails/attendance_notification.html"
 
-		subject = "Pending Attendance Approval of {0} for date {1}.".format(employee_name,att_date)
-		recipients = frappe.db.get_value("User",attendance_approver, "email")
-		message = frappe.get_template(template).render({"att_details": att_details})
-		try:
-			frappe.sendmail(recipients=recipients, subject=subject,message= message)
-			return "Success"
-		except:
-			msgprint(_("sendmail Error"), raise_exception=1)
+	subject = "Pending Attendance Approval of {0} for date {1}.".format(employee_name,att_date)
+	recipients = frappe.db.get_value("User",attendance_approver, "email")
+	message = frappe.get_template(template).render({"att_details": att_details})
+	try:
+		frappe.sendmail(recipients=recipients, subject=subject,message= message)
+		return "Success"
+	except:
+		msgprint(_("sendmail Error"), raise_exception=1)
 
 @frappe.whitelist()
 def get_attendance_approver(employee):
