@@ -17,13 +17,15 @@ def delivery_note(doctype, txt, searchfield, start, page_len, filters):
 	
 def approve_attendance(doc, method):
 	user = frappe.session.user
-	if not doc.attendance_approver:
-		frappe.throw(_("Please set Attendance Approver on Employee form"))
+
 	if doc.attendance_approver and user != doc.attendance_approver:
 		frappe.throw(_("Only '{0}' can approve this Attendance.").format(doc.attendance_approver))
-	if doc.attendance_approver and user == doc.attendance_approver and doc.send_mail_to_approver ==1:
+
+	if (doc.attendance_approver and user == doc.attendance_approver and doc.send_mail_to_approver ==1) or not doc.attendance_approver:
 		frappe.db.set_value(doc.doctype, doc.name, "approval_status", "Approved")
 		frappe.msgprint("Attendance Approved Successfully")
+	else:
+		frappe.throw(_("This attendance is not sent for approval yet."))
 		# att_details = {"approver": doc.attendance_approver, "date": doc.att_date,
 		# 		"path": get_url_to_form(doc.doctype, doc.name), "status": "approved"}
 		# template = "templates/emails/attendance_notification.html"
@@ -32,8 +34,6 @@ def approve_attendance(doc, method):
 		# recipients = frappe.db.get_value("Employee", doc.employee, "user_id")
 		# message = frappe.get_template(template).render({"att_details": att_details})
 		#frappe.sendmail(recipients=recipients, subject=subject,message= message)
-	else:
-		frappe.throw(_("This attendance is not sent for approval yet."))
 
 @frappe.whitelist()
 def send_mail_to_approver(doctype,doc_name,att_date,employee_name,attendance_approver):
