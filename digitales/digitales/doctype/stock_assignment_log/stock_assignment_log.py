@@ -53,7 +53,7 @@ class StockAssignmentLog(Document):
 	def update_SAL(self):
 		item_details = self.get_so_item_details()
 		assign_qty = cint(self.assign_qty) if cint(self.assign_qty) > 0 else cint(item_details.get("qty", 0))
-		val = cint(item_details.qty) - assign_qty
+		val = cint(item_details.get("qty", 0)) - assign_qty
 		frappe.db.sql(''' update `tabSales Order Item` set assigned_qty = %s
 			where parent = "%s" and item_code = "%s"'''%(val, self.sales_order, self.item_code))
 
