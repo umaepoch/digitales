@@ -1,6 +1,6 @@
 import frappe
 from frappe.utils import cstr
-from .utils import log_sync_error,get_custom_attribute_value
+from .utils import log_sync_error
 
 def create_or_update_item(entity):
 	""" create or update the Item """
@@ -16,38 +16,35 @@ def create_or_update_item(entity):
 		else:
 			item = frappe.get_doc("Item", name)
 
-        	custom_attributes_list = entity.get("custom_attributes")#m2_changes
 		item.weight_uom = "Kg"
-		item.event_id = cstr(entity.get("id")) #m2_changes
-		item.artist = get_custom_attribute_value(custom_attributes_list,"artist") #m2_changes
+		item.event_id = cstr(entity.get("entity_id"))
+		item.artist = entity.get('artist')
 		item.item_name = cstr(entity.get('name')) or cstr(entity.get('sku'))
-		item.item_group = get_item_group(get_custom_attribute_value(custom_attributes_list,"media")) #m2_changes
-		item.description = 'Desc: %s'%get_custom_attribute_value(custom_attributes_list,"meta_description") if get_custom_attribute_value(custom_attributes_list,"meta_description") else  cstr(entity.get('sku'))  #m2_changes
+		item.item_group = get_item_group(entity.get('media'))
+		item.description = 'Desc: %s'%entity.get('description') if entity.get('description') else cstr(entity.get('sku'))
 		item.default_warehouse = get_own_warehouse()
-		if get_custom_attribute_value(custom_attributes_list,"barcode") and not frappe.db.get_value('Item', { 'barcode':get_custom_attribute_value(custom_attributes_list,"barcode") }): #m2_changes
-            		item.barcode = get_custom_attribute_value(custom_attributes_list,"barcode")
+		if entity.get('barcode') and not frappe.db.get_value('Item', { 'barcode':entity.get('barcode') }):
+			item.barcode = entity.get('barcode')
 		item.modified_date = entity.get('updated_at')
-		item.distributor = get_custom_attribute_value(custom_attributes_list,"distributor") #m2_changes
-		item.product_release_date = get_custom_attribute_value(custom_attributes_list,"release_date") #m2_changes
-        	item.classification = get_custom_attribute_value(custom_attributes_list,"classification") #m2_changes
-		item.default_supplier = get_supplier(get_custom_attribute_value(custom_attributes_list,"distributor"))
+		item.distributor = entity.get('distributor')
+		item.product_release_date = entity.get('release_date')
+		item.default_supplier = get_supplier(entity.get('distributor'))
 		item.expense_account, item.income_account = default_ExpenxeIncomeAccount(item.item_group)
 
 		item.net_weight = entity.get("weight", 0)
-		item.publisher = get_custom_attribute_value(custom_attributes_list,"publisher")#m2_changes
-		item.valid_from = get_custom_attribute_value(custom_attributes_list,"special_from_date") #m2_changes
-		#item.valid_upto = entity.get("special_to_date") #m2_pending
-		item.trade_price = get_custom_attribute_value(custom_attributes_list,"trade_price") if get_custom_attribute_value(custom_attributes_list,"trade_price") else 0 #m2_changes
-		item.discounted_price = get_custom_attribute_value(custom_attributes_list,"special_price") if get_custom_attribute_value(custom_attributes_list,"special_price") else 0 #m2_changes
-		item.aid_code = get_custom_attribute_value(custom_attributes_list,"aid_code") if get_custom_attribute_value(custom_attributes_list,"aid_code") else "test" #m2_changes
-		item.popular= get_custom_attribute_value(custom_attributes_list,"populartag")
+		item.publisher = entity.get("publisher", "")
+		item.valid_from = entity.get("special_from_date")
+		item.valid_upto = entity.get("special_to_date")
+		item.trade_price = entity.get("trade_price", 0)
+		item.discounted_price = entity.get("special_price", 0)
+		item.aid_code = entity.get("aid_code", "test")
                 #This has been added by KM on 30.03.2017 for CR ISS-00038
                 #item_is_disabled = entity.get('status')
                 #if item_is_disabled == 1:
                 #   item.is_purchase_item="Yes"
                 #else:
                 #   item.is_purchase_item="No"
-
+                     
 		item.save(ignore_permissions=True)
 
 		create_or_update_item_price(entity)
@@ -142,7 +139,7 @@ def default_ExpenxeIncomeAccount(media):
 #  		frappe.throw("Please Specify the Price List in Configuration Page")
 
 #  	item_price_name = frappe.db.get_value(
-#  						"Item Price",
+#  						"Item Price", 
 #  						{
 #  							"item_code": entity.get("sku"),
 #  							"price_list": price_list
@@ -164,7 +161,6 @@ def default_ExpenxeIncomeAccount(media):
 def create_or_update_item_price(entity):
 	#create new Item Price if not available else update
 	price = entity.get("price")
-    	custom_attributes_list = entity.get("custom_attributes") #m2_changes
 	if not price:
 		return
 
@@ -173,7 +169,7 @@ def create_or_update_item_price(entity):
 		frappe.throw("Please Specify the Price List in Configuration Page")
 
 	item_price_name_buying = frappe.db.get_value(
-						"Item Price",
+						"Item Price", 
 						{
 							"item_code": entity.get("sku"),
 							"price_list": "Standard Buying"
@@ -181,7 +177,7 @@ def create_or_update_item_price(entity):
 						"name"
 					)
 	item_price_name_selling = frappe.db.get_value(
-						"Item Price",
+						"Item Price", 
 						{
 							"item_code": entity.get("sku"),
 							"price_list": "Standard Selling"
@@ -202,7 +198,7 @@ def create_or_update_item_price(entity):
 
 	item_price_buying.item_code = cstr(entity.get("sku"))
 	item_price_buying.price_list = "Standard Buying"
-	item_price_buying.price_list_rate = get_custom_attribute_value(custom_attributes_list,"trade_price") if get_custom_attribute_value(custom_attributes_list,"trade_price") else 0 #m2_changes
+	item_price_buying.price_list_rate = entity.get("trade_price", 0)
 
 	item_price_selling.item_code = cstr(entity.get("sku"))
 	item_price_selling.price_list = "Standard Selling"
@@ -210,4 +206,3 @@ def create_or_update_item_price(entity):
 
 	item_price_buying.save(ignore_permissions=True)
 	item_price_selling.save(ignore_permissions=True)
-

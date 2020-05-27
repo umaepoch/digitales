@@ -53,6 +53,7 @@ def a_product(count, max_date):
 					'modified_date': value.get('updated_at'),
 					'default_supplier': supplier,
 					'product_release_date': value.get('release_date'),
+                                        'classification': value.get('classification'),
 					'expense_account': expense,
 					'income_account': income
 					})

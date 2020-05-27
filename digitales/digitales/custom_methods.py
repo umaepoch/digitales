@@ -1,12 +1,15 @@
 
 from __future__ import unicode_literals
 import frappe
+import requests
+from requests_oauthlib import OAuth1 as OAuth
 from frappe.widgets.reportview import get_match_cond
 from frappe import _, msgprint, throw
 from frappe.utils import get_url_to_form, add_days, cint, cstr, date_diff, rounded, flt, getdate, nowdate, \
 	get_first_day, get_last_day,money_in_words, now, nowtime
 #from frappe.utils import add_days, cint, cstr, flt, getdate, nowdate, rounded
 from frappe import _
+from frappe.utils import cstr
 
 def send_mail_SchedulerLog(doc, method):
 	pass
@@ -72,3 +75,18 @@ def update_po_no(parent, budget, so_name, status):
 
 	else:
 		return ""
+
+def get_custom_attribute_value (custom_attributes_list,attribute) :
+    attribute_value=None
+    for custom_attributes in custom_attributes_list:  # travelling each custom_attributes of  item
+        if custom_attributes.get("attribute_code") == attribute:
+            attribute_value = custom_attributes.get("value")
+            return attribute_value
+    return attribute_value
+
+
+@frappe.whitelist()
+def url_test_name():
+	url=frappe.utils.get_url()
+	return url
+

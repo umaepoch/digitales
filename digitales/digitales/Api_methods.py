@@ -377,6 +377,7 @@ def create_new_po(doc,d,supplier,qty):
 	e.warehouse = d.warehouse
 	e.schedule_date = nowdate()
 	e.product_release_date = frappe.db.get_value("Item", d.item_code, "product_release_date")
+	e.aid_code = frappe.db.get_value("Item", d.item_code, "aid_code")
 	po.save(ignore_permissions=True)
 	return po.name
 
@@ -394,6 +395,7 @@ def update_child_entry(doc,d,purchase_order,qty):
 	poi.warehouse=d.warehouse
 	poi.schedule_date=nowdate()
 	poi.product_release_date = d.release_date_of_item
+        poi.aid_code = frappe.db.get_value("Item", d.item_code, "aid_code")
 	doc1.save(ignore_permissions=True)
 
 def update_qty(doc,d,item,purchase_order,qty,rate):

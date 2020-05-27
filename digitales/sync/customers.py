@@ -1,10 +1,16 @@
 import frappe
-from .utils import log_sync_error, get_entities_from_magento
+from .utils import log_sync_error, get_entities_from_magento,get_custom_attribute_value,get_organisation
+
 
 def create_or_update_customer(entity):
 	""" create or update customer """
 	try:
-		organisation = entity.get('organisation').replace("'","")
+		custom_attributes_list = entity.get("custom_attributes") #m2_changes
+		#organisation_code_start
+		customer_parent_id = get_custom_attribute_value(custom_attributes_list,"customer_parent")
+		organisation_temp = get_organisation(customer_parent_id)
+		#organisation_code_end
+		organisation = organisation_temp.replace("'","")  #m2_changes
 		organisation = "%s(C)"%organisation if is_supplier_or_customer_group(organisation) else organisation
 		name = frappe.db.get_value('Customer', organisation)
 		if not name:
@@ -13,17 +19,9 @@ def create_or_update_customer(entity):
 		else:
 			customer = frappe.get_doc("Customer", name)
 
-		customer.entity_id = entity.get('entity_id')
+		customer.entity_id = entity.get('id')
 		customer.customer_type = 'Company'
-		if entity.get('group'):
-			if entity.get('group').strip() == 'General':
-				customer.customer_group = 'All Customer Groups'
-			elif frappe.db.get_value('Customer Group', entity.get('group').strip()):
-				customer.customer_group = entity.get('group').strip() or 'All Customer Groups'
-			elif frappe.db.get_value('Customer', entity.get('group').strip()):
-				customer.customer_group = 'All Customer Groups'
-			else:
-				customer.customer_group = create_customer_group(entity.get('group').strip())
+		customer.customer_group = 'All Customer Groups' #m2_pending
 		customer.territory = 'Australia'
 		customer.customer_status = 'Existing'
 		customer.modified_date = entity.get('updated_at')
@@ -32,18 +30,18 @@ def create_or_update_customer(entity):
 			frappe.db.set_value("Cusomer", customer.name, "customer_name", organisation.replace("(C)", ""))
 
 		create_or_update_contact(customer, entity)
-		get_addresses(entity.get('entity_id'))
+		#get_addresses(entity)
 
 		# return status
 		return {
-			entity.get("entity_id"): {
+			entity.get("id"): {
 				"operation": "Customer Created" if not name else "Customer Updated",
 				"name": customer.name,
 				"modified_date": entity.get("updated_at")
 			}
 		}
 	except Exception, e:
-		docname = entity.get('entity_id')
+		docname = entity.get('id')
 		response = entity
 		log_sync_error("Customer", docname, response, e, "create_new_customer")
 
@@ -64,7 +62,7 @@ def create_customer_group(customer_group):
 
 def create_or_update_contact(customer, entity):
 	""" create or update the customer Contact """
-	name = frappe.db.get_value('Contact', { 'entity_id': entity.get('entity_id') })
+	name = frappe.db.get_value('Contact', { 'entity_id': entity.get('id') })
 	if not name:
 		contact = frappe.new_doc('Contact')
 	else:
@@ -72,21 +70,20 @@ def create_or_update_contact(customer, entity):
 
 	if not entity.get('firstname'):
 		return
-	
+
 	contact.first_name = entity.get('firstname')
 	contact.last_name = entity.get('lastname')
 	contact.customer = customer.name
 	contact.customer_name = customer.customer_name
-	contact.entity_id = entity.get('entity_id')
+	contact.entity_id = entity.get('id')
 	contact.email_id = entity.get('email')
 	contact.save(ignore_permissions=True)
 
-def get_addresses(entity_id):
-	customer = frappe.db.get_value('Contact', { 'entity_id': entity_id }, 'customer')
+def get_addresses(entity):
+	customer = frappe.db.get_value('Contact', { 'entity_id': entity.get('id') }, 'customer')
 	if customer:
-		url = "http://digitales.com.au/api/rest/customers/%s/addresses"%entity_id
-		response = get_entities_from_magento(url, entity_type="Address")
-		if not response:
+		response = entity.get('addresses')
+		if not len(response):
 			return
 
 		for address in response:
@@ -94,28 +91,28 @@ def get_addresses(entity_id):
 
 def create_or_update_address(address, customer):
 	""" create or update the address """
-	name = frappe.db.get_value('Address', { 'entity_id': address.get('entity_id') })
+	name = frappe.db.get_value('Address', { 'entity_id': address.get('id') })
 	if not name:
 		addr = frappe.new_doc('Address')
 		addr.address_title = "{} {} {}".format(
 			address.get("firstname"),
 			address.get("lastname"),
-			address.get("entity_id")
+			address.get("id")
 		)
 	else:
 		addr = frappe.get_doc("Address", name)
 
 	addr.address_type = get_address_type(address).get('type')
-	addr.entity_id = address.get('entity_id')
+	addr.entity_id = address.get('id')
 	addr.address_line1 = address.get('street')[0]
 	addr.address_line2 = address.get('street')[1] if len(address.get('street')) > 1 else ""
 	addr.city = address.get('city')
 	addr.country = frappe.db.get_value('Country', { 'code': address.get('country_id') })
-	addr.state = address.get('region')
+	addr.state = address.get('region').get('region')
 	addr.pincode = address.get('postcode')
 	addr.phone = address.get('telephone') or '00000'
-	addr.fax = address.get('fax')
-	addr.customer = customer
+	#addr.fax = address.get('fax') #m2_pending
+	addr.customer = customer # organisationName
 	addr.customer_name = address.get('firstname')+' '+address.get('lastname')
 	addr.is_primary_address = get_address_type(address).get('is_primary_address')
 	addr.is_shipping_address = get_address_type(address).get('is_shipping_address')
@@ -123,9 +120,11 @@ def create_or_update_address(address, customer):
 	addr.save(ignore_permissions=True)
 
 def get_address_type(address):
-	if address.get('is_default_billing'):
+	if address.get('default_billing'):
 		return { "type":"Billing", "is_primary_address":1, "is_shipping_address":0 }
-	elif address.get('is_default_shipping'):
+	elif address.get('default_shipping'):
 		return { "type":"Shipping", "is_primary_address":0, "is_shipping_address":1 }
 	else:
 		return { "type":"Other", "is_primary_address":0, "is_shipping_address":0 }
+
+

@@ -1,8 +1,7 @@
 import frappe
 import json
 from frappe.utils import flt, today
-from frappe import _, msgprint, throw
-
+from frappe import _
 
 @frappe.whitelist()
 def stop_po_items(po_name, items):
@@ -106,7 +105,7 @@ def check_available_pr(items, po_name):
 		frappe.throw(_(pr_data[0]))
 
 def create_po_negative_qty(items,po_name):
-	new_po_items = []	
+	new_po_items = []
 	for item_code, item in items.iteritems():
 		query = """
 					select 
@@ -137,37 +136,17 @@ def create_po_negative_qty(items,po_name):
 					"name"
 				)
 
-				# Code added by satyakam
-				default_supplier = frappe.db.get_value("Item", item_code, "default_supplier")
-				
-				draft_po_default_supplier = frappe.db.get_value(
-					"Purchase Order", 
-					{ 
-						"supplier": default_supplier,
-						"docstatus": 0,
-						"status": "Draft"
-					},
-					"name"
-				)					
-				
-
-				if draft_po and supplier != default_supplier:					
+				if draft_po:
 					append_or_increase_po_item_qty(draft_po, item_code, projected_qty, warehouse)
-				# Code added by satyakam
-				elif draft_po_default_supplier:					
-					append_or_increase_po_item_qty(draft_po_default_supplier, item_code, projected_qty, warehouse)
 				else:
 					new_po_items.append({
-						"item_code": item_code,						
-						"qty": projected_qty,												
+						"item_code": item_code,
+						"qty": projected_qty,
 						"warehouse": warehouse
 					})
 
-	
-	if new_po_items:		
-		# Code added by satyakam
-		#create_purchase_order(new_po_items, supplier)
-		create_purchase_order(new_po_items, default_supplier)
+	if new_po_items:
+		create_purchase_order(new_po_items, supplier)
 
 def append_or_increase_po_item_qty(draft_po, item_code, projected_qty, warehouse):
 	def append_item(draft_po, item_code, qty, warehouse):
@@ -178,7 +157,6 @@ def append_or_increase_po_item_qty(draft_po, item_code, projected_qty, warehouse
 		po_item.qty = qty
 		po_item.warehouse = warehouse
 		po_item.product_release_date = frappe.db.get_value("Item", item_code, "product_release_date") or ""
-                po_item.aid_code = frappe.db.get_value("Item", item_code, "aid_code") or ""
 		po.save(ignore_permissions=True)
 
 	def increase_item_qty(draft_po, poi_name, item_code, warehouse):
@@ -204,7 +182,6 @@ def append_or_increase_po_item_qty(draft_po, item_code, projected_qty, warehouse
 			},
 			"name")
 
-	
 	if poi_name:
 		increase_item_qty(draft_po, poi_name, item_code, warehouse)
 	else:
@@ -218,9 +195,9 @@ def create_purchase_order(items, supplier):
 	doc.set("po_details", [])
 	for item in items:
 		po_item = doc.append("po_details", {})
-		po_item.item_code = item.get("item_code")		
-		po_item.qty = item.get("qty") * -1		
+		po_item.item_code = item.get("item_code")
+		po_item.qty = item.get("qty") * -1
 		po_item.warehouse = item.get("warehouse")
 		po_item.product_release_date = frappe.db.get_value("Item",item.get("item_code"), "product_release_date") or ""
-	        po_item.aid_code = frappe.db.get_value("Item",item.get("item_code"), "aid_code") or ""
+	
 	doc.save(ignore_permissions=True)

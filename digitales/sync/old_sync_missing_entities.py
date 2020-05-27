@@ -14,7 +14,7 @@ def manually_sync_entity(entity_type, entity):
 		"Sales Order": get_missing_orders,
 		"Customer": get_missing_customers
 	}
-
+	
 	func_map[entity_type](entity, manual_sync=True)
 
 def get_missing_items(item=None, manual_sync=False):
@@ -25,19 +25,20 @@ def get_missing_items(item=None, manual_sync=False):
 	if all([item, manual_sync]):
 		results = json.loads(item) if item else None
 		if results: results = [results]
-
+	
 	items = get_entity_ids_to_sync(entity_type="Item", results=results)
 	if not items:
 		return
 
-	m_url = "https://digitales.com.au/rest/V1/products/?searchCriteria[filter_groups][0][filters][0][field]=sku&searchCriteria[filter_groups][0][filters][0][value]=%s&searchCriteria[filter_groups][0][filters][0][condition_type]=eq"
+	url = "https://digitales.com.au/api/rest/products?filter[1][attribute]=sku&filter[1][eq]=%s"
 
 	sync_stat.update({ item: {} for item in items })
 	for item in items:
-		response = get_entity_from_magento(m_url%(item), entity_type="Item", entity_id=item)
+		response = get_entity_from_magento(url%(item), entity_type="Item", entity_id=item)
 		if response:
-			status = create_or_update_item(response["items"][0]) #m2_changes
-			sync_stat.update(status) if status else sync_stat.update({ item: { "modified_date":  response["items"][0].get("updated_at") or ""} })
+			idx = response.keys()[0]
+			status = create_or_update_item(response[idx])
+			sync_stat.update(status) if status else sync_stat.update({ item: { "modified_date":  response[idx].get("updated_at") or ""} })
 
 	update_sync_status("Item", items)
 	return sync_stat
@@ -55,15 +56,16 @@ def get_missing_customers(customer=None, manual_sync=False):
 	if not customers:
 		return
 
-	m_url = "https://digitales.com.au/rest/V1/customers/search?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=%s&searchCriteria[filter_groups][0][filters][0][condition_type]=eq"
+	url = "https://digitales.com.au/api/rest/customers?filter[1][attribute]=entity_id&filter[1][eq]=%s"
 
 	sync_stat.update({ customer: {} for customer in customers })
 	for customer in customers:
-		response = get_entity_from_magento(m_url%(customer), entity_type="Customer", entity_id=customer)
+		response = get_entity_from_magento(url%(customer), entity_type="Customer", entity_id=customer)
 		if response:
-			status = create_or_update_customer(response["items"][0]) #m2_changes
+			idx = response.keys()[0]
+			status = create_or_update_customer(response[idx])
 			if status: print customer
-			sync_stat.update(status) if status else sync_stat.update({ customer: { "modified_date":  response["items"][0].get("updated_at") or ""} })
+			sync_stat.update(status) if status else sync_stat.update({ customer: { "modified_date":  response[idx].get("updated_at") or ""} })
 
 	update_sync_status("Customer", customers)
 	return sync_stat
@@ -81,14 +83,15 @@ def get_missing_orders(order=None, manual_sync=False):
 	if not orders:
 		return
 
-	m_url = "https://digitales.com.au/rest/V1/orders/?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=%s&searchCriteria[filter_groups][0][filters][0][condition_type]=eq"
+	url = "https://digitales.com.au/api/rest/orders?filter[1][attribute]=entity_id&filter[1][eq]=%s"
 
 	sync_stat.update({ order: {} for order in orders })
 	for order in orders:
-		response = get_entity_from_magento(m_url%(order), entity_type="Sales Order", entity_id=order)
+		response = get_entity_from_magento(url%(order), entity_type="Sales Order", entity_id=order)
 		if response:
-			status = create_or_update_sales_order(response["items"][0]) #m2_changes
-			sync_stat.update(status) if status else sync_stat.update({ order: { "modified_date":  response["items"][0].get("updated_at") or ""} })
+			idx = response.keys()[0]
+			status = create_or_update_sales_order(response[idx])
+			sync_stat.update(status) if status else sync_stat.update({ order: { "modified_date":  response[idx].get("updated_at") or ""} })
 
 	update_sync_status("Sales Order", orders)
 	return sync_stat
@@ -105,7 +108,7 @@ def get_entity_ids_to_sync(entity_type=None, results=None):
 			"is_synced": "No",
 			"sync_attempts": ("<", 4)
 		}
-		fields = "sync_docname" if entity_type != "Sales Order" else ["sync_docname", "missing_items", "missing_customer"]
+		fields = "sync_docname" if entity_type != "Sales Order" else ["sync_docname", "missing_items", "missing_customer"]		
 		results = frappe.db.get_values("Sync Error Log", filters, fields, as_dict=True)
 
 	if entity_type == "Sales Order":
@@ -118,7 +121,7 @@ def get_entity_ids_to_sync(entity_type=None, results=None):
 			if order.get("missing_items"):
 				missing_items = [item for item in json.loads(order.get("missing_items")) or []]
 				if missing_items: items = check_if_entity_already_synced("Item", missing_items)
-
+			
 			if not items and order.get("missing_customer"):
 				customer = check_if_entity_already_synced("Customer", [order.get("missing_customer")])
 
@@ -143,7 +146,7 @@ def update_sync_status(entity_type, entities):
 def check_if_entity_already_synced(entity_type, entities):
 	""" check if Items or Customer is already synced """
 	field_map = { "Item": "name", "Sales Order": "entity_id", "Customer": "entity_id" }
-
+	
 	if not entities:
 		return []
 
@@ -158,9 +161,9 @@ def check_if_entity_already_synced(entity_type, entities):
 
 	if not results:
 		return entities
-
+	
 	synced_entities = list(set([result.get(field_map.get(entity_type)) for result in results]))
-
+	
 	if synced_entities:
 		""" Update the Sync Status """
 		query = """ update `tabSync Error Log` set is_synced='Yes' where sync_docname in ({names})
@@ -188,7 +191,7 @@ def get_entity_from_magento(url, entity_type=None, entity_id=None):
 		msg = "Error While fetching missing %s #%s"%(entity_type, entity_id)
 		create_scheduler_exception(msg, "get_entity_from_magento", obj=json.dumps(response.json() or {}))
 		return None
-
+		
 	elif not response.json():
 		""" create log entity not available in magento """
 		error = "can not find %s #%s in magento, please contact administrator"
@@ -201,6 +204,28 @@ def get_entity_from_magento(url, entity_type=None, entity_id=None):
 	else:
 		return response.json()
 
+def notifiy_stopped_entities_status():
+	""" Notify User about stopped entities """
+
+	filters = { "is_synced": "Stopped" }
+	fields = ["name", "sync_doctype", "sync_docname", "sync_attempts"]
+	entities = frappe.db.get_values("Sync Error Log", filters, fields, as_dict=True)
+	if not entities:
+		return
+
+	recipients = frappe.get_hooks("error_report_email", app_name="erpnext")
+	subject = "Magento >> ERP Sync Failed"
+	template = "templates/emails/failed_synced.html"
+
+	frappe.sendmail(recipients=recipients, subject=subject,
+			message=frappe.get_template(template).render({"entities": entities}))
+
+	# update notification sent status
+	query = """ update `tabSync Error Log` set notification_sent='Yes' where
+				name in ({names}) """.format(
+					names=",".join(["'%s'"%entity.get("name") for entity in entities])
+				)
+	frappe.db.sql(query)
 
 def get_sync_error_entities_count(entity_type="Item"):
 	""" get total unsync entities count """
@@ -208,27 +233,3 @@ def get_sync_error_entities_count(entity_type="Item"):
 	if not entities:
 		return 0
 	return len(entities) or 0
-
-def notifiy_stopped_entities_status():
-	""" Notify User about stopped entities """
-	print "notifaction sending feature is currently stopped"
-	#filters = { "is_synced": "Stopped" }
-	#fields = ["name", "sync_doctype", "sync_docname", "sync_attempts"]
-	#entities = frappe.db.get_values("Sync Error Log", filters, fields, as_dict=True)
-	#if not entities:
-		#return
-
-	#recipients = frappe.get_hooks("error_report_email", app_name="erpnext")
-	#subject = "Magento >> ERP Sync Failed"
-	#template = "templates/emails/failed_synced.html"
-
-	#frappe.sendmail(recipients=recipients, subject=subject,
-			#message=frappe.get_template(template).render({"entities": entities}))
-
-	# update notification sent status
-	#query = """ update `tabSync Error Log` set notification_sent='Yes' where
-				#name in ({names}) """.format(
-					#names=",".join(["'%s'"%entity.get("name") for entity in entities])
-				#)
-	#frappe.db.sql(query)
-

@@ -41,7 +41,12 @@ def get_data(filters):
 								soi.date_stopped,
 								so.status,
 								so.comment,
-								soi.release_date_of_item
+								soi.release_date_of_item,
+                                                                soi.catalogued,
+								soi.default_supplier,
+                                                                soi.classification,
+                                                                soi.poupular
+
 							FROM 
 								`tabSales Order`so,
 								`tabSales Order Item`soi 
@@ -108,4 +113,9 @@ def get_columns():
 			_("Status") + ":Data:100",
 			_("Comments") + ":Data:100",
 			_("Product Release Date") + ":Date:200",
+                        _("Catalouged") + ":Data:100",
+			_("Default Supplier") + ":Link/Supplier:150",
+                        _("Classification") +  ":Data:100",
+                        _("Popular")+  ":Check:100"
+                        
 	]

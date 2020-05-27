@@ -18,7 +18,7 @@ class SyncMissingEntities(Document):
 
 	def onload(self):
 		self.sync_stat = ""
-
+	
 	def sync_entity(self):
 		self.sync_stat = ""
 
@@ -30,7 +30,7 @@ class SyncMissingEntities(Document):
 			frappe.throw("Please add the missing entities first")
 
 	def sync_entities(self, entity_type, entities):
-		url = "https://digitales.com.au/rest/V1/{entity_type}/?searchCriteria[filter_groups][0][filters][0][field]={field}&searchCriteria[filter_groups][0][filters][0][value]=%s&searchCriteria[filter_groups][0][filters][0][condition_type]=eq"
+		url = "https://digitales.com.au/api/rest/{entity_type}?filter[1][attribute]={field}&filter[1][eq]=%s"
 		if entity_type == "Item":
 			url = url.format(
 				entity_type="products",
@@ -45,28 +45,19 @@ class SyncMissingEntities(Document):
 		sync_stat = {}
 		for entity in entities:
 			response = get_entity_from_magento(url%(entity), entity_type=entity_type, entity_id=entity)
-			if response:
+			
+if response:
 				idx = response.keys()[0]
-				status = func_map[entity_type](response["items"][0])
-				sync_stat.update(status) if status else sync_stat.update({ entity: { "modified_date":response["items"][0].get("updated_at") or ""} })
+				status = func_map[entity_type](response[idx])
+				sync_stat.update(status) if status else sync_stat.update({ entity: { "modified_date":  response[idx].get("updated_at") or ""} })
 			else:
-				if entity_type == "Sales Order":
-					sync_stat.update({
-						entity: {
-							"operation": "Entity Not Found",
-							"name": response["items"][0].get("entity_id") if response["items"][0] and response["items"][0].get("entity_id") else entity,
-						}
-					})
-				else:
-					sync_stat.update({
-						entity: {
-							"operation": "Entity Not Found",
-							"name": response["items"][0].get("id") if response["items"][0] and response["items"][0].get("id") else entity,
-						}
-					})
-
+				sync_stat.update({
+					entity: {
+						"operation": "Entity Not Found",
+						"name": response.get("entity_id") if response and response.get("entity_id") else entity,
+					}
+				})
 
 		uri = "{url}/desk#Form/{dt}/".format(url=frappe.utils.get_url(), dt=entity_type)
 		html = frappe.get_template("templates/status/sync_log_stat.html").render({"sync_stat": sync_stat, "uri":uri})
 		self.sync_stat = html.strip()
-

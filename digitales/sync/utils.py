@@ -24,8 +24,8 @@ def get_entity_and_page_count(max_date, entity_type="Item"):
 		"Sales Order": "orders_pages_per_100_mcount"
 	}
 
-	url = "http://digitales.com.au/api/rest/mcount?start_date=%s"%max_date
-	response = get_entities_from_magento(url, entity_type="Item")
+	m2_url = "https://digitales.com.au/rest/V1/mcount?start_date=%s"%max_date
+	response = get_entities_from_magento(m2_url, entity_type="Item")
 
 	if response:
 		entity_count = response.get(entity_count[entity_type])
@@ -58,7 +58,7 @@ def get_entities_from_magento(url, entity_type=None):
 		msg = "Error While fetching %s(s)"%(entity_type)
 		create_scheduler_exception(msg, "get_entity_from_magento", obj=json.dumps(response.json() or {}))
 		return None
-		
+
 	elif not response.json():
 		""" create log entity not available in magento """
 		msg = "empty response from magento, please contact administrator"
@@ -119,7 +119,7 @@ def log_sync_error(
 	err.error = str(error)
 	err.obj_traceback = frappe.get_traceback()
 	err.response = json.dumps(response)
-	
+
 	log.missing_items = json.dumps(missing_items) or ""
 	log.missing_customer = missing_customer or ""
 	log.magento_response = "<pre><code>%s</code></pre>"%(json.dumps(response, indent=2))
@@ -153,3 +153,36 @@ def create_scheduler_exception(msg, method, obj=None):
 	se.error = msg
 	se.obj_traceback = obj
 	se.save(ignore_permissions=True)
+
+#suresh Changes
+def get_custom_attribute_value (custom_attributes_list,attribute) : #m2_changes
+    attribute_value=None
+    for custom_attributes in custom_attributes_list:  #travelling each custom_attributes of  item
+        if custom_attributes.get("attribute_code") == attribute:
+            attribute_value = custom_attributes.get("value")
+            return attribute_value
+    return attribute_value
+
+#suresh Changes
+def debug_log(
+	entity_type,url,entities_to_sync=0):
+
+	""" log Magento >> ERPNext debug developer build """
+
+	log = frappe.new_doc("Debug log")
+	log.debug_log = entities_to_sync
+	log.entity_type =entity_type
+	log.url= url
+	log.save(ignore_permissions=True)
+
+#suresh Changes
+def get_organisation(customer_parent_id):
+	url = "https://digitales.com.au/rest/V1/Getparentcustomer?entity_id=%s"%customer_parent_id
+	response = get_entities_from_magento(url, entity_type="Customer")
+
+	if response:
+		organisation_name = response.get("organisation")
+		return organisation_name
+	else:
+		return None
+
